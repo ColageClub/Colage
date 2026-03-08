@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>MBXAccessToken</key>
+    <string>$(MAPBOX_ACCESS_TOKEN)</string>
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>Colage uses your location to show you on the campus map and help you discover nearby students.</string>
+    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+    <string>Colage uses your location to show you on the campus map even when the app is in the background.</string>
+    <key>NSCameraUsageDescription</key>
+    <string>Colage uses your camera for AR discovery mode and profile photos.</string>
+</dict>
+</plist>

@@ -1,0 +1,63 @@
+import SwiftUI
+
+/// Full onboarding flow — 10 screens as NavigationStack
+struct OnboardingFlow: View {
+    @EnvironmentObject var appState: AppState
+    @EnvironmentObject var authService: AuthService
+    @EnvironmentObject var universityService: UniversityService
+    @StateObject private var onboardingData = OnboardingData()
+    @State private var path = NavigationPath()
+
+    var body: some View {
+        NavigationStack(path: $path) {
+            WelcomeScreen(onContinue: { path.append(OnboardingStep.email) })
+                .navigationDestination(for: OnboardingStep.self) { step in
+                    stepView(for: step)
+                }
+        }
+        .tint(ColageColors.primary)
+        .environmentObject(onboardingData)
+    }
+
+    @ViewBuilder
+    private func stepView(for step: OnboardingStep) -> some View {
+        switch step {
+        case .email:
+            EmailEntryScreen(onContinue: { path.append(OnboardingStep.emailOTP) })
+        case .emailOTP:
+            EmailOTPScreen(onVerified: { path.append(OnboardingStep.phone) })
+        case .phone:
+            PhoneEntryScreen(onContinue: { path.append(OnboardingStep.phoneOTP) })
+        case .phoneOTP:
+            PhoneOTPScreen(onVerified: { path.append(OnboardingStep.photo) })
+        case .photo:
+            PhotoUploadScreen(onContinue: { path.append(OnboardingStep.info) })
+        case .info:
+            ProfileInfoScreen(onContinue: { path.append(OnboardingStep.socialLinks) })
+        case .socialLinks:
+            SocialLinksScreen(onContinue: { path.append(OnboardingStep.permissions) })
+        case .permissions:
+            PermissionsScreen(onContinue: { path.append(OnboardingStep.welcome) })
+        case .welcome:
+            UniversityWelcomeScreen(onEnter: {
+                // Build and save profile from onboarding data
+                let domain = authService.extractDomain(from: authService.enteredEmail) ?? "umich.edu"
+                let links = onboardingData.socialLinks.compactMap { (platform, handle) -> SocialLink? in
+                    guard !handle.isEmpty else { return nil }
+                    return SocialLink(platform: platform, handle: handle)
+                }
+                authService.createDevProfile(
+                    name: onboardingData.displayName,
+                    bio: onboardingData.bio.isEmpty ? nil : onboardingData.bio,
+                    major: onboardingData.major.isEmpty ? nil : onboardingData.major,
+                    socialLinks: links
+                )
+                appState.authState = .authenticated
+            })
+        }
+    }
+}
+
+enum OnboardingStep: Hashable {
+    case email, emailOTP, phone, phoneOTP, photo, info, socialLinks, permissions, welcome
+}

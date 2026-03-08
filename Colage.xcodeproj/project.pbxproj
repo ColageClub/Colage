@@ -1,0 +1,745 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		04035847F6D4797675D7FCDA /* PermissionsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 726405070516B3DE4A213C0B /* PermissionsScreen.swift */; };
+		0A889C630581BB1BD8EBC005 /* MapDiscoveryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8215AE0734F4DCD33F4BC58E /* MapDiscoveryView.swift */; };
+		0BD455916AF5A0DAFC297BD3 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5C6D18BF3F0885B43D7965D /* AppState.swift */; };
+		0EC56C413E4CFC1AED4F87DA /* OnboardingData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81FA3EAD9639D55E8AECE39D /* OnboardingData.swift */; };
+		13985CB78FEB2EBE0FD2E681 /* EmailOTPScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2795CDE7219F7E3922A63416 /* EmailOTPScreen.swift */; };
+		143D9C1ABCF5A09968B3B034 /* CameraCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = E246967642CBD3D3845D8AC8 /* CameraCapture.swift */; };
+		330B20667796510413BFE562 /* EditProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B6B58532969912532C25927 /* EditProfileView.swift */; };
+		359EBDF3DF5ADFBF84161248 /* EmailEntryScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9CA02623540E71DD9E26993 /* EmailEntryScreen.swift */; };
+		3F297C5B3FDC5BCB0B190D04 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = EBEFEEE3F411601216E5E7A8 /* Assets.xcassets */; };
+		3F49D67187B046A0014DBB04 /* UniversityWelcomeScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA1930251905050A938A2C7B /* UniversityWelcomeScreen.swift */; };
+		42A6AC84E6B04FD1531F9B59 /* FullProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD27D30D1660C116837F37F3 /* FullProfileView.swift */; };
+		5D72A377B7BF917A97F98EAB /* PhotoUploadScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FE81311AE937ABFC2163597 /* PhotoUploadScreen.swift */; };
+		5F22DEE2EAB3210FB5BE6BA5 /* MapboxMaps in Frameworks */ = {isa = PBXBuildFile; productRef = 29C1F2231CF75DEE1A535013 /* MapboxMaps */; };
+		6247C1F32E69A91D2621AFE9 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F11E8811494169116F03748 /* RootView.swift */; };
+		692C5DEC0C577EE2E0D797E4 /* ColageApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 946A16331FAD66C6ADA00B2F /* ColageApp.swift */; };
+		789EB6947529E3EE8789B33E /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87640D1C6F18DE6363F0EF9A /* APIClient.swift */; };
+		792C7C37DEF17F5CDDBFE35E /* ProfileInfoScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 513360BE5968A8A3BC33262C /* ProfileInfoScreen.swift */; };
+		7C9A8ED0EBBCEFF27DA1AFFA /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8F4E1DCBFFC54F5596072D8 /* HomeView.swift */; };
+		91F91E30E7823B4D3FD51104 /* OwnProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FA399806100FD2EF560921D /* OwnProfileView.swift */; };
+		95B84BBE218CD573532AB381 /* MiniProfileSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DB9978F1611E1B7434F9CAA /* MiniProfileSheet.swift */; };
+		96F56F8638FDCC9255E50D42 /* ColageFonts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C60B8166B429CB697756107 /* ColageFonts.swift */; };
+		971B134C544634BDCB865856 /* KeychainWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8707A7A95EE4E029957B4BDC /* KeychainWrapper.swift */; };
+		AEBC49F52B66AE1497EE8DD8 /* LocationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B7309CFB72C2EDAB7756FFD /* LocationService.swift */; };
+		AEF698FFCA2519C6AAEE99EE /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4098554FE549E32E81D6246B /* Components.swift */; };
+		B182800C92BA9077C4D26353 /* ListDiscoveryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B313100A466F65FE16EEFB9 /* ListDiscoveryView.swift */; };
+		B54146B473C02D3B58B8DEEB /* SocialLinksScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00A89FE83B77667ADF37304D /* SocialLinksScreen.swift */; };
+		B9D8F85BD26394E89E9C4A43 /* ColageColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 071ACDC6D067275AC0CB053A /* ColageColors.swift */; };
+		C0FD3F5E2FB3392E94368B36 /* AuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 253B8E527D0F2170EE215D3B /* AuthService.swift */; };
+		C78D7270B26D6AAD752EA2D2 /* MapboxConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F85A917E07A9D4A95D7698A /* MapboxConfig.swift */; };
+		CFD130131F7DDBFB2D56DA01 /* WelcomeScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5610F483B0DC5437B9CF19D4 /* WelcomeScreen.swift */; };
+		DCEBBD09FECB53749364D35A /* PhoneEntryScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4A99EE8505F250FC812BC17 /* PhoneEntryScreen.swift */; };
+		DD3E1D0CEA288DA65F280CD5 /* ColageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12444BC41E78DFEE0D066B44 /* ColageTests.swift */; };
+		DE7E560FD002CCBD7183E031 /* WebSocketManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EC0D5B806037863C25D1229 /* WebSocketManager.swift */; };
+		DF7812A999E224C3DAAA5AA3 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A48824419208531567EF24B /* SettingsView.swift */; };
+		E9B9F26EC45921C25B0AEEA0 /* UniversityService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D58E8CCD14BE3C6C3E11282D /* UniversityService.swift */; };
+		EDC38B3BFD6CC9547BB08AC5 /* OnboardingFlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7CE5518727AA90436F1BE99 /* OnboardingFlow.swift */; };
+		EF6A000FEEE1868304AD4CF2 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD991A6ECE627141F59FB3C1 /* Models.swift */; };
+		F1961EE7270E1ED47DB8C28C /* ARDiscoveryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1254BCAFD8797D4E407EE276 /* ARDiscoveryView.swift */; };
+		FAA5C296D1E74B0CA067EA58 /* PhoneOTPScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 879028394F3D3E85455D4038 /* PhoneOTPScreen.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		49C7FF326516FE0F3C159E29 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 55EB747B8F705A478C06A397 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 6EB08D46FE5DB7459021293E;
+			remoteInfo = Colage;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		00A89FE83B77667ADF37304D /* SocialLinksScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocialLinksScreen.swift; sourceTree = "<group>"; };
+		071ACDC6D067275AC0CB053A /* ColageColors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColageColors.swift; sourceTree = "<group>"; };
+		12444BC41E78DFEE0D066B44 /* ColageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColageTests.swift; sourceTree = "<group>"; };
+		1254BCAFD8797D4E407EE276 /* ARDiscoveryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ARDiscoveryView.swift; sourceTree = "<group>"; };
+		20D08C2040707578D2E35788 /* Colage.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Colage.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		253B8E527D0F2170EE215D3B /* AuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthService.swift; sourceTree = "<group>"; };
+		2795CDE7219F7E3922A63416 /* EmailOTPScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmailOTPScreen.swift; sourceTree = "<group>"; };
+		2B313100A466F65FE16EEFB9 /* ListDiscoveryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListDiscoveryView.swift; sourceTree = "<group>"; };
+		3FA399806100FD2EF560921D /* OwnProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OwnProfileView.swift; sourceTree = "<group>"; };
+		4098554FE549E32E81D6246B /* Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Components.swift; sourceTree = "<group>"; };
+		4DB9978F1611E1B7434F9CAA /* MiniProfileSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MiniProfileSheet.swift; sourceTree = "<group>"; };
+		4F11E8811494169116F03748 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		513360BE5968A8A3BC33262C /* ProfileInfoScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileInfoScreen.swift; sourceTree = "<group>"; };
+		5610F483B0DC5437B9CF19D4 /* WelcomeScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeScreen.swift; sourceTree = "<group>"; };
+		5B6B58532969912532C25927 /* EditProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditProfileView.swift; sourceTree = "<group>"; };
+		5B7309CFB72C2EDAB7756FFD /* LocationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationService.swift; sourceTree = "<group>"; };
+		6EC0D5B806037863C25D1229 /* WebSocketManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebSocketManager.swift; sourceTree = "<group>"; };
+		726405070516B3DE4A213C0B /* PermissionsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionsScreen.swift; sourceTree = "<group>"; };
+		7A48824419208531567EF24B /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		7FE81311AE937ABFC2163597 /* PhotoUploadScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoUploadScreen.swift; sourceTree = "<group>"; };
+		81FA3EAD9639D55E8AECE39D /* OnboardingData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingData.swift; sourceTree = "<group>"; };
+		8215AE0734F4DCD33F4BC58E /* MapDiscoveryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapDiscoveryView.swift; sourceTree = "<group>"; };
+		8707A7A95EE4E029957B4BDC /* KeychainWrapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainWrapper.swift; sourceTree = "<group>"; };
+		87640D1C6F18DE6363F0EF9A /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
+		879028394F3D3E85455D4038 /* PhoneOTPScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneOTPScreen.swift; sourceTree = "<group>"; };
+		8C60B8166B429CB697756107 /* ColageFonts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColageFonts.swift; sourceTree = "<group>"; };
+		8F85A917E07A9D4A95D7698A /* MapboxConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapboxConfig.swift; sourceTree = "<group>"; };
+		946A16331FAD66C6ADA00B2F /* ColageApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColageApp.swift; sourceTree = "<group>"; };
+		9FF644B4D137D3E71D7374CC /* ColageTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = ColageTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		AD991A6ECE627141F59FB3C1 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		B4A99EE8505F250FC812BC17 /* PhoneEntryScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneEntryScreen.swift; sourceTree = "<group>"; };
+		C7CE5518727AA90436F1BE99 /* OnboardingFlow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingFlow.swift; sourceTree = "<group>"; };
+		CA1930251905050A938A2C7B /* UniversityWelcomeScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UniversityWelcomeScreen.swift; sourceTree = "<group>"; };
+		D5382F868F597ACE9DA0D86B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		D58E8CCD14BE3C6C3E11282D /* UniversityService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UniversityService.swift; sourceTree = "<group>"; };
+		D9CA02623540E71DD9E26993 /* EmailEntryScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmailEntryScreen.swift; sourceTree = "<group>"; };
+		E246967642CBD3D3845D8AC8 /* CameraCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraCapture.swift; sourceTree = "<group>"; };
+		EBEFEEE3F411601216E5E7A8 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Assets.xcassets; path = Colage/Resources/Assets.xcassets; sourceTree = SOURCE_ROOT; };
+		F5C6D18BF3F0885B43D7965D /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
+		F8F4E1DCBFFC54F5596072D8 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		FD27D30D1660C116837F37F3 /* FullProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullProfileView.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		A8432A2590536AE729206121 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5F22DEE2EAB3210FB5BE6BA5 /* MapboxMaps in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		08273E6B0E6BE951BE505D7A /* Features */ = {
+			isa = PBXGroup;
+			children = (
+				E8BE2E663921DB9B0BDE6CF1 /* AR */,
+				1343E0010B0C9E4CD18D2A03 /* Auth */,
+				E80CEDAF67509A29407C8798 /* List */,
+				7154DB121B5772E72466BD9C /* Map */,
+				64F9ADCECC6A3130C9F5A8A1 /* Profile */,
+			);
+			path = Features;
+			sourceTree = "<group>";
+		};
+		1343E0010B0C9E4CD18D2A03 /* Auth */ = {
+			isa = PBXGroup;
+			children = (
+				253B8E527D0F2170EE215D3B /* AuthService.swift */,
+				81FA3EAD9639D55E8AECE39D /* OnboardingData.swift */,
+				C7CE5518727AA90436F1BE99 /* OnboardingFlow.swift */,
+				AC513FB7D3B78B48B9F1BB18 /* Screens */,
+			);
+			path = Auth;
+			sourceTree = "<group>";
+		};
+		229FDF5B1A890807F92DDA9F /* Colage */ = {
+			isa = PBXGroup;
+			children = (
+				2DB4523599B75CB036B82BE9 /* App */,
+				3BBEFB89E0CD17AA8DCFDA10 /* Core */,
+				08273E6B0E6BE951BE505D7A /* Features */,
+				BCA60AC9638BB815085F40B4 /* Shared */,
+			);
+			path = Colage;
+			sourceTree = "<group>";
+		};
+		2DB4523599B75CB036B82BE9 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				F5C6D18BF3F0885B43D7965D /* AppState.swift */,
+				946A16331FAD66C6ADA00B2F /* ColageApp.swift */,
+				D5382F868F597ACE9DA0D86B /* Info.plist */,
+				4F11E8811494169116F03748 /* RootView.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		3B932ED378BD58FE9FCD1878 /* Networking */ = {
+			isa = PBXGroup;
+			children = (
+				87640D1C6F18DE6363F0EF9A /* APIClient.swift */,
+				6EC0D5B806037863C25D1229 /* WebSocketManager.swift */,
+			);
+			path = Networking;
+			sourceTree = "<group>";
+		};
+		3BBEFB89E0CD17AA8DCFDA10 /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				F588BDB5C01B18B4C5375BBC /* Design */,
+				A1A56B9373C457313E2D1FD3 /* Location */,
+				3B932ED378BD58FE9FCD1878 /* Networking */,
+				93BEB1F1F574133896DA0CCF /* Storage */,
+				459B902F23C2AE4F16FEF59D /* University */,
+			);
+			path = Core;
+			sourceTree = "<group>";
+		};
+		459B902F23C2AE4F16FEF59D /* University */ = {
+			isa = PBXGroup;
+			children = (
+				AD991A6ECE627141F59FB3C1 /* Models.swift */,
+				D58E8CCD14BE3C6C3E11282D /* UniversityService.swift */,
+			);
+			path = University;
+			sourceTree = "<group>";
+		};
+		47956DED381409BA83D45298 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				20D08C2040707578D2E35788 /* Colage.app */,
+				9FF644B4D137D3E71D7374CC /* ColageTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		5FD4FC68AB253D64E90F1A77 /* ColageTests */ = {
+			isa = PBXGroup;
+			children = (
+				12444BC41E78DFEE0D066B44 /* ColageTests.swift */,
+			);
+			path = ColageTests;
+			sourceTree = "<group>";
+		};
+		64F9ADCECC6A3130C9F5A8A1 /* Profile */ = {
+			isa = PBXGroup;
+			children = (
+				E246967642CBD3D3845D8AC8 /* CameraCapture.swift */,
+				5B6B58532969912532C25927 /* EditProfileView.swift */,
+				3FA399806100FD2EF560921D /* OwnProfileView.swift */,
+				7A48824419208531567EF24B /* SettingsView.swift */,
+			);
+			path = Profile;
+			sourceTree = "<group>";
+		};
+		7154DB121B5772E72466BD9C /* Map */ = {
+			isa = PBXGroup;
+			children = (
+				F8F4E1DCBFFC54F5596072D8 /* HomeView.swift */,
+				8215AE0734F4DCD33F4BC58E /* MapDiscoveryView.swift */,
+			);
+			path = Map;
+			sourceTree = "<group>";
+		};
+		93BEB1F1F574133896DA0CCF /* Storage */ = {
+			isa = PBXGroup;
+			children = (
+				8707A7A95EE4E029957B4BDC /* KeychainWrapper.swift */,
+			);
+			path = Storage;
+			sourceTree = "<group>";
+		};
+		98B3FDAFBE019BB3F4EC6ABB = {
+			isa = PBXGroup;
+			children = (
+				EBEFEEE3F411601216E5E7A8 /* Assets.xcassets */,
+				229FDF5B1A890807F92DDA9F /* Colage */,
+				5FD4FC68AB253D64E90F1A77 /* ColageTests */,
+				47956DED381409BA83D45298 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		9C313C080B8B1DDB9840F619 /* Discovery */ = {
+			isa = PBXGroup;
+			children = (
+				FD27D30D1660C116837F37F3 /* FullProfileView.swift */,
+				4DB9978F1611E1B7434F9CAA /* MiniProfileSheet.swift */,
+			);
+			path = Discovery;
+			sourceTree = "<group>";
+		};
+		A1A56B9373C457313E2D1FD3 /* Location */ = {
+			isa = PBXGroup;
+			children = (
+				5B7309CFB72C2EDAB7756FFD /* LocationService.swift */,
+			);
+			path = Location;
+			sourceTree = "<group>";
+		};
+		AC513FB7D3B78B48B9F1BB18 /* Screens */ = {
+			isa = PBXGroup;
+			children = (
+				D9CA02623540E71DD9E26993 /* EmailEntryScreen.swift */,
+				2795CDE7219F7E3922A63416 /* EmailOTPScreen.swift */,
+				726405070516B3DE4A213C0B /* PermissionsScreen.swift */,
+				B4A99EE8505F250FC812BC17 /* PhoneEntryScreen.swift */,
+				879028394F3D3E85455D4038 /* PhoneOTPScreen.swift */,
+				7FE81311AE937ABFC2163597 /* PhotoUploadScreen.swift */,
+				513360BE5968A8A3BC33262C /* ProfileInfoScreen.swift */,
+				00A89FE83B77667ADF37304D /* SocialLinksScreen.swift */,
+				CA1930251905050A938A2C7B /* UniversityWelcomeScreen.swift */,
+				5610F483B0DC5437B9CF19D4 /* WelcomeScreen.swift */,
+			);
+			path = Screens;
+			sourceTree = "<group>";
+		};
+		BCA60AC9638BB815085F40B4 /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				9C313C080B8B1DDB9840F619 /* Discovery */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
+		E80CEDAF67509A29407C8798 /* List */ = {
+			isa = PBXGroup;
+			children = (
+				2B313100A466F65FE16EEFB9 /* ListDiscoveryView.swift */,
+			);
+			path = List;
+			sourceTree = "<group>";
+		};
+		E8BE2E663921DB9B0BDE6CF1 /* AR */ = {
+			isa = PBXGroup;
+			children = (
+				1254BCAFD8797D4E407EE276 /* ARDiscoveryView.swift */,
+			);
+			path = AR;
+			sourceTree = "<group>";
+		};
+		F588BDB5C01B18B4C5375BBC /* Design */ = {
+			isa = PBXGroup;
+			children = (
+				071ACDC6D067275AC0CB053A /* ColageColors.swift */,
+				8C60B8166B429CB697756107 /* ColageFonts.swift */,
+				4098554FE549E32E81D6246B /* Components.swift */,
+				8F85A917E07A9D4A95D7698A /* MapboxConfig.swift */,
+			);
+			path = Design;
+			sourceTree = "<group>";
+		};
+		"TEMP_EE46E26C-C5FF-4976-B2BE-12BD5F7AE84F" /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		1B17C2F0465C079276FF348E /* ColageTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = EB01E5B2AF472CD5FD89180F /* Build configuration list for PBXNativeTarget "ColageTests" */;
+			buildPhases = (
+				F7141EBFE508E412C8BDEDF9 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				DC5F38010A50831B72BE07CA /* PBXTargetDependency */,
+			);
+			name = ColageTests;
+			packageProductDependencies = (
+			);
+			productName = ColageTests;
+			productReference = 9FF644B4D137D3E71D7374CC /* ColageTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		6EB08D46FE5DB7459021293E /* Colage */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 8C267C822EFAAFF7AA2CC769 /* Build configuration list for PBXNativeTarget "Colage" */;
+			buildPhases = (
+				3391B24D0C459618A38E37D7 /* Sources */,
+				85678F7144AF40EE59E5A6A2 /* Resources */,
+				A8432A2590536AE729206121 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Colage;
+			packageProductDependencies = (
+				29C1F2231CF75DEE1A535013 /* MapboxMaps */,
+			);
+			productName = Colage;
+			productReference = 20D08C2040707578D2E35788 /* Colage.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		55EB747B8F705A478C06A397 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					1B17C2F0465C079276FF348E = {
+						DevelopmentTeam = "";
+					};
+					6EB08D46FE5DB7459021293E = {
+						DevelopmentTeam = "";
+					};
+				};
+			};
+			buildConfigurationList = F9FE174B1327EFB9E7A1C783 /* Build configuration list for PBXProject "Colage" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 98B3FDAFBE019BB3F4EC6ABB;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				D5DE7A2C2F4355DDF83CB267 /* XCRemoteSwiftPackageReference "mapbox-maps-ios" */,
+			);
+			preferredProjectObjectVersion = 77;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				6EB08D46FE5DB7459021293E /* Colage */,
+				1B17C2F0465C079276FF348E /* ColageTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		85678F7144AF40EE59E5A6A2 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3F297C5B3FDC5BCB0B190D04 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		3391B24D0C459618A38E37D7 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				789EB6947529E3EE8789B33E /* APIClient.swift in Sources */,
+				F1961EE7270E1ED47DB8C28C /* ARDiscoveryView.swift in Sources */,
+				0BD455916AF5A0DAFC297BD3 /* AppState.swift in Sources */,
+				C0FD3F5E2FB3392E94368B36 /* AuthService.swift in Sources */,
+				143D9C1ABCF5A09968B3B034 /* CameraCapture.swift in Sources */,
+				692C5DEC0C577EE2E0D797E4 /* ColageApp.swift in Sources */,
+				B9D8F85BD26394E89E9C4A43 /* ColageColors.swift in Sources */,
+				96F56F8638FDCC9255E50D42 /* ColageFonts.swift in Sources */,
+				AEF698FFCA2519C6AAEE99EE /* Components.swift in Sources */,
+				330B20667796510413BFE562 /* EditProfileView.swift in Sources */,
+				359EBDF3DF5ADFBF84161248 /* EmailEntryScreen.swift in Sources */,
+				13985CB78FEB2EBE0FD2E681 /* EmailOTPScreen.swift in Sources */,
+				42A6AC84E6B04FD1531F9B59 /* FullProfileView.swift in Sources */,
+				7C9A8ED0EBBCEFF27DA1AFFA /* HomeView.swift in Sources */,
+				971B134C544634BDCB865856 /* KeychainWrapper.swift in Sources */,
+				B182800C92BA9077C4D26353 /* ListDiscoveryView.swift in Sources */,
+				AEBC49F52B66AE1497EE8DD8 /* LocationService.swift in Sources */,
+				0A889C630581BB1BD8EBC005 /* MapDiscoveryView.swift in Sources */,
+				C78D7270B26D6AAD752EA2D2 /* MapboxConfig.swift in Sources */,
+				95B84BBE218CD573532AB381 /* MiniProfileSheet.swift in Sources */,
+				EF6A000FEEE1868304AD4CF2 /* Models.swift in Sources */,
+				0EC56C413E4CFC1AED4F87DA /* OnboardingData.swift in Sources */,
+				EDC38B3BFD6CC9547BB08AC5 /* OnboardingFlow.swift in Sources */,
+				91F91E30E7823B4D3FD51104 /* OwnProfileView.swift in Sources */,
+				04035847F6D4797675D7FCDA /* PermissionsScreen.swift in Sources */,
+				DCEBBD09FECB53749364D35A /* PhoneEntryScreen.swift in Sources */,
+				FAA5C296D1E74B0CA067EA58 /* PhoneOTPScreen.swift in Sources */,
+				5D72A377B7BF917A97F98EAB /* PhotoUploadScreen.swift in Sources */,
+				792C7C37DEF17F5CDDBFE35E /* ProfileInfoScreen.swift in Sources */,
+				6247C1F32E69A91D2621AFE9 /* RootView.swift in Sources */,
+				DF7812A999E224C3DAAA5AA3 /* SettingsView.swift in Sources */,
+				B54146B473C02D3B58B8DEEB /* SocialLinksScreen.swift in Sources */,
+				E9B9F26EC45921C25B0AEEA0 /* UniversityService.swift in Sources */,
+				3F49D67187B046A0014DBB04 /* UniversityWelcomeScreen.swift in Sources */,
+				DE7E560FD002CCBD7183E031 /* WebSocketManager.swift in Sources */,
+				CFD130131F7DDBFB2D56DA01 /* WelcomeScreen.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F7141EBFE508E412C8BDEDF9 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DD3E1D0CEA288DA65F280CD5 /* ColageTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		DC5F38010A50831B72BE07CA /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 6EB08D46FE5DB7459021293E /* Colage */;
+			targetProxy = 49C7FF326516FE0F3C159E29 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		0D0F549603239859E93B2699 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Colage/App/Info.plist;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Colage uses your camera for AR discovery mode and profile photos.";
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Colage uses your location to show you on the campus map even when the app is in the background.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Colage uses your location to show you on the campus map and help you discover nearby students.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.colage.app;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		34B1FE7DC6AE3C5E158E1638 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGNING_REQUIRED = NO;
+				CODE_SIGN_IDENTITY = "";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.9;
+			};
+			name = Debug;
+		};
+		44E605CA8B630EDA6C3088E5 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.colage.ColageTests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Colage.app/Colage";
+			};
+			name = Release;
+		};
+		A96F47522D12D29CA58019A8 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Colage/App/Info.plist;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Colage uses your camera for AR discovery mode and profile photos.";
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Colage uses your location to show you on the campus map even when the app is in the background.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Colage uses your location to show you on the campus map and help you discover nearby students.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.colage.app;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		B617A3B3EEEEB9A6B56AB820 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGNING_REQUIRED = NO;
+				CODE_SIGN_IDENTITY = "";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = "";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.9;
+			};
+			name = Release;
+		};
+		E753EC8612FDAD9052146407 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.colage.ColageTests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Colage.app/Colage";
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		8C267C822EFAAFF7AA2CC769 /* Build configuration list for PBXNativeTarget "Colage" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A96F47522D12D29CA58019A8 /* Debug */,
+				0D0F549603239859E93B2699 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		EB01E5B2AF472CD5FD89180F /* Build configuration list for PBXNativeTarget "ColageTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E753EC8612FDAD9052146407 /* Debug */,
+				44E605CA8B630EDA6C3088E5 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		F9FE174B1327EFB9E7A1C783 /* Build configuration list for PBXProject "Colage" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				34B1FE7DC6AE3C5E158E1638 /* Debug */,
+				B617A3B3EEEEB9A6B56AB820 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		D5DE7A2C2F4355DDF83CB267 /* XCRemoteSwiftPackageReference "mapbox-maps-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/mapbox/mapbox-maps-ios.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 11.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		29C1F2231CF75DEE1A535013 /* MapboxMaps */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D5DE7A2C2F4355DDF83CB267 /* XCRemoteSwiftPackageReference "mapbox-maps-ios" */;
+			productName = MapboxMaps;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 55EB747B8F705A478C06A397 /* Project object */;
+}
