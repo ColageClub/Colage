@@ -7,16 +7,26 @@ struct OnboardingFlow: View {
     @EnvironmentObject var universityService: UniversityService
     @StateObject private var onboardingData = OnboardingData()
     @State private var path = NavigationPath()
+    @State private var showLogin = false
 
     var body: some View {
         NavigationStack(path: $path) {
-            WelcomeScreen(onContinue: { path.append(OnboardingStep.email) })
-                .navigationDestination(for: OnboardingStep.self) { step in
-                    stepView(for: step)
-                }
+            WelcomeScreen(
+                onContinue: { path.append(OnboardingStep.email) },
+                onLogin: { showLogin = true }
+            )
+            .navigationDestination(for: OnboardingStep.self) { step in
+                stepView(for: step)
+            }
         }
         .tint(ColageColors.primary)
         .environmentObject(onboardingData)
+        .sheet(isPresented: $showLogin) {
+            LoginScreen()
+                .environmentObject(appState)
+                .environmentObject(authService)
+                .environmentObject(universityService)
+        }
     }
 
     @ViewBuilder

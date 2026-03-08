@@ -232,7 +232,7 @@ struct LiveARView: UIViewRepresentable {
     class Coordinator: NSObject {
         let parent: LiveARView
         var arView: ARView?
-        private var anchors: [String: AnchorEntity] = []
+        private var anchors: [String: AnchorEntity] = [:]
 
         init(parent: LiveARView) {
             self.parent = parent

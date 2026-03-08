@@ -36,6 +36,7 @@
 		B54146B473C02D3B58B8DEEB /* SocialLinksScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00A89FE83B77667ADF37304D /* SocialLinksScreen.swift */; };
 		B9D8F85BD26394E89E9C4A43 /* ColageColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 071ACDC6D067275AC0CB053A /* ColageColors.swift */; };
 		C0FD3F5E2FB3392E94368B36 /* AuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 253B8E527D0F2170EE215D3B /* AuthService.swift */; };
+		C6501C206D71582488922693 /* LoginScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 954B5E875240638553CDD4DC /* LoginScreen.swift */; };
 		C78D7270B26D6AAD752EA2D2 /* MapboxConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F85A917E07A9D4A95D7698A /* MapboxConfig.swift */; };
 		CFD130131F7DDBFB2D56DA01 /* WelcomeScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5610F483B0DC5437B9CF19D4 /* WelcomeScreen.swift */; };
 		DCEBBD09FECB53749364D35A /* PhoneEntryScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4A99EE8505F250FC812BC17 /* PhoneEntryScreen.swift */; };
@@ -90,6 +91,7 @@
 		8C60B8166B429CB697756107 /* ColageFonts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColageFonts.swift; sourceTree = "<group>"; };
 		8F85A917E07A9D4A95D7698A /* MapboxConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapboxConfig.swift; sourceTree = "<group>"; };
 		946A16331FAD66C6ADA00B2F /* ColageApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColageApp.swift; sourceTree = "<group>"; };
+		954B5E875240638553CDD4DC /* LoginScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginScreen.swift; sourceTree = "<group>"; };
 		9FF644B4D137D3E71D7374CC /* ColageTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = ColageTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		AB4D1652B0286CE84C9AE9E0 /* MapThemeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapThemeManager.swift; sourceTree = "<group>"; };
 		AD991A6ECE627141F59FB3C1 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
@@ -97,6 +99,7 @@
 		C7CE5518727AA90436F1BE99 /* OnboardingFlow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingFlow.swift; sourceTree = "<group>"; };
 		CA1930251905050A938A2C7B /* UniversityWelcomeScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UniversityWelcomeScreen.swift; sourceTree = "<group>"; };
 		D5382F868F597ACE9DA0D86B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		D5390D10BAC40FD100B1DEBC /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
 		D58E8CCD14BE3C6C3E11282D /* UniversityService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UniversityService.swift; sourceTree = "<group>"; };
 		D9CA02623540E71DD9E26993 /* EmailEntryScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmailEntryScreen.swift; sourceTree = "<group>"; };
 		E246967642CBD3D3845D8AC8 /* CameraCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraCapture.swift; sourceTree = "<group>"; };
@@ -185,6 +188,15 @@
 			path = Core;
 			sourceTree = "<group>";
 		};
+		40884EBFE83018770734E77E /* Colage */ = {
+			isa = PBXGroup;
+			children = (
+				D5390D10BAC40FD100B1DEBC /* Secrets.xcconfig */,
+			);
+			name = Colage;
+			path = .;
+			sourceTree = "<group>";
+		};
 		459B902F23C2AE4F16FEF59D /* University */ = {
 			isa = PBXGroup;
 			children = (
@@ -245,6 +257,7 @@
 			children = (
 				EBEFEEE3F411601216E5E7A8 /* Assets.xcassets */,
 				229FDF5B1A890807F92DDA9F /* Colage */,
+				40884EBFE83018770734E77E /* Colage */,
 				5FD4FC68AB253D64E90F1A77 /* ColageTests */,
 				47956DED381409BA83D45298 /* Products */,
 			);
@@ -272,6 +285,7 @@
 			children = (
 				D9CA02623540E71DD9E26993 /* EmailEntryScreen.swift */,
 				2795CDE7219F7E3922A63416 /* EmailOTPScreen.swift */,
+				954B5E875240638553CDD4DC /* LoginScreen.swift */,
 				726405070516B3DE4A213C0B /* PermissionsScreen.swift */,
 				B4A99EE8505F250FC812BC17 /* PhoneEntryScreen.swift */,
 				879028394F3D3E85455D4038 /* PhoneOTPScreen.swift */,
@@ -319,7 +333,7 @@
 			path = Design;
 			sourceTree = "<group>";
 		};
-		"TEMP_B7CBFCF7-F498-4B1D-86E4-9CD183D61B6D" /* Resources */ = {
+		"TEMP_95EC8D05-7F32-4EFF-962C-A618809CB460" /* Resources */ = {
 			isa = PBXGroup;
 			children = (
 			);
@@ -440,6 +454,7 @@
 				971B134C544634BDCB865856 /* KeychainWrapper.swift in Sources */,
 				B182800C92BA9077C4D26353 /* ListDiscoveryView.swift in Sources */,
 				AEBC49F52B66AE1497EE8DD8 /* LocationService.swift in Sources */,
+				C6501C206D71582488922693 /* LoginScreen.swift in Sources */,
 				0A889C630581BB1BD8EBC005 /* MapDiscoveryView.swift in Sources */,
 				8272B45F3B06B936110AC8D3 /* MapThemeManager.swift in Sources */,
 				C78D7270B26D6AAD752EA2D2 /* MapboxConfig.swift in Sources */,
@@ -512,6 +527,7 @@
 		};
 		34B1FE7DC6AE3C5E158E1638 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = D5390D10BAC40FD100B1DEBC /* Secrets.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -623,6 +639,7 @@
 		};
 		B617A3B3EEEEB9A6B56AB820 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = D5390D10BAC40FD100B1DEBC /* Secrets.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;

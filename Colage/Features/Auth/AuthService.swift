@@ -123,6 +123,63 @@ class AuthService: ObservableObject {
         return profile
     }
 
+    // MARK: - Login (existing accounts)
+
+    /// Send login OTP to existing user's email
+    func sendLoginOTP(email: String) async -> Bool {
+        enteredEmail = email
+        isLoading = true
+        defer { isLoading = false }
+
+        if AppState.devMode {
+            // Dev mode: check if a profile exists for this email
+            try? await Task.sleep(for: .seconds(0.5))
+            // In dev, any .edu email "exists"
+            return true
+        }
+
+        // TODO: POST /auth/login — triggers Cognito to send OTP
+        // Should return 404 if user doesn't exist
+        return false
+    }
+
+    /// Confirm login OTP and restore session
+    func confirmLoginOTP(email: String, code: String) async -> Bool {
+        isLoading = true
+        defer { isLoading = false }
+
+        if AppState.devMode {
+            try? await Task.sleep(for: .seconds(0.5))
+            if code.count == 6 {
+                emailVerified = true
+                phoneVerified = true
+
+                // Restore or create dev profile
+                if let existing = loadDevProfile() {
+                    UserProfile.current = existing
+                } else {
+                    // No stored profile — create a basic one
+                    let domain = extractDomain(from: email) ?? "umich.edu"
+                    createDevProfile(
+                        name: email.components(separatedBy: "@").first?.capitalized ?? "Student",
+                        bio: nil,
+                        major: nil,
+                        socialLinks: []
+                    )
+                }
+
+                UserDefaults.standard.set(true, forKey: "dev_onboarding_complete")
+                return true
+            }
+            errorMessage = "Invalid code"
+            return false
+        }
+
+        // TODO: POST /auth/login/confirm — returns JWT tokens
+        // Store tokens in Keychain, fetch profile from API
+        return false
+    }
+
     func logout() {
         KeychainWrapper.clearAll()
         UserProfile.current = nil

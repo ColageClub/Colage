@@ -2,6 +2,7 @@ import SwiftUI
 
 struct WelcomeScreen: View {
     let onContinue: () -> Void
+    let onLogin: () -> Void
 
     var body: some View {
         ZStack {
@@ -54,13 +55,23 @@ struct WelcomeScreen: View {
 
                 Spacer()
 
-                // CTA
+                // CTAs
                 VStack(spacing: 12) {
                     ColagePrimaryButton(title: "Get Started", action: onContinue)
+
+                    Button(action: onLogin) {
+                        Text("Already have an account? ")
+                            .font(ColageFonts.body)
+                            .foregroundStyle(ColageColors.textSecondary)
+                        + Text("Log In")
+                            .font(ColageFonts.bodyBold)
+                            .foregroundStyle(ColageColors.primary)
+                    }
 
                     Text("For verified .edu students only")
                         .font(ColageFonts.caption)
                         .foregroundStyle(ColageColors.textTertiary)
+                        .padding(.top, 4)
                 }
                 .padding(.horizontal, 24)
                 .padding(.bottom, 40)
@@ -99,5 +110,5 @@ struct FeatureRow: View {
 }
 
 #Preview {
-    WelcomeScreen(onContinue: {})
+    WelcomeScreen(onContinue: {}, onLogin: {})
 }
