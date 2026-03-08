@@ -1,86 +1,206 @@
 import SwiftUI
 import ARKit
 import RealityKit
-import CoreLocation
 
-/// AR discovery view — floating bubbles above nearby students
+/// AR discovery mode — floating name bubbles in camera view
+/// Falls back to a simulated view in the simulator
 struct ARDiscoveryView: View {
     @ObservedObject var students: NearbyStudentsViewModel
     @EnvironmentObject var appState: AppState
-    @EnvironmentObject var locationService: LocationService
+    @EnvironmentObject var universityService: UniversityService
     @State private var selectedStudent: NearbyStudent?
-    @State private var torchOn = false
 
     var body: some View {
         ZStack {
-            if ARWorldTrackingConfiguration.isSupported {
-                ARSceneView(
-                    students: students.filteredStudents,
-                    userLocation: locationService.currentLocation,
-                    onStudentTapped: { student in
-                        selectedStudent = student
-                    }
-                )
-                .ignoresSafeArea()
-            } else {
-                // Simulator / non-AR fallback
-                ARSimulatorFallback(students: students, onTap: { student in
+            #if targetEnvironment(simulator)
+            // Simulator fallback — mock AR view
+            SimulatedARView(
+                students: students.filteredStudents,
+                themeColor: universityService.currentTheme?.primary ?? ColageColors.primary,
+                onStudentTapped: { student in
                     selectedStudent = student
-                })
-            }
-
-            // Distance slider
-            VStack {
-                Spacer().frame(height: 100)
-                DistanceSlider(distance: $students.maxDistance)
-                    .padding(.horizontal, 24)
-                Spacer()
-            }
-
-            // Bottom controls
-            VStack {
-                Spacer()
-                HStack {
-                    Spacer()
-                    Button {
-                        toggleTorch()
-                    } label: {
-                        Image(systemName: torchOn ? "flashlight.on.fill" : "flashlight.off.fill")
-                            .font(.system(size: 18))
-                            .foregroundStyle(torchOn ? ColageColors.warning : ColageColors.textPrimary)
-                            .frame(width: 44, height: 44)
-                            .background(ColageColors.surface.opacity(0.8))
-                            .clipShape(Circle())
-                    }
-                    .padding(.trailing, 16)
-                    .padding(.bottom, 40)
                 }
+            )
+            #else
+            // Real device — ARKit session
+            LiveARView(
+                students: students.filteredStudents,
+                themeColor: universityService.currentTheme?.primary ?? ColageColors.primary,
+                onStudentTapped: { student in
+                    selectedStudent = student
+                }
+            )
+            #endif
+
+            // AR overlay UI
+            VStack {
+                Spacer()
+
+                // Bottom info bar
+                HStack(spacing: 16) {
+                    HStack(spacing: 6) {
+                        Circle()
+                            .fill(ColageColors.online)
+                            .frame(width: 8, height: 8)
+                        Text("\(students.filteredStudents.count) visible")
+                            .font(ColageFonts.captionBold)
+                            .foregroundStyle(ColageColors.textPrimary)
+                    }
+
+                    Spacer()
+
+                    Text("Floor \(appState.currentFloor)")
+                        .font(ColageFonts.monoSmall)
+                        .foregroundStyle(ColageColors.textSecondary)
+                }
+                .padding(.horizontal, 20)
+                .padding(.vertical, 12)
+                .background(.ultraThinMaterial)
+                .clipShape(RoundedRectangle(cornerRadius: 16))
+                .padding(.horizontal, 16)
+                .padding(.bottom, 100)
             }
         }
         .sheet(item: $selectedStudent) { student in
             MiniProfileSheet(student: student)
                 .presentationDetents([.fraction(0.35), .large])
                 .presentationDragIndicator(.visible)
+                .presentationBackgroundInteraction(.enabled)
         }
-    }
-
-    private func toggleTorch() {
-        guard let device = AVCaptureDevice.default(for: .video),
-              device.hasTorch else { return }
-        do {
-            try device.lockForConfiguration()
-            device.torchMode = torchOn ? .off : .on
-            device.unlockForConfiguration()
-            torchOn.toggle()
-        } catch {}
     }
 }
 
-// MARK: - Real AR View with bubble anchors
+// MARK: - Simulator Fallback
 
-struct ARSceneView: UIViewRepresentable {
+struct SimulatedARView: View {
     let students: [NearbyStudent]
-    let userLocation: CLLocationCoordinate2D?
+    let themeColor: Color
+    let onStudentTapped: (NearbyStudent) -> Void
+
+    @State private var bubbleOffsets: [String: CGPoint] = [:]
+
+    var body: some View {
+        GeometryReader { geo in
+            ZStack {
+                // Dark background simulating camera
+                LinearGradient(
+                    colors: [Color(hex: "1a1a2e"), Color(hex: "0a0a1a")],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .ignoresSafeArea()
+
+                // Grid lines for AR effect
+                ForEach(0..<8, id: \.self) { i in
+                    Rectangle()
+                        .fill(Color.white.opacity(0.03))
+                        .frame(height: 1)
+                        .offset(y: CGFloat(i) * geo.size.height / 8 - geo.size.height / 2)
+                }
+                ForEach(0..<6, id: \.self) { i in
+                    Rectangle()
+                        .fill(Color.white.opacity(0.03))
+                        .frame(width: 1)
+                        .offset(x: CGFloat(i) * geo.size.width / 6 - geo.size.width / 2)
+                }
+
+                // "AR" label
+                VStack {
+                    HStack {
+                        Label("SIMULATOR", systemImage: "camera.viewfinder")
+                            .font(ColageFonts.captionBold)
+                            .foregroundStyle(ColageColors.textTertiary)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 6)
+                            .background(.ultraThinMaterial)
+                            .clipShape(Capsule())
+                        Spacer()
+                    }
+                    .padding(.leading, 16)
+                    .padding(.top, 90)
+                    Spacer()
+                }
+
+                // Floating bubbles
+                ForEach(students.prefix(10)) { student in
+                    let offset = bubbleOffset(for: student, in: geo.size)
+                    ARBubble(
+                        student: student,
+                        themeColor: themeColor
+                    )
+                    .position(x: offset.x, y: offset.y)
+                    .onTapGesture {
+                        onStudentTapped(student)
+                    }
+                    .animation(
+                        .easeInOut(duration: 2.0 + Double.random(in: 0...1))
+                        .repeatForever(autoreverses: true),
+                        value: offset
+                    )
+                }
+            }
+        }
+        .onAppear {
+            generateOffsets()
+        }
+    }
+
+    private func bubbleOffset(for student: NearbyStudent, in size: CGSize) -> CGPoint {
+        if let offset = bubbleOffsets[student.id] {
+            return offset
+        }
+        return CGPoint(x: size.width / 2, y: size.height / 2)
+    }
+
+    private func generateOffsets() {
+        for student in students.prefix(10) {
+            let x = CGFloat.random(in: 60...320)
+            let y = CGFloat.random(in: 140...700)
+            bubbleOffsets[student.id] = CGPoint(x: x, y: y)
+        }
+    }
+}
+
+// MARK: - AR Bubble
+
+struct ARBubble: View {
+    let student: NearbyStudent
+    let themeColor: Color
+
+    var body: some View {
+        VStack(spacing: 4) {
+            // Avatar circle
+            AvatarView(
+                imageURL: student.profile.profilePhotoURL,
+                size: 48,
+                borderColor: themeColor
+            )
+            .shadow(color: themeColor.opacity(0.4), radius: 8)
+
+            // Name tag
+            VStack(spacing: 2) {
+                Text(student.profile.displayName.components(separatedBy: " ").first ?? "")
+                    .font(ColageFonts.captionBold)
+                    .foregroundStyle(.white)
+
+                Text("\(Int(student.distance)) ft")
+                    .font(ColageFonts.monoSmall)
+                    .foregroundStyle(themeColor)
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .background(.ultraThinMaterial)
+            .clipShape(RoundedRectangle(cornerRadius: 10))
+        }
+    }
+}
+
+// MARK: - Live AR View (real device only)
+
+#if !targetEnvironment(simulator)
+struct LiveARView: UIViewRepresentable {
+    let students: [NearbyStudent]
+    let themeColor: Color
     var onStudentTapped: ((NearbyStudent) -> Void)?
 
     func makeCoordinator() -> Coordinator {
@@ -90,134 +210,54 @@ struct ARSceneView: UIViewRepresentable {
     func makeUIView(context: Context) -> ARView {
         let arView = ARView(frame: .zero)
 
+        // World tracking with camera feed
         let config = ARWorldTrackingConfiguration()
-        config.planeDetection = [.horizontal]
-        config.worldAlignment = .gravityAndHeading // Align to compass for positioning
+        config.planeDetection = []
         arView.session.run(config)
 
-        // Tap gesture for bubbles
-        let tapGesture = UITapGestureRecognizer(
-            target: context.coordinator,
-            action: #selector(Coordinator.handleTap(_:))
-        )
-        arView.addGestureRecognizer(tapGesture)
-
         context.coordinator.arView = arView
+        context.coordinator.addStudentEntities(students: students)
+
+        // Tap gesture
+        let tap = UITapGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.handleTap(_:)))
+        arView.addGestureRecognizer(tap)
+
         return arView
     }
 
     func updateUIView(_ arView: ARView, context: Context) {
-        context.coordinator.updateBubbles(students: students, userLocation: userLocation)
+        context.coordinator.updateStudentEntities(students: students)
     }
 
     class Coordinator: NSObject {
-        let parent: ARSceneView
+        let parent: LiveARView
         var arView: ARView?
-        private var bubbleAnchors: [String: AnchorEntity] = [:]
-        private var studentMap: [Entity: NearbyStudent] = [:]
+        private var anchors: [String: AnchorEntity] = []
 
-        init(parent: ARSceneView) {
+        init(parent: LiveARView) {
             self.parent = parent
         }
 
-        func updateBubbles(students: [NearbyStudent], userLocation: CLLocationCoordinate2D?) {
-            guard let arView = arView, let userCoord = userLocation else { return }
+        func addStudentEntities(students: [NearbyStudent]) {
+            guard let arView = arView else { return }
 
-            // Remove old anchors not in current list
-            let currentIds = Set(students.map { $0.id })
-            for (id, anchor) in bubbleAnchors where !currentIds.contains(id) {
-                arView.scene.removeAnchor(anchor)
-                bubbleAnchors.removeValue(forKey: id)
-            }
+            for student in students.prefix(15) {
+                let anchor = AnchorEntity(world: randomPosition(distance: student.distance))
 
-            for student in students {
-                let offset = coordinateOffset(
-                    from: userCoord,
-                    to: CLLocationCoordinate2D(
-                        latitude: student.location.latitude,
-                        longitude: student.location.longitude
-                    )
-                )
+                // Simple sphere for now — custom meshes later
+                let mesh = MeshResource.generateSphere(radius: 0.08)
+                let material = SimpleMaterial(color: .systemPurple, isMetallic: false)
+                let entity = ModelEntity(mesh: mesh, materials: [material])
+                entity.name = student.id
 
-                // Position: x = east/west, z = north/south (negative = north), y = height
-                let position = SIMD3<Float>(
-                    Float(offset.east),
-                    1.7, // Head height
-                    Float(-offset.north) // Negative because ARKit z is south
-                )
-
-                if let existingAnchor = bubbleAnchors[student.id] {
-                    // Smoothly move existing bubble
-                    existingAnchor.position = position
-                } else {
-                    // Create new bubble
-                    let anchor = AnchorEntity(world: position)
-                    let bubble = createBubble(for: student)
-                    anchor.addChild(bubble)
-                    arView.scene.addAnchor(anchor)
-                    bubbleAnchors[student.id] = anchor
-                    studentMap[bubble] = student
-                }
+                anchor.addChild(entity)
+                arView.scene.addAnchor(anchor)
+                anchors[student.id] = anchor
             }
         }
 
-        private func createBubble(for student: NearbyStudent) -> ModelEntity {
-            // Create a sphere as the bubble
-            let mesh = MeshResource.generateSphere(radius: 0.15)
-            var material = SimpleMaterial()
-            material.color = .init(
-                tint: UIColor(ColageColors.primary).withAlphaComponent(0.85)
-            )
-            let entity = ModelEntity(mesh: mesh, materials: [material])
-            entity.generateCollisionShapes(recursive: false)
-
-            // Add text label below
-            let textMesh = MeshResource.generateText(
-                student.profile.displayName,
-                extrusionDepth: 0.001,
-                font: .systemFont(ofSize: 0.04, weight: .semibold),
-                containerFrame: .zero,
-                alignment: .center,
-                lineBreakMode: .byTruncatingTail
-            )
-            var textMaterial = SimpleMaterial()
-            textMaterial.color = .init(tint: .white)
-            let textEntity = ModelEntity(mesh: textMesh, materials: [textMaterial])
-            textEntity.position = SIMD3<Float>(0, -0.22, 0)
-            entity.addChild(textEntity)
-
-            // Distance label
-            let distText = "\(Int(student.distance)) ft"
-            let distMesh = MeshResource.generateText(
-                distText,
-                extrusionDepth: 0.001,
-                font: .systemFont(ofSize: 0.03),
-                containerFrame: .zero,
-                alignment: .center,
-                lineBreakMode: .byClipping
-            )
-            var distMaterial = SimpleMaterial()
-            distMaterial.color = .init(tint: UIColor(ColageColors.textSecondary))
-            let distEntity = ModelEntity(mesh: distMesh, materials: [distMaterial])
-            distEntity.position = SIMD3<Float>(0, -0.28, 0)
-            entity.addChild(distEntity)
-
-            return entity
-        }
-
-        /// Convert GPS coordinate difference to meters (east/north offset)
-        private func coordinateOffset(
-            from: CLLocationCoordinate2D,
-            to: CLLocationCoordinate2D
-        ) -> (north: Double, east: Double) {
-            let latDiff = to.latitude - from.latitude
-            let lngDiff = to.longitude - from.longitude
-            let metersPerDegreeLat = 111_132.0
-            let metersPerDegreeLng = 111_132.0 * cos(from.latitude * .pi / 180)
-            return (
-                north: latDiff * metersPerDegreeLat,
-                east: lngDiff * metersPerDegreeLng
-            )
+        func updateStudentEntities(students: [NearbyStudent]) {
+            // Update positions based on new data
         }
 
         @objc func handleTap(_ gesture: UITapGestureRecognizer) {
@@ -225,76 +265,27 @@ struct ARSceneView: UIViewRepresentable {
             let location = gesture.location(in: arView)
 
             if let entity = arView.entity(at: location) {
-                // Walk up to find the root model entity
-                var current: Entity? = entity
-                while let c = current {
-                    if let student = studentMap[c] {
-                        parent.onStudentTapped?(student)
-                        return
-                    }
-                    current = c.parent
+                let studentId = entity.name
+                if let student = parent.students.first(where: { $0.id == studentId }) {
+                    parent.onStudentTapped?(student)
                 }
             }
         }
-    }
-}
 
-// MARK: - Simulator Fallback
-
-struct ARSimulatorFallback: View {
-    @ObservedObject var students: NearbyStudentsViewModel
-    var onTap: (NearbyStudent) -> Void
-
-    var body: some View {
-        ZStack {
-            ColageColors.background.ignoresSafeArea()
-
-            VStack(spacing: 16) {
-                Image(systemName: "arkit")
-                    .font(.system(size: 48))
-                    .foregroundStyle(ColageColors.textTertiary)
-                Text("AR Preview Mode")
-                    .font(ColageFonts.title3)
-                    .foregroundStyle(ColageColors.textSecondary)
-                Text("Run on a real device for the full experience")
-                    .font(ColageFonts.caption)
-                    .foregroundStyle(ColageColors.textTertiary)
-
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 20) {
-                        ForEach(students.filteredStudents.prefix(10)) { student in
-                            VStack(spacing: 8) {
-                                // Simulated bubble
-                                ZStack {
-                                    Circle()
-                                        .fill(ColageColors.primary.opacity(0.2))
-                                        .frame(width: 90, height: 90)
-                                    AvatarView(
-                                        imageURL: student.profile.profilePhotoURL,
-                                        size: 72
-                                    )
-                                }
-                                .shadow(color: ColageColors.primary.opacity(0.3), radius: 12)
-
-                                Text(student.profile.displayName)
-                                    .font(ColageFonts.caption)
-                                    .foregroundStyle(ColageColors.textPrimary)
-                                    .lineLimit(1)
-
-                                Text("\(Int(student.distance)) ft")
-                                    .font(ColageFonts.monoSmall)
-                                    .foregroundStyle(ColageColors.textSecondary)
-                            }
-                            .onTapGesture { onTap(student) }
-                        }
-                    }
-                    .padding(.horizontal, 24)
-                }
-                .padding(.top, 32)
-            }
+        private func randomPosition(distance: Double) -> SIMD3<Float> {
+            let meters = Float(distance) * 0.3048 // feet to meters
+            let angle = Float.random(in: 0...(2 * .pi))
+            let height = Float.random(in: -0.5...1.5)
+            let clampedDist = min(meters, 10.0) // Cap at 10m for visibility
+            return SIMD3(
+                cos(angle) * clampedDist,
+                height,
+                -sin(angle) * clampedDist
+            )
         }
     }
 }
+#endif
 
 #Preview {
     ARDiscoveryView(students: {
@@ -303,5 +294,5 @@ struct ARSimulatorFallback: View {
         return vm
     }())
     .environmentObject(AppState())
-    .environmentObject(LocationService())
+    .environmentObject(UniversityService())
 }

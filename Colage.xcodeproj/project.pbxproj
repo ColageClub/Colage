@@ -25,6 +25,7 @@
 		789EB6947529E3EE8789B33E /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87640D1C6F18DE6363F0EF9A /* APIClient.swift */; };
 		792C7C37DEF17F5CDDBFE35E /* ProfileInfoScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 513360BE5968A8A3BC33262C /* ProfileInfoScreen.swift */; };
 		7C9A8ED0EBBCEFF27DA1AFFA /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8F4E1DCBFFC54F5596072D8 /* HomeView.swift */; };
+		8272B45F3B06B936110AC8D3 /* MapThemeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB4D1652B0286CE84C9AE9E0 /* MapThemeManager.swift */; };
 		91F91E30E7823B4D3FD51104 /* OwnProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FA399806100FD2EF560921D /* OwnProfileView.swift */; };
 		95B84BBE218CD573532AB381 /* MiniProfileSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DB9978F1611E1B7434F9CAA /* MiniProfileSheet.swift */; };
 		96F56F8638FDCC9255E50D42 /* ColageFonts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C60B8166B429CB697756107 /* ColageFonts.swift */; };
@@ -42,6 +43,7 @@
 		DE7E560FD002CCBD7183E031 /* WebSocketManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EC0D5B806037863C25D1229 /* WebSocketManager.swift */; };
 		DF7812A999E224C3DAAA5AA3 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A48824419208531567EF24B /* SettingsView.swift */; };
 		E9B9F26EC45921C25B0AEEA0 /* UniversityService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D58E8CCD14BE3C6C3E11282D /* UniversityService.swift */; };
+		EAAAE090040981E7E4FDC16A /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 151B405ED0102B29AE644BEB /* NotificationService.swift */; };
 		EDC38B3BFD6CC9547BB08AC5 /* OnboardingFlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7CE5518727AA90436F1BE99 /* OnboardingFlow.swift */; };
 		EF6A000FEEE1868304AD4CF2 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD991A6ECE627141F59FB3C1 /* Models.swift */; };
 		F1961EE7270E1ED47DB8C28C /* ARDiscoveryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1254BCAFD8797D4E407EE276 /* ARDiscoveryView.swift */; };
@@ -63,6 +65,7 @@
 		071ACDC6D067275AC0CB053A /* ColageColors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColageColors.swift; sourceTree = "<group>"; };
 		12444BC41E78DFEE0D066B44 /* ColageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColageTests.swift; sourceTree = "<group>"; };
 		1254BCAFD8797D4E407EE276 /* ARDiscoveryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ARDiscoveryView.swift; sourceTree = "<group>"; };
+		151B405ED0102B29AE644BEB /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
 		20D08C2040707578D2E35788 /* Colage.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Colage.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		253B8E527D0F2170EE215D3B /* AuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthService.swift; sourceTree = "<group>"; };
 		2795CDE7219F7E3922A63416 /* EmailOTPScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmailOTPScreen.swift; sourceTree = "<group>"; };
@@ -88,6 +91,7 @@
 		8F85A917E07A9D4A95D7698A /* MapboxConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapboxConfig.swift; sourceTree = "<group>"; };
 		946A16331FAD66C6ADA00B2F /* ColageApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColageApp.swift; sourceTree = "<group>"; };
 		9FF644B4D137D3E71D7374CC /* ColageTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = ColageTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		AB4D1652B0286CE84C9AE9E0 /* MapThemeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapThemeManager.swift; sourceTree = "<group>"; };
 		AD991A6ECE627141F59FB3C1 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		B4A99EE8505F250FC812BC17 /* PhoneEntryScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneEntryScreen.swift; sourceTree = "<group>"; };
 		C7CE5518727AA90436F1BE99 /* OnboardingFlow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingFlow.swift; sourceTree = "<group>"; };
@@ -163,6 +167,7 @@
 			isa = PBXGroup;
 			children = (
 				87640D1C6F18DE6363F0EF9A /* APIClient.swift */,
+				151B405ED0102B29AE644BEB /* NotificationService.swift */,
 				6EC0D5B806037863C25D1229 /* WebSocketManager.swift */,
 			);
 			path = Networking;
@@ -183,6 +188,7 @@
 		459B902F23C2AE4F16FEF59D /* University */ = {
 			isa = PBXGroup;
 			children = (
+				AB4D1652B0286CE84C9AE9E0 /* MapThemeManager.swift */,
 				AD991A6ECE627141F59FB3C1 /* Models.swift */,
 				D58E8CCD14BE3C6C3E11282D /* UniversityService.swift */,
 			);
@@ -313,7 +319,7 @@
 			path = Design;
 			sourceTree = "<group>";
 		};
-		"TEMP_EE46E26C-C5FF-4976-B2BE-12BD5F7AE84F" /* Resources */ = {
+		"TEMP_B7CBFCF7-F498-4B1D-86E4-9CD183D61B6D" /* Resources */ = {
 			isa = PBXGroup;
 			children = (
 			);
@@ -435,9 +441,11 @@
 				B182800C92BA9077C4D26353 /* ListDiscoveryView.swift in Sources */,
 				AEBC49F52B66AE1497EE8DD8 /* LocationService.swift in Sources */,
 				0A889C630581BB1BD8EBC005 /* MapDiscoveryView.swift in Sources */,
+				8272B45F3B06B936110AC8D3 /* MapThemeManager.swift in Sources */,
 				C78D7270B26D6AAD752EA2D2 /* MapboxConfig.swift in Sources */,
 				95B84BBE218CD573532AB381 /* MiniProfileSheet.swift in Sources */,
 				EF6A000FEEE1868304AD4CF2 /* Models.swift in Sources */,
+				EAAAE090040981E7E4FDC16A /* NotificationService.swift in Sources */,
 				0EC56C413E4CFC1AED4F87DA /* OnboardingData.swift in Sources */,
 				EDC38B3BFD6CC9547BB08AC5 /* OnboardingFlow.swift in Sources */,
 				91F91E30E7823B4D3FD51104 /* OwnProfileView.swift in Sources */,

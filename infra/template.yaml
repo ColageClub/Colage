@@ -1,0 +1,573 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Colage Backend - University Social Discovery Platform
+
+Globals:
+  Function:
+    Runtime: nodejs20.x
+    Timeout: 30
+    MemorySize: 256
+    Environment:
+      Variables:
+        USERS_TABLE: !Ref UsersTable
+        UNIVERSITIES_TABLE: !Ref UniversitiesTable
+        LOCATIONS_TABLE: !Ref LocationsTable
+        PROFILE_PHOTOS_BUCKET: !Ref ProfilePhotosBucket
+        USER_POOL_ID: !Ref CognitoUserPool
+        USER_POOL_CLIENT_ID: !Ref CognitoUserPoolClient
+        CONNECTIONS_TABLE: !Ref ConnectionsTable
+
+Parameters:
+  Stage:
+    Type: String
+    Default: dev
+    AllowedValues: [dev, prod]
+
+Resources:
+  # ============================================================
+  # COGNITO - Auth
+  # ============================================================
+  CognitoUserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: !Sub colage-users-${Stage}
+      AutoVerifiedAttributes:
+        - email
+      UsernameAttributes:
+        - email
+      Schema:
+        - Name: email
+          Required: true
+          Mutable: true
+        - Name: phone_number
+          Required: false
+          Mutable: true
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireSymbols: false
+          RequireUppercase: false
+      MfaConfiguration: "OFF"
+      EmailConfiguration:
+        EmailSendingAccount: COGNITO_DEFAULT
+      AccountRecoverySetting:
+        RecoveryMechanisms:
+          - Name: verified_email
+            Priority: 1
+
+  CognitoUserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      ClientName: !Sub colage-ios-${Stage}
+      UserPoolId: !Ref CognitoUserPool
+      GenerateSecret: false
+      ExplicitAuthFlows:
+        - ALLOW_USER_SRP_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+        - ALLOW_CUSTOM_AUTH
+      PreventUserExistenceErrors: ENABLED
+      AccessTokenValidity: 15
+      IdTokenValidity: 15
+      RefreshTokenValidity: 30
+      TokenValidityUnits:
+        AccessToken: minutes
+        IdToken: minutes
+        RefreshToken: days
+
+  # ============================================================
+  # DYNAMODB - Data
+  # ============================================================
+  UsersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub colage-users-${Stage}
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: userId
+          AttributeType: S
+        - AttributeName: universityDomain
+          AttributeType: S
+        - AttributeName: email
+          AttributeType: S
+      KeySchema:
+        - AttributeName: userId
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: by-university
+          KeySchema:
+            - AttributeName: universityDomain
+              KeyType: HASH
+            - AttributeName: userId
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: by-email
+          KeySchema:
+            - AttributeName: email
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+
+  UniversitiesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub colage-universities-${Stage}
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: domain
+          AttributeType: S
+      KeySchema:
+        - AttributeName: domain
+          KeyType: HASH
+
+  LocationsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub colage-locations-${Stage}
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: universityDomain
+          AttributeType: S
+        - AttributeName: userId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: universityDomain
+          KeyType: HASH
+        - AttributeName: userId
+          KeyType: RANGE
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+
+  ConnectionsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub colage-connections-${Stage}
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: connectionId
+          AttributeType: S
+        - AttributeName: universityDomain
+          AttributeType: S
+      KeySchema:
+        - AttributeName: connectionId
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: by-university
+          KeySchema:
+            - AttributeName: universityDomain
+              KeyType: HASH
+            - AttributeName: connectionId
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+
+  # ============================================================
+  # S3 - Profile Photos
+  # ============================================================
+  ProfilePhotosBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub colage-photos-${Stage}-${AWS::AccountId}
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      CorsConfiguration:
+        CorsRules:
+          - AllowedHeaders: ['*']
+            AllowedMethods: [GET, PUT]
+            AllowedOrigins: ['*']
+            MaxAge: 3600
+      LifecycleConfiguration:
+        Rules:
+          - Id: DeleteTempUploads
+            Prefix: temp/
+            Status: Enabled
+            ExpirationInDays: 1
+
+  # CloudFront removed — account needs AWS verification first
+  # Photos served via S3 presigned URLs for now
+
+  # ============================================================
+  # SAM HTTP API with Cognito Auth
+  # ============================================================
+  ColageApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName: !Ref Stage
+      CorsConfiguration:
+        AllowHeaders: ['*']
+        AllowMethods: ['*']
+        AllowOrigins: ['*']
+      Auth:
+        DefaultAuthorizer: CognitoAuth
+        Authorizers:
+          CognitoAuth:
+            AuthorizationScopes: []
+            IdentitySource: $request.header.Authorization
+            JwtConfiguration:
+              issuer: !Sub https://cognito-idp.${AWS::Region}.amazonaws.com/${CognitoUserPool}
+              audience:
+                - !Ref CognitoUserPoolClient
+
+  # ============================================================
+  # LAMBDA FUNCTIONS - Auth (no auth required)
+  # ============================================================
+  AuthEmailVerifyFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub colage-auth-email-verify-${Stage}
+      Handler: index.handler
+      CodeUri: ./functions/auth-email-verify/
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - cognito-idp:SignUp
+                - cognito-idp:AdminGetUser
+              Resource: !GetAtt CognitoUserPool.Arn
+      Events:
+        Api:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref ColageApi
+            Path: /auth/email/verify
+            Method: POST
+            Auth:
+              Authorizer: NONE
+
+  AuthEmailConfirmFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub colage-auth-email-confirm-${Stage}
+      Handler: index.handler
+      CodeUri: ./functions/auth-email-confirm/
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - cognito-idp:ConfirmSignUp
+              Resource: !GetAtt CognitoUserPool.Arn
+      Events:
+        Api:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref ColageApi
+            Path: /auth/email/confirm
+            Method: POST
+            Auth:
+              Authorizer: NONE
+
+  AuthPhoneVerifyFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub colage-auth-phone-verify-${Stage}
+      Handler: index.handler
+      CodeUri: ./functions/auth-phone-verify/
+      Events:
+        Api:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref ColageApi
+            Path: /auth/phone/verify
+            Method: POST
+            Auth:
+              Authorizer: NONE
+
+  AuthPhoneConfirmFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub colage-auth-phone-confirm-${Stage}
+      Handler: index.handler
+      CodeUri: ./functions/auth-phone-confirm/
+      Events:
+        Api:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref ColageApi
+            Path: /auth/phone/confirm
+            Method: POST
+            Auth:
+              Authorizer: NONE
+
+  # ============================================================
+  # LAMBDA FUNCTIONS - Users (auth required — uses default)
+  # ============================================================
+  GetProfileFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub colage-get-profile-${Stage}
+      Handler: index.handler
+      CodeUri: ./functions/get-profile/
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref UsersTable
+      Events:
+        Api:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref ColageApi
+            Path: /users/{userId}
+            Method: GET
+
+  UpdateProfileFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub colage-update-profile-${Stage}
+      Handler: index.handler
+      CodeUri: ./functions/update-profile/
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UsersTable
+      Events:
+        Api:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref ColageApi
+            Path: /users/{userId}
+            Method: PUT
+
+  CreateProfileFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub colage-create-profile-${Stage}
+      Handler: index.handler
+      CodeUri: ./functions/create-profile/
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UsersTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UniversitiesTable
+      Events:
+        Api:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref ColageApi
+            Path: /users
+            Method: POST
+            Auth:
+              Authorizer: NONE
+
+  # ============================================================
+  # LAMBDA FUNCTIONS - University (public)
+  # ============================================================
+  GetUniversityFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub colage-get-university-${Stage}
+      Handler: index.handler
+      CodeUri: ./functions/get-university/
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UniversitiesTable
+      Events:
+        Api:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref ColageApi
+            Path: /universities/{domain}
+            Method: GET
+            Auth:
+              Authorizer: NONE
+
+  # ============================================================
+  # LAMBDA FUNCTIONS - Nearby (auth required)
+  # ============================================================
+  GetNearbyFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub colage-get-nearby-${Stage}
+      Handler: index.handler
+      CodeUri: ./functions/get-nearby/
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref LocationsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref UsersTable
+      Events:
+        Api:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref ColageApi
+            Path: /nearby
+            Method: GET
+
+  # ============================================================
+  # LAMBDA FUNCTIONS - Photo Upload (auth required)
+  # ============================================================
+  GetUploadUrlFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub colage-get-upload-url-${Stage}
+      Handler: index.handler
+      CodeUri: ./functions/get-upload-url/
+      Policies:
+        - S3CrudPolicy:
+            BucketName: !Ref ProfilePhotosBucket
+      Events:
+        Api:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref ColageApi
+            Path: /photos/upload-url
+            Method: POST
+
+  # ============================================================
+  # WEBSOCKET API - Real-time locations (raw CloudFormation)
+  # ============================================================
+  WebSocketApi:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: !Sub colage-ws-${Stage}
+      ProtocolType: WEBSOCKET
+      RouteSelectionExpression: $request.body.action
+
+  WebSocketStage:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      ApiId: !Ref WebSocketApi
+      StageName: !Ref Stage
+      AutoDeploy: true
+
+  # WebSocket Lambda handlers
+  WsConnectFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub colage-ws-connect-${Stage}
+      Handler: index.handler
+      CodeUri: ./functions/ws-connect/
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ConnectionsTable
+
+  WsDisconnectFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub colage-ws-disconnect-${Stage}
+      Handler: index.handler
+      CodeUri: ./functions/ws-disconnect/
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ConnectionsTable
+
+  WsLocationUpdateFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub colage-ws-location-${Stage}
+      Handler: index.handler
+      CodeUri: ./functions/ws-location-update/
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ConnectionsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref LocationsTable
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action: execute-api:ManageConnections
+              Resource: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketApi}/${Stage}/POST/@connections/*
+
+  # WebSocket Routes + Integrations
+  ConnectIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref WebSocketApi
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${WsConnectFunction.Arn}/invocations
+
+  ConnectRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref WebSocketApi
+      RouteKey: $connect
+      Target: !Sub integrations/${ConnectIntegration}
+
+  DisconnectIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref WebSocketApi
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${WsDisconnectFunction.Arn}/invocations
+
+  DisconnectRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref WebSocketApi
+      RouteKey: $disconnect
+      Target: !Sub integrations/${DisconnectIntegration}
+
+  LocationUpdateIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref WebSocketApi
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${WsLocationUpdateFunction.Arn}/invocations
+
+  LocationUpdateRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref WebSocketApi
+      RouteKey: location.update
+      Target: !Sub integrations/${LocationUpdateIntegration}
+
+  # Lambda invoke permissions for WebSocket API Gateway
+  WsConnectPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref WsConnectFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketApi}/*
+
+  WsDisconnectPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref WsDisconnectFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketApi}/*
+
+  WsLocationUpdatePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref WsLocationUpdateFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketApi}/*
+
+# ============================================================
+# OUTPUTS
+# ============================================================
+Outputs:
+  ApiUrl:
+    Description: HTTP API URL
+    Value: !Sub https://${ColageApi}.execute-api.${AWS::Region}.amazonaws.com/${Stage}
+
+  WebSocketUrl:
+    Description: WebSocket API URL
+    Value: !Sub wss://${WebSocketApi}.execute-api.${AWS::Region}.amazonaws.com/${Stage}
+
+  UserPoolId:
+    Description: Cognito User Pool ID
+    Value: !Ref CognitoUserPool
+
+  UserPoolClientId:
+    Description: Cognito User Pool Client ID
+    Value: !Ref CognitoUserPoolClient
+
+  PhotosBucketName:
+    Description: S3 bucket for profile photos
+    Value: !Ref ProfilePhotosBucket
+
+  PhotosBucketUrl:
+    Description: S3 bucket URL for photos (presigned)
+    Value: !Sub https://${ProfilePhotosBucket}.s3.${AWS::Region}.amazonaws.com
