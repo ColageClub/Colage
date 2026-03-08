@@ -44,3 +44,5 @@ fastlane/test_output
 
 # Secrets - DO NOT COMMIT
 # MapboxConfig.swift contains API key - consider using xcconfig or env vars for production
+Secrets.xcconfig
+infra/.aws-sam/
