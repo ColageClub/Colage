@@ -192,8 +192,20 @@ struct LoginScreen: View {
             await MainActor.run {
                 isLoading = false
                 if success {
-                    step = .otp
-                    startCountdown()
+                    if AppState.devMode {
+                        // Dev mode: skip OTP, log in directly
+                        Task {
+                            let loginSuccess = await authService.confirmLoginOTP(email: email, code: "000000")
+                            await MainActor.run {
+                                if loginSuccess {
+                                    appState.authState = .authenticated
+                                }
+                            }
+                        }
+                    } else {
+                        step = .otp
+                        startCountdown()
+                    }
                 } else {
                     errorMessage = authService.errorMessage ?? "Failed to send code"
                 }

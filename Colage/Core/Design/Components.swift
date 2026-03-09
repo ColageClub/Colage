@@ -77,24 +77,29 @@ struct OTPCodeField: View {
                     )
             }
         }
-        .overlay(
-            // Hidden text field captures keyboard input
-            TextField("", text: $code)
-                .keyboardType(.numberPad)
-                .textContentType(.oneTimeCode)
-                .opacity(0.01)
-                .onChange(of: code) { _, newValue in
-                    // Limit to length
-                    if newValue.count > length {
-                        code = String(newValue.prefix(length))
-                    }
-                    // Filter non-digits
-                    code = code.filter { $0.isNumber }
-                    if code.count == length {
-                        onComplete?(code)
-                    }
+        // Tappable text field below the boxes
+        TextField("Enter code", text: $code)
+            .keyboardType(.numberPad)
+            .textContentType(.oneTimeCode)
+            .font(ColageFonts.mono)
+            .foregroundStyle(ColageColors.textPrimary)
+            .multilineTextAlignment(.center)
+            .frame(height: 44)
+            .background(ColageColors.surface)
+            .clipShape(RoundedRectangle(cornerRadius: 10))
+            .padding(.horizontal, 40)
+            .padding(.top, 8)
+            .onChange(of: code) { _, newValue in
+                // Limit to length
+                if newValue.count > length {
+                    code = String(newValue.prefix(length))
                 }
-        )
+                // Filter non-digits
+                code = code.filter { $0.isNumber }
+                if code.count == length {
+                    onComplete?(code)
+                }
+            }
     }
 }
 
