@@ -27,7 +27,8 @@ struct OwnProfileView: View {
                             AvatarView(
                                 imageURL: profile?.profilePhotoURL,
                                 size: 100,
-                                borderColor: themeColor
+                                borderColor: themeColor,
+                                initials: profile?.displayName.initials
                             )
 
                             // Name + university

@@ -15,7 +15,8 @@ struct FullProfileView: View {
                     VStack(spacing: 16) {
                         AvatarView(
                             imageURL: student.profile.profilePhotoURL,
-                            size: 120
+                            size: 120,
+                            initials: student.profile.displayName.initials
                         )
 
                         Text(student.profile.displayName)

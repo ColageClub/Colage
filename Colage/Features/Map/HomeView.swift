@@ -114,6 +114,7 @@ struct HomeView: View {
 class NearbyStudentsViewModel: ObservableObject {
     @Published var students: [NearbyStudent] = []
     @Published var maxDistance: Double = 300 // feet
+    @Published var filterFloor: Int? = nil // nil = all floors
 
     func loadMockData() {
         guard AppState.devMode else { return }
@@ -126,8 +127,11 @@ class NearbyStudentsViewModel: ObservableObject {
     }
 
     var filteredStudents: [NearbyStudent] {
-        students.filter { $0.distance <= maxDistance }
-            .sorted { $0.distance < $1.distance }
+        students.filter { student in
+            student.distance <= maxDistance &&
+            (filterFloor == nil || student.location.floor == filterFloor)
+        }
+        .sorted { $0.distance < $1.distance }
     }
 }
 

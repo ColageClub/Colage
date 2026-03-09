@@ -78,13 +78,6 @@ struct UniversityWelcomeScreen: View {
                 Spacer()
 
                 ColagePrimaryButton(title: "Enter \(universityName)", action: {
-                    // Finalize dev profile
-                    authService.createDevProfile(
-                        name: "Dev User",
-                        bio: nil,
-                        major: nil,
-                        socialLinks: []
-                    )
                     onEnter()
                 })
                 .padding(.horizontal, 24)

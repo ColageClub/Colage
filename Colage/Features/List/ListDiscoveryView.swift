@@ -42,12 +42,16 @@ struct ListDiscoveryView: View {
 
                 // Floor filter
                 HStack(spacing: 8) {
-                    FloorFilterChip(label: "All Floors", isSelected: true, action: {})
+                    FloorFilterChip(
+                        label: "All Floors",
+                        isSelected: students.filterFloor == nil,
+                        action: { students.filterFloor = nil }
+                    )
 
                     FloorFilterChip(
                         label: "Floor \(appState.currentFloor)",
-                        isSelected: false,
-                        action: {}
+                        isSelected: students.filterFloor == appState.currentFloor,
+                        action: { students.filterFloor = appState.currentFloor }
                     )
 
                     Spacer()
