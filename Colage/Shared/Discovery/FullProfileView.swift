@@ -41,7 +41,7 @@ struct FullProfileView: View {
                             HStack(spacing: 4) {
                                 Image(systemName: "location.fill")
                                     .font(.system(size: 12))
-                                Text("\(Int(student.distance)) ft")
+                                Text(student.distance.formattedDistance)
                                     .font(ColageFonts.captionBold)
                             }
                             .foregroundStyle(ColageColors.textSecondary)

@@ -82,6 +82,13 @@ struct MapboxMapView: UIViewRepresentable {
             let manager = mapView.annotations.makePointAnnotationManager()
             manager.delegate = self
             self.annotationManager = manager
+
+            // Register custom circle marker image
+            let dotImage = createDotImage(
+                color: UIColor(parent.universityTheme?.primary ?? ColageColors.primary),
+                size: 32
+            )
+            try? mapView.mapboxMap.style.addImage(dotImage, id: "student-dot")
         }
 
         func updateStudentAnnotations(students: [NearbyStudent], mapView: MapView) {
@@ -97,18 +104,19 @@ struct MapboxMapView: UIViewRepresentable {
                         longitude: student.location.longitude
                     )
                 )
-                annotation.textField = student.profile.displayName
+
+                // Name label below dot
+                annotation.textField = student.profile.displayName.components(separatedBy: " ").first ?? ""
                 annotation.textSize = 11
                 annotation.textColor = StyleColor(.white)
-                annotation.textOffset = [0, 2.0]
+                annotation.textOffset = [0, 2.2]
                 annotation.textHaloColor = StyleColor(.black)
-                annotation.textHaloWidth = 1.0
+                annotation.textHaloWidth = 1.5
 
-                // Use a circle icon — custom profile photo icons will be added later
-                annotation.iconSize = 0.8
-                annotation.iconColor = StyleColor(
-                    parent.universityTheme?.primary ?? ColageColors.primary
-                )
+                // Colored circle dot
+                annotation.iconImage = "student-dot"
+                annotation.iconSize = 1.0
+                annotation.iconAnchor = .center
 
                 // Map annotation ID to student for tap handling
                 studentMap[annotation.id] = student
@@ -116,6 +124,39 @@ struct MapboxMapView: UIViewRepresentable {
             }
 
             manager.annotations = annotations
+        }
+
+        /// Create a circle dot UIImage for map markers
+        private func createDotImage(color: UIColor, size: CGFloat) -> UIImage {
+            let renderer = UIGraphicsImageRenderer(size: CGSize(width: size, height: size))
+            return renderer.image { ctx in
+                // Outer glow
+                let glowRect = CGRect(x: 2, y: 2, width: size - 4, height: size - 4)
+                ctx.cgContext.setFillColor(color.withAlphaComponent(0.3).cgColor)
+                ctx.cgContext.fillEllipse(in: glowRect)
+
+                // Inner circle
+                let innerSize: CGFloat = size * 0.55
+                let innerRect = CGRect(
+                    x: (size - innerSize) / 2,
+                    y: (size - innerSize) / 2,
+                    width: innerSize,
+                    height: innerSize
+                )
+                ctx.cgContext.setFillColor(color.cgColor)
+                ctx.cgContext.fillEllipse(in: innerRect)
+
+                // White center dot
+                let centerSize: CGFloat = size * 0.2
+                let centerRect = CGRect(
+                    x: (size - centerSize) / 2,
+                    y: (size - centerSize) / 2,
+                    width: centerSize,
+                    height: centerSize
+                )
+                ctx.cgContext.setFillColor(UIColor.white.cgColor)
+                ctx.cgContext.fillEllipse(in: centerRect)
+            }
         }
     }
 }

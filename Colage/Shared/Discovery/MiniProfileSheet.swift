@@ -57,7 +57,7 @@ struct MiniProfileSheet: View {
                         Image(systemName: "location.fill")
                             .font(.system(size: 10))
                             .foregroundStyle(themeColor)
-                        Text(formatDistance(student.distance))
+                        Text(student.distance.formattedDistance)
                             .font(ColageFonts.monoSmall)
                             .foregroundStyle(ColageColors.textSecondary)
                     }
@@ -132,13 +132,7 @@ struct MiniProfileSheet: View {
         }
     }
 
-    private func formatDistance(_ feet: Double) -> String {
-        let dist = Int(feet)
-        if dist >= 5280 {
-            return String(format: "%.1f mi", Double(dist) / 5280.0)
-        }
-        return "\(dist) ft"
-    }
+    // Using Double.formattedDistance extension
 }
 
 // MARK: - Social Link Button

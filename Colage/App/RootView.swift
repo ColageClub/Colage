@@ -24,6 +24,9 @@ struct RootView: View {
 
 /// Simple launch screen with logo
 struct LaunchScreen: View {
+    @State private var animateIn = false
+    @State private var pulse = false
+
     var body: some View {
         ZStack {
             ColageColors.background.ignoresSafeArea()
@@ -31,9 +34,26 @@ struct LaunchScreen: View {
                 Image(systemName: "location.circle.fill")
                     .font(.system(size: 64))
                     .foregroundStyle(ColageColors.primary)
+                    .scaleEffect(pulse ? 1.1 : 1.0)
+                    .opacity(animateIn ? 1 : 0)
+
                 Text("colage")
-                    .font(ColageFonts.title)
+                    .font(.system(size: 36, weight: .bold, design: .rounded))
                     .foregroundStyle(ColageColors.textPrimary)
+                    .opacity(animateIn ? 1 : 0)
+
+                Text("Be You.")
+                    .font(ColageFonts.subheadline)
+                    .foregroundStyle(ColageColors.textSecondary)
+                    .opacity(animateIn ? 1 : 0)
+            }
+        }
+        .onAppear {
+            withAnimation(.easeOut(duration: 0.6)) {
+                animateIn = true
+            }
+            withAnimation(.easeInOut(duration: 1.2).repeatForever(autoreverses: true)) {
+                pulse = true
             }
         }
     }

@@ -250,6 +250,16 @@ struct DiscoveryModePicker: View {
     }
 }
 
+// MARK: - Distance Formatting
+extension Double {
+    /// Format distance in feet to a human-readable string
+    var formattedDistance: String {
+        if self < 50 { return "nearby" }
+        if self < 5280 { return "\(Int(self)) ft" }
+        return String(format: "%.1f mi", self / 5280.0)
+    }
+}
+
 // MARK: - String Initials Extension
 extension String {
     /// Returns up to 2 initials from a name, e.g. "Emma Wilson" → "EW"

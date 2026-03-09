@@ -106,12 +106,7 @@ struct ListDiscoveryView: View {
     }
 
     private var distanceLabel: String {
-        let dist = Int(students.maxDistance)
-        if dist >= 5280 {
-            let miles = Double(dist) / 5280.0
-            return String(format: "%.1f mi", miles)
-        }
-        return "\(dist) ft"
+        students.maxDistance.formattedDistance
     }
 }
 
@@ -150,7 +145,7 @@ struct StudentCard: View {
                 Image(systemName: "location.fill")
                     .font(.system(size: 10))
                     .foregroundStyle(themeColor)
-                Text(formatDistance(student.distance))
+                Text(student.distance.formattedDistance)
                     .font(ColageFonts.monoSmall)
                     .foregroundStyle(ColageColors.textSecondary)
 
@@ -172,13 +167,7 @@ struct StudentCard: View {
         )
     }
 
-    private func formatDistance(_ feet: Double) -> String {
-        let dist = Int(feet)
-        if dist >= 5280 {
-            return String(format: "%.1f mi", Double(dist) / 5280.0)
-        }
-        return "\(dist) ft"
-    }
+    // Using Double.formattedDistance extension
 }
 
 // MARK: - Floor Filter Chip

@@ -173,7 +173,8 @@ struct ARBubble: View {
             AvatarView(
                 imageURL: student.profile.profilePhotoURL,
                 size: 48,
-                borderColor: themeColor
+                borderColor: themeColor,
+                initials: student.profile.displayName.initials
             )
             .shadow(color: themeColor.opacity(0.4), radius: 8)
 
@@ -183,7 +184,7 @@ struct ARBubble: View {
                     .font(ColageFonts.captionBold)
                     .foregroundStyle(.white)
 
-                Text("\(Int(student.distance)) ft")
+                Text(student.distance.formattedDistance)
                     .font(ColageFonts.monoSmall)
                     .foregroundStyle(themeColor)
             }

@@ -347,7 +347,7 @@
 			path = Design;
 			sourceTree = "<group>";
 		};
-		"TEMP_0472E4AF-D4E5-4392-A022-D96394B50860" /* Resources */ = {
+		"TEMP_AEE1FCFF-C9F0-49ED-9BB1-A2BA9AFA2AFC" /* Resources */ = {
 			isa = PBXGroup;
 			children = (
 			);
