@@ -1,0 +1,51 @@
+@import "tailwindcss";
+
+:root {
+  --colage-primary: #6C5CE7;
+  --colage-primary-light: #a29bfe;
+  --colage-bg: #0a0a1a;
+  --colage-surface: #141428;
+  --colage-surface-elevated: #1e1e3a;
+  --colage-border: #2a2a4a;
+  --colage-text: #ffffff;
+  --colage-text-secondary: #a0a0c0;
+  --colage-text-tertiary: #606080;
+  --colage-online: #00b894;
+  --colage-warning: #fdcb6e;
+  --colage-error: #ff6b6b;
+}
+
+body {
+  background: var(--colage-bg);
+  color: var(--colage-text);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Smooth scrolling */
+html { scroll-behavior: smooth; }
+
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #050510; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+
+/* Custom animations */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-12px); }
+}
+
+@keyframes scan {
+  0% { transform: translateY(0); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateY(400px); opacity: 0; }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-scan {
+  animation: scan 3s linear infinite;
+}

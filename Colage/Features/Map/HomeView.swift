@@ -84,6 +84,14 @@ struct HomeView: View {
                 Spacer()
             }
             .padding(.top, 80)
+
+            // Ad banner — bottom of map
+            VStack {
+                Spacer()
+                AdBannerView()
+                    .padding(.horizontal, 12)
+                    .padding(.bottom, 16)
+            }
         }
         .sheet(isPresented: $appState.showOwnProfile) {
             OwnProfileView()

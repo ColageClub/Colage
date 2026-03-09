@@ -46,3 +46,5 @@ fastlane/test_output
 # MapboxConfig.swift contains API key - consider using xcconfig or env vars for production
 Secrets.xcconfig
 infra/.aws-sam/
+website/node_modules/
+website/.next/
