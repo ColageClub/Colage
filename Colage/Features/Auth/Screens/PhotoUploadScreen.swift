@@ -3,6 +3,7 @@ import PhotosUI
 
 struct PhotoUploadScreen: View {
     let onContinue: () -> Void
+    @EnvironmentObject var onboardingData: OnboardingData
     @State private var selectedItem: PhotosPickerItem?
     @State private var profileImage: Image?
     @State private var profileUIImage: UIImage?
@@ -107,7 +108,10 @@ struct PhotoUploadScreen: View {
                 Spacer()
 
                 VStack(spacing: 12) {
-                    ColagePrimaryButton(title: "Continue", action: onContinue)
+                    ColagePrimaryButton(title: "Continue", action: {
+                        onboardingData.profilePhoto = profileUIImage
+                        onContinue()
+                    })
 
                     Button("Skip for now") {
                         onContinue()

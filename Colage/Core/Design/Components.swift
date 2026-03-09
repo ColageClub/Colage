@@ -8,7 +8,10 @@ struct ColagePrimaryButton: View {
     var isDisabled: Bool = false
 
     var body: some View {
-        Button(action: action) {
+        Button(action: {
+            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+            action()
+        }) {
             HStack(spacing: 8) {
                 if isLoading {
                     ProgressView()
@@ -133,12 +136,20 @@ struct AvatarView: View {
         )
     }
 
+    var initials: String? = nil
+
     private var placeholderAvatar: some View {
         ZStack {
             ColageColors.surfaceElevated
-            Image(systemName: "person.fill")
-                .font(.system(size: size * 0.4))
-                .foregroundStyle(ColageColors.textTertiary)
+            if let initials, !initials.isEmpty {
+                Text(initials)
+                    .font(.system(size: size * 0.35, weight: .semibold, design: .rounded))
+                    .foregroundStyle(ColageColors.primary)
+            } else {
+                Image(systemName: "person.fill")
+                    .font(.system(size: size * 0.4))
+                    .foregroundStyle(ColageColors.textTertiary)
+            }
         }
     }
 }
@@ -214,6 +225,7 @@ struct DiscoveryModePicker: View {
                     withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                         activeMode = mode
                     }
+                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
                 } label: {
                     Text(mode.rawValue)
                         .font(ColageFonts.captionBold)
@@ -235,6 +247,18 @@ struct DiscoveryModePicker: View {
         .padding(4)
         .background(.ultraThinMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 14))
+    }
+}
+
+// MARK: - String Initials Extension
+extension String {
+    /// Returns up to 2 initials from a name, e.g. "Emma Wilson" → "EW"
+    var initials: String {
+        let parts = self.split(separator: " ").map { String($0) }
+        if parts.count >= 2 {
+            return String(parts[0].prefix(1) + parts[1].prefix(1)).uppercased()
+        }
+        return String(self.prefix(2)).uppercased()
     }
 }
 

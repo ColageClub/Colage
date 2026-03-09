@@ -34,6 +34,11 @@ class AppState: ObservableObject {
         if AppState.devMode {
             // In dev mode, check if we have a stored dev profile
             if UserDefaults.standard.bool(forKey: "dev_onboarding_complete") {
+                // Restore saved profile
+                if let data = UserDefaults.standard.data(forKey: "dev_profile"),
+                   let profile = try? JSONDecoder().decode(UserProfile.self, from: data) {
+                    UserProfile.current = profile
+                }
                 authState = .authenticated
             } else {
                 authState = .onboarding

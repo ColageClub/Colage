@@ -123,7 +123,8 @@ struct StudentCard: View {
             AvatarView(
                 imageURL: student.profile.profilePhotoURL,
                 size: 72,
-                borderColor: themeColor
+                borderColor: themeColor,
+                initials: student.profile.displayName.initials
             )
 
             // Name

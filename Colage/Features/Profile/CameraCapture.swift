@@ -8,8 +8,13 @@ struct CameraCaptureView: UIViewControllerRepresentable {
 
     func makeUIViewController(context: Context) -> UIImagePickerController {
         let picker = UIImagePickerController()
-        picker.sourceType = .camera
-        picker.cameraDevice = .front
+        if UIImagePickerController.isSourceTypeAvailable(.camera) {
+            picker.sourceType = .camera
+            picker.cameraDevice = .front
+        } else {
+            // Fallback to photo library on simulator
+            picker.sourceType = .photoLibrary
+        }
         picker.allowsEditing = true // Built-in circular crop
         picker.delegate = context.coordinator
         return picker

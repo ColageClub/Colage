@@ -2,6 +2,7 @@ import SwiftUI
 
 struct SocialLinksScreen: View {
     let onContinue: () -> Void
+    @EnvironmentObject var onboardingData: OnboardingData
     @State private var links: [SocialPlatform: String] = [:]
     @State private var expandedPlatform: SocialPlatform?
 
@@ -55,7 +56,10 @@ struct SocialLinksScreen: View {
             VStack {
                 Spacer()
                 VStack(spacing: 12) {
-                    ColagePrimaryButton(title: "Continue", action: onContinue)
+                    ColagePrimaryButton(title: "Continue", action: {
+                        onboardingData.socialLinks = links
+                        onContinue()
+                    })
 
                     Button("Skip for now") {
                         onContinue()

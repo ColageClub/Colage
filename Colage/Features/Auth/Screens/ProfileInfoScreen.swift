@@ -3,6 +3,7 @@ import SwiftUI
 struct ProfileInfoScreen: View {
     let onContinue: () -> Void
     @EnvironmentObject var authService: AuthService
+    @EnvironmentObject var onboardingData: OnboardingData
     @State private var displayName = ""
     @State private var bio = ""
     @State private var major = ""
@@ -140,7 +141,12 @@ struct ProfileInfoScreen: View {
                 Spacer()
                 ColagePrimaryButton(
                     title: "Continue",
-                    action: onContinue,
+                    action: {
+                        onboardingData.displayName = displayName.trimmingCharacters(in: .whitespaces)
+                        onboardingData.bio = bio
+                        onboardingData.major = major
+                        onContinue()
+                    },
                     isDisabled: !isValid
                 )
                 .padding(.horizontal, 24)

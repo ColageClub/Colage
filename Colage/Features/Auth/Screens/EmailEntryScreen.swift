@@ -4,6 +4,7 @@ struct EmailEntryScreen: View {
     let onContinue: () -> Void
     @EnvironmentObject var authService: AuthService
     @EnvironmentObject var universityService: UniversityService
+    @EnvironmentObject var onboardingData: OnboardingData
     @State private var email = ""
     @State private var isLoading = false
     @State private var errorMessage: String?
@@ -94,6 +95,7 @@ struct EmailEntryScreen: View {
             await MainActor.run {
                 isLoading = false
                 if success {
+                    onboardingData.email = email
                     onContinue()
                 } else {
                     errorMessage = "Failed to send verification code"

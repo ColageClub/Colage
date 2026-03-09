@@ -3,6 +3,7 @@ import SwiftUI
 struct PhoneEntryScreen: View {
     let onContinue: () -> Void
     @EnvironmentObject var authService: AuthService
+    @EnvironmentObject var onboardingData: OnboardingData
     @State private var phoneNumber = ""
     @State private var countryCode = "+1"
     @State private var isLoading = false
@@ -93,6 +94,7 @@ struct PhoneEntryScreen: View {
             await MainActor.run {
                 isLoading = false
                 if success {
+                    onboardingData.phone = fullNumber
                     onContinue()
                 } else {
                     errorMessage = "Failed to send SMS"

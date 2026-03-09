@@ -198,6 +198,7 @@ struct LoginScreen: View {
                             let loginSuccess = await authService.confirmLoginOTP(email: email, code: "000000")
                             await MainActor.run {
                                 if loginSuccess {
+                                    dismiss()
                                     appState.authState = .authenticated
                                 }
                             }
