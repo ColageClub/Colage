@@ -57,14 +57,12 @@ struct AdBannerView: View {
                     adBanner(ad: ad)
                 }
                 .buttonStyle(.plain)
-                .transition(.move(edge: .bottom).combined(with: .opacity))
                 .sheet(isPresented: $showAdDetail) {
                     AdDetailSheet(ad: ad)
                         .presentationDetents([.fraction(0.55), .large])
                         .presentationDragIndicator(.visible)
                 }
             } else {
-                // Debug: show something if ad is nil
                 Text("Loading ads...")
                     .font(.caption)
                     .foregroundStyle(.white.opacity(0.5))
@@ -73,16 +71,15 @@ struct AdBannerView: View {
                     .clipShape(Capsule())
             }
         }
-        .animation(.spring(response: 0.5, dampingFraction: 0.8), value: currentAd?.id)
         .onAppear {
             print("[AdBanner] onAppear — setting first ad")
             currentAd = mockAds.first
         }
         .onReceive(timer) { _ in
+            // Don't rotate while sheet is open
+            guard !showAdDetail else { return }
             adIndex = (adIndex + 1) % mockAds.count
-            withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
-                currentAd = mockAds[adIndex]
-            }
+            currentAd = mockAds[adIndex]
         }
     }
 
@@ -254,7 +251,8 @@ struct AdDetailSheet: View {
                         }
 
                         Button {
-                            takeScreenshot()
+                            // TODO: Implement proper screenshot saving
+                            print("[AdDetail] Screenshot requested for \(ad.businessName)")
                         } label: {
                             HStack(spacing: 8) {
                                 Image(systemName: "camera.fill")
@@ -277,16 +275,7 @@ struct AdDetailSheet: View {
         .background(ColageColors.background)
     }
 
-    private func takeScreenshot() {
-        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-              let window = windowScene.windows.first else { return }
-
-        let renderer = UIGraphicsImageRenderer(size: window.bounds.size)
-        let image = renderer.image { _ in
-            window.drawHierarchy(in: window.bounds, afterScreenUpdates: true)
-        }
-        UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil)
-    }
+    // Screenshot saving deferred — simulator can freeze with UIGraphicsImageRenderer
 }
 
 // MARK: - Info Badge
