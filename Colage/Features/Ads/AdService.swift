@@ -79,7 +79,11 @@ class AdService: ObservableObject {
 
     func fetchAd() {
         if AppState.devMode {
-            currentAd = ads.first
+            if ads.isEmpty { loadMockAds() }
+            print("[AdService] fetchAd called, \(ads.count) ads available")
+            DispatchQueue.main.async { [weak self] in
+                self?.currentAd = self?.ads.first
+            }
             startRotation()
             return
         }

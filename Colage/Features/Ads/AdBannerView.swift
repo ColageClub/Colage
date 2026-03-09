@@ -2,14 +2,56 @@ import SwiftUI
 
 /// Horizontal ad banner shown at the bottom of the map view
 struct AdBannerView: View {
-    @StateObject private var adService = AdService.shared
+    @State private var currentAd: AdData? = nil
     @State private var showAdDetail = false
+    @State private var adIndex = 0
+
+    // Mock ads loaded directly — no singleton needed
+    private let mockAds: [AdData] = [
+        AdData(
+            id: "ad-1",
+            businessName: "Blue Brew Coffee",
+            bio: "Student-favorite coffee shop since 2019",
+            deal: "15% off any drink — show this ad",
+            logoEmoji: "☕",
+            logoUrl: nil,
+            distance: "0.2 mi"
+        ),
+        AdData(
+            id: "ad-2",
+            businessName: "Campus Pizza Co.",
+            bio: "Late night slices, every night",
+            deal: "Free garlic knots with any large pizza",
+            logoEmoji: "🍕",
+            logoUrl: nil,
+            distance: "0.4 mi"
+        ),
+        AdData(
+            id: "ad-3",
+            businessName: "FitZone Gym",
+            bio: "24/7 gym, 1 block from campus",
+            deal: "First month free for students",
+            logoEmoji: "🏋️",
+            logoUrl: nil,
+            distance: "0.3 mi"
+        ),
+        AdData(
+            id: "ad-4",
+            businessName: "BookStack",
+            bio: "Used textbooks at 60% off retail",
+            deal: "Extra 10% off with .edu email",
+            logoEmoji: "📚",
+            logoUrl: nil,
+            distance: "0.1 mi"
+        ),
+    ]
+
+    let timer = Timer.publish(every: 15, on: .main, in: .common).autoconnect()
 
     var body: some View {
-        Group {
-            if let ad = adService.currentAd {
+        VStack {
+            if let ad = currentAd {
                 Button {
-                    adService.trackTap(adId: ad.id)
                     showAdDetail = true
                 } label: {
                     adBanner(ad: ad)
@@ -21,11 +63,26 @@ struct AdBannerView: View {
                         .presentationDetents([.fraction(0.55), .large])
                         .presentationDragIndicator(.visible)
                 }
+            } else {
+                // Debug: show something if ad is nil
+                Text("Loading ads...")
+                    .font(.caption)
+                    .foregroundStyle(.white.opacity(0.5))
+                    .padding()
+                    .background(.ultraThinMaterial)
+                    .clipShape(Capsule())
             }
         }
-        .animation(.spring(response: 0.5, dampingFraction: 0.8), value: adService.currentAd?.id)
+        .animation(.spring(response: 0.5, dampingFraction: 0.8), value: currentAd?.id)
         .onAppear {
-            adService.fetchAd()
+            print("[AdBanner] onAppear — setting first ad")
+            currentAd = mockAds.first
+        }
+        .onReceive(timer) { _ in
+            adIndex = (adIndex + 1) % mockAds.count
+            withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                currentAd = mockAds[adIndex]
+            }
         }
     }
 
@@ -75,11 +132,9 @@ struct AdBannerView: View {
         .padding(.vertical, 10)
         .background {
             ZStack {
-                // Base background
                 RoundedRectangle(cornerRadius: 18)
                     .fill(.ultraThinMaterial)
 
-                // Transparent logo watermark
                 HStack {
                     Spacer()
                     Text(ad.logoEmoji)
@@ -108,7 +163,6 @@ struct AdDetailSheet: View {
             VStack(spacing: 0) {
                 // Header with logo background
                 ZStack {
-                    // Gradient background with transparent logo
                     LinearGradient(
                         colors: [ColageColors.primary.opacity(0.15), ColageColors.background],
                         startPoint: .top,
@@ -120,7 +174,6 @@ struct AdDetailSheet: View {
                         .font(.system(size: 100))
                         .opacity(0.08)
 
-                    // Logo card
                     VStack {
                         Spacer()
                         ZStack {
@@ -140,9 +193,7 @@ struct AdDetailSheet: View {
                     .frame(height: 180)
                 }
 
-                // Content
                 VStack(spacing: 20) {
-                    // Name + bio
                     VStack(spacing: 6) {
                         Text(ad.businessName)
                             .font(ColageFonts.title)
@@ -180,16 +231,13 @@ struct AdDetailSheet: View {
                             .strokeBorder(ColageColors.online.opacity(0.15), lineWidth: 1)
                     )
 
-                    // Info row
                     HStack(spacing: 20) {
                         InfoBadge(icon: "location.fill", text: ad.distance)
                         InfoBadge(icon: "clock.fill", text: "Open now")
                         InfoBadge(icon: "camera.fill", text: "Screenshot")
                     }
 
-                    // Actions
                     VStack(spacing: 10) {
-                        // Get directions
                         Button {
                             // Open in Maps
                         } label: {
@@ -205,7 +253,6 @@ struct AdDetailSheet: View {
                             .clipShape(RoundedRectangle(cornerRadius: 14))
                         }
 
-                        // Screenshot
                         Button {
                             takeScreenshot()
                         } label: {
@@ -231,7 +278,6 @@ struct AdDetailSheet: View {
     }
 
     private func takeScreenshot() {
-        // Capture the ad view as an image and save to photos
         guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
               let window = windowScene.windows.first else { return }
 

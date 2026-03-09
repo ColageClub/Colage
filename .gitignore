@@ -48,3 +48,4 @@ Secrets.xcconfig
 infra/.aws-sam/
 website/node_modules/
 website/.next/
+.spm-packages/
