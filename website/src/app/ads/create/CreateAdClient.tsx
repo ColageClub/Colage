@@ -98,7 +98,7 @@ export function CreateAdClient({ session }: { session: Session }) {
       <nav className="fixed top-0 w-full z-50 backdrop-blur-xl bg-[var(--colage-bg)]/80 border-b border-[var(--colage-border)]">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Link href="/ads/dashboard" className="text-[var(--colage-text-secondary)] hover:text-white transition">
+            <Link href="/ads/dashboard" className="text-[var(--colage-text-secondary)] hover:text-[var(--colage-text)] transition">
               ← Back
             </Link>
           </div>
@@ -211,7 +211,7 @@ export function CreateAdClient({ session }: { session: Session }) {
                     type="text"
                     value={businessName}
                     onChange={(e) => setBusinessName(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl bg-[var(--colage-surface)] border border-[var(--colage-border)] text-white text-sm focus:outline-none focus:border-[var(--colage-primary)] transition"
+                    className="w-full px-4 py-3 rounded-xl bg-[var(--colage-surface)] border border-[var(--colage-border)] text-[var(--colage-text)] text-sm focus:outline-none focus:border-[var(--colage-primary)] transition"
                   />
                 </div>
 
@@ -223,7 +223,7 @@ export function CreateAdClient({ session }: { session: Session }) {
                     onChange={(e) => setBio(e.target.value.slice(0, 50))}
                     placeholder="Student-favorite coffee shop since 2019"
                     maxLength={50}
-                    className="w-full px-4 py-3 rounded-xl bg-[var(--colage-surface)] border border-[var(--colage-border)] text-white text-sm focus:outline-none focus:border-[var(--colage-primary)] transition"
+                    className="w-full px-4 py-3 rounded-xl bg-[var(--colage-surface)] border border-[var(--colage-border)] text-[var(--colage-text)] text-sm focus:outline-none focus:border-[var(--colage-primary)] transition"
                   />
                   <div className="text-right text-[10px] text-[var(--colage-text-tertiary)] mt-1">{bio.length}/50</div>
                 </div>
@@ -235,7 +235,7 @@ export function CreateAdClient({ session }: { session: Session }) {
                     value={deal}
                     onChange={(e) => setDeal(e.target.value)}
                     placeholder="15% off any drink — show this ad"
-                    className="w-full px-4 py-3 rounded-xl bg-[var(--colage-surface)] border border-[var(--colage-border)] text-white text-sm focus:outline-none focus:border-[var(--colage-primary)] transition"
+                    className="w-full px-4 py-3 rounded-xl bg-[var(--colage-surface)] border border-[var(--colage-border)] text-[var(--colage-text)] text-sm focus:outline-none focus:border-[var(--colage-primary)] transition"
                   />
                 </div>
               </div>

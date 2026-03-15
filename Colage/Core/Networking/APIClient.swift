@@ -8,10 +8,7 @@ class APIClient {
     private let session: URLSession
 
     private init() {
-        // Will be replaced with real API Gateway URL
-        self.baseURL = AppState.devMode
-            ? "http://localhost:8080/api"
-            : "https://api.colage.app"
+        self.baseURL = "https://wn7mxcdxca.execute-api.us-east-2.amazonaws.com/dev"
         self.session = URLSession.shared
     }
 

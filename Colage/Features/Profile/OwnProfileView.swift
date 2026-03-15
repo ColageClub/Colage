@@ -104,19 +104,6 @@ struct OwnProfileView: View {
                             }
                         }
 
-                        // Stats (placeholder for future)
-                        VStack(alignment: .leading, spacing: 12) {
-                            SectionHeader(title: "Activity")
-                                .padding(.horizontal, 20)
-
-                            HStack(spacing: 0) {
-                                StatCard(value: "—", label: "Waves Sent", icon: "hand.wave.fill")
-                                StatCard(value: "—", label: "Connections", icon: "person.2.fill")
-                                StatCard(value: "—", label: "Profile Views", icon: "eye.fill")
-                            }
-                            .padding(.horizontal, 16)
-                        }
-
                         // Visibility toggle
                         VStack(alignment: .leading, spacing: 12) {
                             SectionHeader(title: "Visibility")

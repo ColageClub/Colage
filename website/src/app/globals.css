@@ -3,16 +3,17 @@
 :root {
   --colage-primary: #6C5CE7;
   --colage-primary-light: #a29bfe;
-  --colage-bg: #0a0a1a;
-  --colage-surface: #141428;
-  --colage-surface-elevated: #1e1e3a;
-  --colage-border: #2a2a4a;
-  --colage-text: #ffffff;
-  --colage-text-secondary: #a0a0c0;
-  --colage-text-tertiary: #606080;
+  --colage-bg: #ffffff;
+  --colage-bg-alt: #f8f7ff;
+  --colage-surface: #f3f2ff;
+  --colage-surface-elevated: #ebe9ff;
+  --colage-border: #e5e3f0;
+  --colage-text: #1a1a2e;
+  --colage-text-secondary: #5a5a7a;
+  --colage-text-tertiary: #9090a8;
   --colage-online: #00b894;
-  --colage-warning: #fdcb6e;
-  --colage-error: #ff6b6b;
+  --colage-warning: #f39c12;
+  --colage-error: #e74c3c;
 }
 
 body {
@@ -26,8 +27,8 @@ html { scroll-behavior: smooth; }
 
 /* Custom scrollbar */
 ::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: #050510; }
-::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+::-webkit-scrollbar-track { background: #f5f5f5; }
+::-webkit-scrollbar-thumb { background: rgba(108,92,231,0.2); border-radius: 3px; }
 
 /* Custom animations */
 @keyframes float {

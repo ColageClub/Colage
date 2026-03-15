@@ -11,7 +11,6 @@ const features = [
     icon: "🗺️",
     visual: (
       <div className="relative w-full h-full bg-gradient-to-b from-[#00274C] to-[#0a0a1a] rounded-2xl overflow-hidden">
-        {/* Dots */}
         {Array.from({ length: 12 }).map((_, i) => (
           <div
             key={i}
@@ -59,7 +58,6 @@ const features = [
             <div className="text-[9px] text-[#6C5CE7] font-mono">{s.dist}</div>
           </div>
         ))}
-        {/* Slider */}
         <div className="pt-2">
           <div className="h-1 rounded-full bg-white/5">
             <div className="h-full w-2/3 rounded-full bg-gradient-to-r from-[#6C5CE7] to-[#a29bfe]" />
@@ -80,12 +78,10 @@ const features = [
     icon: "📱",
     visual: (
       <div className="relative w-full h-full bg-gradient-to-b from-[#1a1a2e] to-[#0a0a1a] rounded-2xl overflow-hidden">
-        {/* Grid for AR feel */}
         <div className="absolute inset-0 opacity-5" style={{
           backgroundImage: 'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)',
           backgroundSize: '30px 30px',
         }} />
-        {/* Floating AR bubbles */}
         {[
           { top: "20%", left: "20%", name: "Alex", emoji: "🧑‍💻" },
           { top: "35%", left: "60%", name: "Maya", emoji: "👩‍⚕️" },
@@ -102,9 +98,7 @@ const features = [
             </div>
           </div>
         ))}
-        {/* Scanner line */}
         <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-[#6C5CE7] to-transparent animate-scan" />
-        {/* Camera label */}
         <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2 py-1 rounded-full bg-black/40 backdrop-blur">
           <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
           <span className="text-[8px] font-semibold text-white/50">AR MODE</span>
@@ -130,26 +124,26 @@ export function FeatureShowcase() {
               onClick={() => setActive(feature.id)}
               className={`w-full text-left p-6 rounded-2xl border transition-all duration-500 ${
                 isActive
-                  ? "bg-[#6C5CE7]/10 border-[#6C5CE7]/30 shadow-lg shadow-[#6C5CE7]/5"
-                  : "bg-white/2 border-white/5 hover:bg-white/5 hover:border-white/10"
+                  ? "bg-[#6C5CE7]/5 border-[#6C5CE7]/20 shadow-lg shadow-[#6C5CE7]/5"
+                  : "bg-white border-gray-100 hover:bg-gray-50 hover:border-gray-200"
               }`}
             >
               <div className="flex items-start gap-4">
-                <div className={`text-3xl transition-all duration-300 ${isActive ? "scale-110" : "scale-100 opacity-50"}`}>
+                <div className={`text-3xl transition-all duration-300 ${isActive ? "scale-110" : "scale-100 opacity-40"}`}>
                   {feature.icon}
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className={`text-lg font-bold transition-colors duration-300 ${isActive ? "text-white" : "text-white/50"}`}>
+                    <h3 className={`text-lg font-bold transition-colors duration-300 ${isActive ? "text-[#1a1a2e]" : "text-[#9090a8]"}`}>
                       {feature.title}
                     </h3>
                     <span className={`text-[10px] px-2 py-0.5 rounded-full transition-all duration-300 ${
-                      isActive ? "bg-[#6C5CE7]/20 text-[#a29bfe]" : "bg-white/5 text-white/20"
+                      isActive ? "bg-[#6C5CE7]/10 text-[#6C5CE7]" : "bg-gray-100 text-[#9090a8]"
                     }`}>
                       {feature.subtitle}
                     </span>
                   </div>
-                  <p className={`text-sm mt-1 leading-relaxed transition-colors duration-300 ${isActive ? "text-white/60" : "text-white/25"}`}>
+                  <p className={`text-sm mt-1 leading-relaxed transition-colors duration-300 ${isActive ? "text-[#5a5a7a]" : "text-[#9090a8]"}`}>
                     {feature.description}
                   </p>
                 </div>
@@ -159,10 +153,10 @@ export function FeatureShowcase() {
         })}
       </div>
 
-      {/* Right: Visual preview */}
+      {/* Right: Visual preview — these stay dark since they represent the app */}
       <div className="relative">
-        <div className="absolute -inset-4 bg-gradient-to-br from-[#6C5CE7]/10 to-[#00CEC9]/5 rounded-3xl blur-xl" />
-        <div className="relative aspect-[3/4] max-w-sm mx-auto rounded-3xl border border-white/10 overflow-hidden">
+        <div className="absolute -inset-4 bg-gradient-to-br from-[#6C5CE7]/8 to-[#00CEC9]/5 rounded-3xl blur-xl" />
+        <div className="relative aspect-[3/4] max-w-sm mx-auto rounded-3xl border border-gray-200 overflow-hidden shadow-xl">
           {activeFeature.visual}
         </div>
       </div>

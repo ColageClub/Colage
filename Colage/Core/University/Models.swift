@@ -173,7 +173,12 @@ struct NearbyStudent: Identifiable {
                 latitude: baseLat + latOffset,
                 longitude: baseLng + lngOffset,
                 altitude: 0,
-                floor: Int.random(in: 1...3),
+                floor: {
+                    // Ensure good spread: first 6 on floor 1, then round-robin the rest
+                    let allFloors = [-2, -1, 1, 2, 3, 4, 5, 6]
+                    if index < 6 { return 1 }
+                    return allFloors[(index - 6) % allFloors.count]
+                }(),
                 timestamp: Date()
             ),
             distance: dist

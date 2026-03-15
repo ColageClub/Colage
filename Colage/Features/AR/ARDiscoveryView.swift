@@ -15,7 +15,7 @@ struct ARDiscoveryView: View {
             #if targetEnvironment(simulator)
             // Simulator fallback — mock AR view
             SimulatedARView(
-                students: students.filteredStudents,
+                students: students.arFilteredStudents,
                 themeColor: universityService.currentTheme?.primary ?? ColageColors.primary,
                 onStudentTapped: { student in
                     selectedStudent = student
@@ -24,7 +24,7 @@ struct ARDiscoveryView: View {
             #else
             // Real device — ARKit session
             LiveARView(
-                students: students.filteredStudents,
+                students: students.arFilteredStudents,
                 themeColor: universityService.currentTheme?.primary ?? ColageColors.primary,
                 onStudentTapped: { student in
                     selectedStudent = student
@@ -36,13 +36,37 @@ struct ARDiscoveryView: View {
             VStack {
                 Spacer()
 
+                // AR radius slider
+                VStack(spacing: 8) {
+                    HStack {
+                        Text("AR Range")
+                            .font(ColageFonts.caption)
+                            .foregroundStyle(ColageColors.textSecondary)
+                        Spacer()
+                        Text(students.arDistanceFeet.formattedDistance)
+                            .font(ColageFonts.monoSmall)
+                            .foregroundStyle(universityService.currentTheme?.primary ?? ColageColors.primary)
+                    }
+
+                    Slider(
+                        value: $students.arMaxDistance,
+                        in: 0...1
+                    )
+                    .tint(universityService.currentTheme?.primary ?? ColageColors.primary)
+                }
+                .padding(.horizontal, 20)
+                .padding(.vertical, 12)
+                .background(.ultraThinMaterial)
+                .clipShape(RoundedRectangle(cornerRadius: 16))
+                .padding(.horizontal, 16)
+
                 // Bottom info bar
                 HStack(spacing: 16) {
                     HStack(spacing: 6) {
                         Circle()
                             .fill(ColageColors.online)
                             .frame(width: 8, height: 8)
-                        Text("\(students.filteredStudents.count) visible")
+                        Text("\(students.arFilteredStudents.count) visible")
                             .font(ColageFonts.captionBold)
                             .foregroundStyle(ColageColors.textPrimary)
                     }

@@ -208,7 +208,6 @@ struct FloorPicker: View {
     private func floorLabel(_ floor: Int) -> String {
         switch floor {
         case ..<0: return "B\(abs(floor))"
-        case 0: return "G"
         default: return "\(floor)"
         }
     }

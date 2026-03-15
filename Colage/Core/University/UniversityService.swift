@@ -12,8 +12,19 @@ class UniversityService: ObservableObject {
         if AppState.devMode {
             return mockUniversity(for: domain)
         }
-        // TODO: API call to GET /universities/{domain}
-        return nil
+
+        // Fetch from API (auto-creates if unknown)
+        do {
+            struct UniResponse: Decodable { let university: University }
+            let result: UniResponse = try await APIClient.shared.request(
+                path: "/universities/\(domain)"
+            )
+            return result.university
+        } catch {
+            print("Failed to resolve university: \(error)")
+            // Fallback to mock
+            return mockUniversity(for: domain)
+        }
     }
 
     func setUniversity(_ university: University) {
@@ -98,14 +109,14 @@ class UniversityService: ObservableObject {
                 ]
             )
         default:
-            // Auto-create default university
-            let name = domain
+            // Auto-create university from domain — new school, first student!
+            let shortName = domain
                 .replacingOccurrences(of: ".edu", with: "")
-                .capitalized
+                .uppercased()
             return University(
                 id: domain,
                 domain: domain,
-                name: "\(name) University",
+                name: shortName,
                 memberCount: 0,
                 brandingThemes: [UniversityTheme.default]
             )

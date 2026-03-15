@@ -25,8 +25,8 @@ class WebSocketManager: ObservableObject {
             return
         }
 
-        // Will be replaced with real WebSocket API Gateway URL
-        guard let url = URL(string: "wss://ws.colage.app?domain=\(universityDomain)") else { return }
+        let userId = UserProfile.current?.userId ?? "anonymous"
+        guard let url = URL(string: "wss://w0m7jw00ak.execute-api.us-east-2.amazonaws.com/dev?domain=\(universityDomain)&userId=\(userId)") else { return }
 
         webSocketTask = session.webSocketTask(with: url)
         webSocketTask?.resume()
@@ -82,6 +82,14 @@ class WebSocketManager: ObservableObject {
         decoder.dateDecodingStrategy = .iso8601
 
         switch action {
+        case "location.update":
+            if let payload = json["data"],
+               let payloadData = try? JSONSerialization.data(withJSONObject: payload),
+               let location = try? decoder.decode(StudentLocation.self, from: payloadData) {
+                DispatchQueue.main.async {
+                    self.onStudentJoined?(location)
+                }
+            }
         case "location.batch":
             if let payload = json["data"],
                let payloadData = try? JSONSerialization.data(withJSONObject: payload),

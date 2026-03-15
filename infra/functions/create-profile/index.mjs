@@ -58,9 +58,7 @@ export const handler = async (event) => {
         // Auto-create university
         const uniName = universityDomain
           .replace('.edu', '')
-          .split('.')
-          .pop()
-          .replace(/^\w/, c => c.toUpperCase());
+          .toUpperCase();
 
         await ddb.send(new PutCommand({
           TableName: UNIVERSITIES_TABLE,

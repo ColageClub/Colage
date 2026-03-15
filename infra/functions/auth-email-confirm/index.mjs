@@ -17,8 +17,10 @@ export const handler = async (event) => {
       ConfirmationCode: code,
     }));
 
-    // Extract domain for university assignment
-    const domain = email.toLowerCase().split('@')[1];
+    // Extract root .edu domain (collapse subdomains: engineering.umich.edu → umich.edu)
+    const fullDomain = email.toLowerCase().split('@')[1];
+    const parts = fullDomain.split('.');
+    const domain = parts.slice(-2).join('.');
 
     return response(200, {
       message: 'Email verified',

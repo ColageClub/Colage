@@ -28,12 +28,11 @@ export function FloatingStudents() {
       <svg className="absolute inset-0 w-full h-full" style={{ zIndex: 0 }}>
         <defs>
           <linearGradient id="lineGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="rgba(108,92,231,0.1)" />
-            <stop offset="50%" stopColor="rgba(108,92,231,0.3)" />
-            <stop offset="100%" stopColor="rgba(108,92,231,0.1)" />
+            <stop offset="0%" stopColor="rgba(108,92,231,0.08)" />
+            <stop offset="50%" stopColor="rgba(108,92,231,0.2)" />
+            <stop offset="100%" stopColor="rgba(108,92,231,0.08)" />
           </linearGradient>
         </defs>
-        {/* Decorative connection lines */}
         <line x1="20%" y1="30%" x2="50%" y2="50%" stroke="url(#lineGrad)" strokeWidth="1" />
         <line x1="50%" y1="50%" x2="80%" y2="30%" stroke="url(#lineGrad)" strokeWidth="1" />
         <line x1="35%" y1="70%" x2="50%" y2="50%" stroke="url(#lineGrad)" strokeWidth="1" />
@@ -63,29 +62,28 @@ export function FloatingStudents() {
             <div
               className={`relative p-4 rounded-2xl border backdrop-blur-sm transition-all duration-700 ${
                 isActive
-                  ? "bg-[#6C5CE7]/10 border-[#6C5CE7]/30 shadow-lg shadow-[#6C5CE7]/10"
-                  : "bg-white/3 border-white/5"
+                  ? "bg-white border-[#6C5CE7]/20 shadow-lg shadow-[#6C5CE7]/10"
+                  : "bg-white/80 border-gray-100"
               }`}
             >
-              {/* Pulse on active */}
               {isActive && (
-                <div className="absolute -inset-1 rounded-2xl bg-[#6C5CE7]/10 animate-pulse" />
+                <div className="absolute -inset-1 rounded-2xl bg-[#6C5CE7]/5 animate-pulse" />
               )}
 
               <div className="relative flex items-center gap-3">
                 <div className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl transition-all duration-500 ${
-                  isActive ? "bg-[#6C5CE7]/20 ring-2 ring-[#6C5CE7]/40" : "bg-white/5"
+                  isActive ? "bg-[#6C5CE7]/10 ring-2 ring-[#6C5CE7]/30" : "bg-gray-50"
                 }`}>
                   {student.emoji}
                 </div>
                 <div>
-                  <div className={`text-sm font-bold transition-colors duration-500 ${isActive ? "text-white" : "text-white/50"}`}>
+                  <div className={`text-sm font-bold transition-colors duration-500 ${isActive ? "text-[#1a1a2e]" : "text-[#9090a8]"}`}>
                     {student.name}
                   </div>
-                  <div className="text-[10px] text-white/30">{student.major}</div>
+                  <div className="text-[10px] text-[#9090a8]">{student.major}</div>
                   <div className="flex gap-1 mt-1">
                     {student.socials.map((s) => (
-                      <span key={s} className="text-[8px] px-1.5 py-0.5 rounded-full bg-white/5 text-white/30">
+                      <span key={s} className="text-[8px] px-1.5 py-0.5 rounded-full bg-[#f3f2ff] text-[#6C5CE7]">
                         {s}
                       </span>
                     ))}
@@ -101,8 +99,8 @@ export function FloatingStudents() {
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
         <div className="relative">
           <div className="absolute -inset-4 rounded-full bg-[#00b894]/10 animate-ping" style={{ animationDuration: "2s" }} />
-          <div className="absolute -inset-2 rounded-full bg-[#00b894]/20" />
-          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#00b894] to-[#00CEC9] flex items-center justify-center text-lg font-bold shadow-lg shadow-[#00b894]/30">
+          <div className="absolute -inset-2 rounded-full bg-[#00b894]/10" />
+          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#00b894] to-[#00CEC9] flex items-center justify-center text-lg font-bold text-white shadow-lg shadow-[#00b894]/20">
             You
           </div>
         </div>

@@ -93,7 +93,7 @@ class LocationService: NSObject, ObservableObject, CLLocationManagerDelegate {
 
         // Basement detection
         if delta < -2.0 {
-            return Int(Foundation.floor(delta / metersPerFloor))
+            return max(Int(Foundation.floor(delta / metersPerFloor)), -2)
         }
         return max(floor, 1)
     }

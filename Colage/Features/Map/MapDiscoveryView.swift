@@ -18,7 +18,7 @@ struct MapDiscoveryView: View {
         ZStack {
             MapboxMapView(
                 viewport: $viewport,
-                students: students.filteredStudents,
+                students: students.mapStudents,
                 universityTheme: universityService.currentTheme,
                 onStudentTapped: { student in
                     selectedStudent = student

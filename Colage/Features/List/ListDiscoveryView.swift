@@ -31,8 +31,7 @@ struct ListDiscoveryView: View {
 
                     Slider(
                         value: $students.maxDistance,
-                        in: 50...5000,
-                        step: 50
+                        in: 0...1
                     )
                     .tint(universityService.currentTheme?.primary ?? ColageColors.primary)
                 }
@@ -106,7 +105,7 @@ struct ListDiscoveryView: View {
     }
 
     private var distanceLabel: String {
-        students.maxDistance.formattedDistance
+        students.listDistanceFeet.formattedDistance
     }
 }
 
@@ -149,8 +148,8 @@ struct StudentCard: View {
                     .font(ColageFonts.monoSmall)
                     .foregroundStyle(ColageColors.textSecondary)
 
-                if student.location.floor > 1 {
-                    Text("· F\(student.location.floor)")
+                if student.location.floor != 1 {
+                    Text("· \(student.location.floor < 0 ? "B\(abs(student.location.floor))" : "F\(student.location.floor)")")
                         .font(ColageFonts.monoSmall)
                         .foregroundStyle(ColageColors.textTertiary)
                 }

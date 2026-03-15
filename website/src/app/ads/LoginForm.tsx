@@ -53,7 +53,7 @@ export function LoginForm() {
           onChange={(e) => setEmail(e.target.value)}
           placeholder="you@business.com"
           required
-          className="w-full px-4 py-3 rounded-xl bg-[var(--colage-bg)] border border-[var(--colage-border)] text-white text-sm focus:outline-none focus:border-[var(--colage-primary)] transition"
+          className="w-full px-4 py-3 rounded-xl bg-[var(--colage-bg)] border border-[var(--colage-border)] text-[var(--colage-text)] text-sm focus:outline-none focus:border-[var(--colage-primary)] transition"
         />
       </div>
 
@@ -67,7 +67,7 @@ export function LoginForm() {
               onChange={(e) => setBusinessName(e.target.value)}
               placeholder="Blue Brew Coffee"
               required={!isLogin}
-              className="w-full px-4 py-3 rounded-xl bg-[var(--colage-bg)] border border-[var(--colage-border)] text-white text-sm focus:outline-none focus:border-[var(--colage-primary)] transition"
+              className="w-full px-4 py-3 rounded-xl bg-[var(--colage-bg)] border border-[var(--colage-border)] text-[var(--colage-text)] text-sm focus:outline-none focus:border-[var(--colage-primary)] transition"
             />
           </div>
 
@@ -79,7 +79,7 @@ export function LoginForm() {
               onChange={(e) => setAddress(e.target.value)}
               placeholder="123 S State St, Ann Arbor, MI"
               required={!isLogin}
-              className="w-full px-4 py-3 rounded-xl bg-[var(--colage-bg)] border border-[var(--colage-border)] text-white text-sm focus:outline-none focus:border-[var(--colage-primary)] transition"
+              className="w-full px-4 py-3 rounded-xl bg-[var(--colage-bg)] border border-[var(--colage-border)] text-[var(--colage-text)] text-sm focus:outline-none focus:border-[var(--colage-primary)] transition"
             />
           </div>
 
@@ -88,7 +88,7 @@ export function LoginForm() {
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl bg-[var(--colage-bg)] border border-[var(--colage-border)] text-white text-sm focus:outline-none focus:border-[var(--colage-primary)] transition"
+              className="w-full px-4 py-3 rounded-xl bg-[var(--colage-bg)] border border-[var(--colage-border)] text-[var(--colage-text)] text-sm focus:outline-none focus:border-[var(--colage-primary)] transition"
             >
               {categories.map((c) => (
                 <option key={c} value={c}>{c}</option>
@@ -109,7 +109,7 @@ export function LoginForm() {
       <button
         type="button"
         onClick={() => setIsLogin(!isLogin)}
-        className="w-full text-sm text-[var(--colage-text-secondary)] hover:text-white transition"
+        className="w-full text-sm text-[var(--colage-text-secondary)] hover:text-[var(--colage-text)] transition"
       >
         {isLogin ? "Need an account? Sign up" : "Already have an account? Log in"}
       </button>

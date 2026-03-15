@@ -57,7 +57,7 @@ export default async function AdsPage() {
               },
             ].map((item) => (
               <div key={item.step} className="relative p-8 rounded-2xl bg-[var(--colage-surface)] border border-[var(--colage-border)]">
-                <div className="absolute -top-4 left-6 w-8 h-8 rounded-full bg-[var(--colage-primary)] flex items-center justify-center text-sm font-bold">
+                <div className="absolute -top-4 left-6 w-8 h-8 rounded-full bg-[var(--colage-primary)] flex items-center justify-center text-sm font-bold text-white">
                   {item.step}
                 </div>
                 <h3 className="text-lg font-bold mb-2 mt-2">{item.title}</h3>

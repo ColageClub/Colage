@@ -7,6 +7,11 @@ struct HomeView: View {
     @EnvironmentObject var universityService: UniversityService
     @StateObject private var nearbyStudents = NearbyStudentsViewModel()
 
+    /// Sync floor picker selection into the students view model
+    private func syncFloorFilter() {
+        nearbyStudents.filterFloor = appState.currentFloor
+    }
+
     var body: some View {
         ZStack {
             ColageColors.background.ignoresSafeArea()
@@ -76,9 +81,12 @@ struct HomeView: View {
                 HStack {
                     FloorPicker(
                         selectedFloor: $appState.currentFloor,
-                        floors: Array(-1...5)
+                        floors: [-2, -1, 1, 2, 3, 4, 5, 6]
                     )
                     .padding(.leading, 12)
+                    .onChange(of: appState.currentFloor) { _, newFloor in
+                        nearbyStudents.filterFloor = newFloor
+                    }
                     Spacer()
                 }
                 Spacer()
@@ -99,6 +107,7 @@ struct HomeView: View {
         .onAppear {
             locationService.startTracking()
             nearbyStudents.loadMockData()
+            nearbyStudents.filterFloor = appState.currentFloor
         }
         .onChange(of: appState.isVisible) { _, isVisible in
             if isVisible {
@@ -113,8 +122,20 @@ struct HomeView: View {
 /// Manages nearby student data (mock for now)
 class NearbyStudentsViewModel: ObservableObject {
     @Published var students: [NearbyStudent] = []
-    @Published var maxDistance: Double = 300 // feet
+    @Published var maxDistance: Double = 0.5 // list slider position (0...1), logarithmic
+    @Published var arMaxDistance: Double = 0.5 // AR slider position (0...1), logarithmic
     @Published var filterFloor: Int? = nil // nil = all floors
+
+    /// Convert a 0...1 slider position to feet using logarithmic scale
+    /// 0 → 10ft, 0.25 → ~30ft, 0.5 → ~60ft, 1.0 → 500ft
+    static func sliderToFeet(_ value: Double) -> Double {
+        let minFeet = 10.0
+        let maxFeet = 500.0
+        return minFeet * pow(maxFeet / minFeet, value)
+    }
+
+    var listDistanceFeet: Double { Self.sliderToFeet(maxDistance) }
+    var arDistanceFeet: Double { Self.sliderToFeet(arMaxDistance) }
 
     func loadMockData() {
         guard AppState.devMode else { return }
@@ -126,9 +147,27 @@ class NearbyStudentsViewModel: ObservableObject {
         }
     }
 
+    /// All students on the selected floor (no distance limit) — used by Map
+    var mapStudents: [NearbyStudent] {
+        students.filter { student in
+            filterFloor == nil || student.location.floor == filterFloor
+        }
+        .sorted { $0.distance < $1.distance }
+    }
+
+    /// Distance + floor filtered students — used by List
     var filteredStudents: [NearbyStudent] {
         students.filter { student in
-            student.distance <= maxDistance &&
+            student.distance <= listDistanceFeet &&
+            (filterFloor == nil || student.location.floor == filterFloor)
+        }
+        .sorted { $0.distance < $1.distance }
+    }
+
+    /// AR-specific filtered students (own radius + floor)
+    var arFilteredStudents: [NearbyStudent] {
+        students.filter { student in
+            student.distance <= arDistanceFeet &&
             (filterFloor == nil || student.location.floor == filterFloor)
         }
         .sorted { $0.distance < $1.distance }

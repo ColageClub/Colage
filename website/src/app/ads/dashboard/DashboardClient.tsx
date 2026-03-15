@@ -90,7 +90,7 @@ export function DashboardClient({ session }: { session: Session }) {
             <span className="text-sm text-[var(--colage-text-secondary)]">{session.businessName}</span>
             <button
               onClick={handleLogout}
-              className="text-xs text-[var(--colage-text-tertiary)] hover:text-white transition"
+              className="text-xs text-[var(--colage-text-tertiary)] hover:text-[var(--colage-text)] transition"
             >
               Log Out
             </button>

@@ -63,15 +63,13 @@ struct MiniProfileSheet: View {
                     }
 
                     // Floor
-                    if student.location.floor > 0 {
-                        HStack(spacing: 4) {
-                            Image(systemName: "building.2.fill")
-                                .font(.system(size: 10))
-                                .foregroundStyle(ColageColors.textTertiary)
-                            Text("Floor \(student.location.floor)")
-                                .font(ColageFonts.monoSmall)
-                                .foregroundStyle(ColageColors.textTertiary)
-                        }
+                    HStack(spacing: 4) {
+                        Image(systemName: "building.2.fill")
+                            .font(.system(size: 10))
+                            .foregroundStyle(ColageColors.textTertiary)
+                        Text(student.location.floor < 0 ? "B\(abs(student.location.floor))" : "Floor \(student.location.floor)")
+                            .font(ColageFonts.monoSmall)
+                            .foregroundStyle(ColageColors.textTertiary)
                     }
                 }
                 .padding(.top, 2)
@@ -113,22 +111,7 @@ struct MiniProfileSheet: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
 
-            // "Wave" button (future feature placeholder)
-            Button {
-                // Future: send a wave / notification
-            } label: {
-                HStack(spacing: 8) {
-                    Image(systemName: "hand.wave.fill")
-                    Text("Wave")
-                }
-                .font(ColageFonts.bodyBold)
-                .foregroundStyle(.white)
-                .frame(maxWidth: .infinity)
-                .frame(height: 48)
-                .background(themeColor)
-                .clipShape(RoundedRectangle(cornerRadius: 14))
-            }
-            .padding(.top, 8)
+
         }
     }
 

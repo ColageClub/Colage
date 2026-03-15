@@ -43,7 +43,7 @@ export const handler = async (event) => {
 
     // Auto-create university
     const known = KNOWN_UNIVERSITIES[domain];
-    const uniName = known?.name || `${domain.replace('.edu', '').split('.').pop().replace(/^\w/, c => c.toUpperCase())} University`;
+    const uniName = known?.name || domain.replace('.edu', '').toUpperCase();
 
     const university = {
       domain,
