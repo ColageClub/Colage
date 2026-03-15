@@ -67,6 +67,8 @@ Resources:
         - ALLOW_USER_SRP_AUTH
         - ALLOW_REFRESH_TOKEN_AUTH
         - ALLOW_CUSTOM_AUTH
+        - ALLOW_USER_PASSWORD_AUTH
+        - ALLOW_ADMIN_USER_PASSWORD_AUTH
       PreventUserExistenceErrors: ENABLED
       AccessTokenValidity: 15
       IdTokenValidity: 15
@@ -295,6 +297,56 @@ Resources:
           Properties:
             ApiId: !Ref ColageApi
             Path: /auth/phone/confirm
+            Method: POST
+            Auth:
+              Authorizer: NONE
+
+  # ============================================================
+  # LAMBDA FUNCTIONS - Auth Login + Refresh (no auth required)
+  # ============================================================
+  AuthLoginFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub colage-auth-login-${Stage}
+      Handler: index.handler
+      CodeUri: ./functions/auth-login/
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - cognito-idp:AdminInitiateAuth
+                - cognito-idp:AdminSetUserPassword
+              Resource: !GetAtt CognitoUserPool.Arn
+      Events:
+        Api:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref ColageApi
+            Path: /auth/login
+            Method: POST
+            Auth:
+              Authorizer: NONE
+
+  AuthRefreshFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub colage-auth-refresh-${Stage}
+      Handler: index.handler
+      CodeUri: ./functions/auth-refresh/
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - cognito-idp:AdminInitiateAuth
+              Resource: !GetAtt CognitoUserPool.Arn
+      Events:
+        Api:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref ColageApi
+            Path: /auth/refresh
             Method: POST
             Auth:
               Authorizer: NONE

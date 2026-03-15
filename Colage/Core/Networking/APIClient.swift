@@ -8,7 +8,7 @@ class APIClient {
     private let session: URLSession
 
     private init() {
-        self.baseURL = "https://wn7mxcdxca.execute-api.us-east-2.amazonaws.com/dev"
+        self.baseURL = "https://api.colageclub.com"
         self.session = URLSession.shared
     }
 
@@ -30,6 +30,12 @@ class APIClient {
         }
     }
 
+    /// Paths that don't need auth tokens
+    private let publicPaths = ["/auth/", "/universities/"]
+
+    private struct TokenRefreshRequest: Encodable { let refreshToken: String }
+    private struct TokenRefreshResponse: Decodable { let accessToken: String; let idToken: String; let expiresIn: Int }
+
     func request<T: Decodable>(
         method: String = "GET",
         path: String,
@@ -43,8 +49,9 @@ class APIClient {
         request.httpMethod = method
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
-        // Attach JWT if available
-        if let token = KeychainWrapper.get(key: "access_token") {
+        // Attach JWT if available (skip for public auth endpoints)
+        let isPublic = publicPaths.contains(where: { path.hasPrefix($0) })
+        if !isPublic, let token = KeychainWrapper.get(key: "access_token") {
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         }
 
@@ -54,15 +61,37 @@ class APIClient {
             request.httpBody = try encoder.encode(body)
         }
 
-        let (data, response) = try await session.data(for: request)
+        var (data, response) = try await session.data(for: request)
+        var httpResponse = response as? HTTPURLResponse
 
-        guard let httpResponse = response as? HTTPURLResponse else {
+        // Auto-refresh on 401
+        if httpResponse?.statusCode == 401, !isPublic,
+           let refreshToken = KeychainWrapper.get(key: "refresh_token") {
+            if let refreshURL = URL(string: "\(baseURL)/auth/refresh") {
+                var refreshRequest = URLRequest(url: refreshURL)
+                refreshRequest.httpMethod = "POST"
+                refreshRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
+                let encoder = JSONEncoder()
+                refreshRequest.httpBody = try encoder.encode(TokenRefreshRequest(refreshToken: refreshToken))
+                if let (refreshData, _) = try? await session.data(for: refreshRequest),
+                   let tokens = try? JSONDecoder().decode(TokenRefreshResponse.self, from: refreshData) {
+                    KeychainWrapper.set(key: "access_token", value: tokens.accessToken)
+                    KeychainWrapper.set(key: "id_token", value: tokens.idToken)
+                    // Retry original request with new token
+                    request.setValue("Bearer \(tokens.accessToken)", forHTTPHeaderField: "Authorization")
+                    (data, response) = try await session.data(for: request)
+                    httpResponse = response as? HTTPURLResponse
+                }
+            }
+        }
+
+        guard let finalResponse = httpResponse else {
             throw APIError.noData
         }
 
-        guard (200...299).contains(httpResponse.statusCode) else {
+        guard (200...299).contains(finalResponse.statusCode) else {
             let message = String(data: data, encoding: .utf8)
-            throw APIError.serverError(httpResponse.statusCode, message)
+            throw APIError.serverError(finalResponse.statusCode, message)
         }
 
         let decoder = JSONDecoder()

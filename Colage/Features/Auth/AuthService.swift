@@ -81,6 +81,10 @@ class AuthService: ObservableObject {
                 path: "/auth/email/confirm",
                 body: ConfirmRequest(email: enteredEmail.lowercased(), code: code)
             )
+            if result.verified {
+                // Get auth tokens after confirmation
+                await fetchAndStoreTokens()
+            }
             await MainActor.run { emailVerified = result.verified }
             return result.verified
         } catch {
@@ -285,9 +289,84 @@ class AuthService: ObservableObject {
             return false
         }
 
-        // TODO: POST /auth/login/confirm — returns JWT tokens
-        // Store tokens in Keychain, fetch profile from API
-        return false
+        do {
+            struct ConfirmRequest: Encodable { let email: String; let code: String }
+            struct ConfirmResponse: Decodable { let verified: Bool; let universityDomain: String }
+            let result: ConfirmResponse = try await api.request(
+                method: "POST",
+                path: "/auth/email/confirm",
+                body: ConfirmRequest(email: enteredEmail.lowercased(), code: code)
+            )
+            if result.verified {
+                await fetchAndStoreTokens()
+                await MainActor.run {
+                    emailVerified = true
+                    phoneVerified = true
+                }
+            }
+            return result.verified
+        } catch {
+            await MainActor.run { errorMessage = error.localizedDescription }
+            return false
+        }
+    }
+
+    // MARK: - Token Management
+
+    private struct TokenResponse: Decodable {
+        let accessToken: String
+        let idToken: String
+        let refreshToken: String?
+        let expiresIn: Int
+    }
+
+    /// Authenticate with Cognito and store tokens in Keychain
+    func fetchAndStoreTokens() async {
+        do {
+            struct LoginRequest: Encodable { let email: String }
+            let tokens: TokenResponse = try await api.request(
+                method: "POST",
+                path: "/auth/login",
+                body: LoginRequest(email: enteredEmail.lowercased())
+            )
+            KeychainWrapper.set(key: "access_token", value: tokens.accessToken)
+            KeychainWrapper.set(key: "id_token", value: tokens.idToken)
+            if let refresh = tokens.refreshToken {
+                KeychainWrapper.set(key: "refresh_token", value: refresh)
+            }
+            // Store expiry time
+            let expiry = Date().addingTimeInterval(TimeInterval(tokens.expiresIn))
+            UserDefaults.standard.set(expiry.timeIntervalSince1970, forKey: "token_expiry")
+        } catch {
+            print("Failed to fetch tokens: \(error)")
+        }
+    }
+
+    /// Refresh tokens using stored refresh token
+    func refreshTokensIfNeeded() async -> Bool {
+        let expiry = UserDefaults.standard.double(forKey: "token_expiry")
+        guard expiry > 0, Date().timeIntervalSince1970 > expiry - 60 else {
+            return true // Still valid
+        }
+        guard let refreshToken = KeychainWrapper.get(key: "refresh_token") else {
+            return false
+        }
+        do {
+            struct RefreshRequest: Encodable { let refreshToken: String }
+            let tokens: TokenResponse = try await api.request(
+                method: "POST",
+                path: "/auth/refresh",
+                body: RefreshRequest(refreshToken: refreshToken)
+            )
+            KeychainWrapper.set(key: "access_token", value: tokens.accessToken)
+            KeychainWrapper.set(key: "id_token", value: tokens.idToken)
+            let newExpiry = Date().addingTimeInterval(TimeInterval(tokens.expiresIn))
+            UserDefaults.standard.set(newExpiry.timeIntervalSince1970, forKey: "token_expiry")
+            return true
+        } catch {
+            print("Token refresh failed: \(error)")
+            return false
+        }
     }
 
     func logout() {
