@@ -1,0 +1,336 @@
+package com.colageclub.colage.app
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.colageclub.colage.core.design.*
+import com.colageclub.colage.core.university.primaryComposeColor
+import com.colageclub.colage.features.ads.AdBannerView
+import com.colageclub.colage.features.ar.ARDiscoveryView
+import com.colageclub.colage.features.discovery.NearbyStudentsViewModel
+import com.colageclub.colage.features.list.ListDiscoveryView
+import com.colageclub.colage.features.map.MapDiscoveryView
+import com.colageclub.colage.features.profile.EditProfileScreen
+import com.colageclub.colage.features.profile.OwnProfileScreen
+import com.colageclub.colage.features.profile.SettingsScreen
+
+@Composable
+fun HomeScreen(appViewModel: AppViewModel) {
+    val discoveryMode by appViewModel.discoveryMode.collectAsState()
+    val currentProfile by appViewModel.currentProfile.collectAsState()
+    val isVisible by appViewModel.isVisible.collectAsState()
+    val currentFloor by appViewModel.currentFloor.collectAsState()
+    val university by appViewModel.currentUniversity.collectAsState()
+    val theme by appViewModel.currentTheme.collectAsState()
+    val themeColor = theme.primaryComposeColor()
+
+    val nearbyVM: NearbyStudentsViewModel = hiltViewModel()
+
+    var showOwnProfile by remember { mutableStateOf(false) }
+    var showEditProfile by remember { mutableStateOf(false) }
+    var showSettings by remember { mutableStateOf(false) }
+
+    // Load mock data on first appear
+    LaunchedEffect(Unit) {
+        appViewModel.onHomeReady()
+        nearbyVM.loadMockData()
+    }
+
+    // Sync floor filter
+    LaunchedEffect(currentFloor) {
+        nearbyVM.setFilterFloor(currentFloor)
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        Scaffold(
+            containerColor = ColageColors.Background,
+            bottomBar = {
+                ColageBottomBar(
+                    selectedMode = discoveryMode,
+                    onModeSelected = { appViewModel.setDiscoveryMode(it) }
+                )
+            }
+        ) { paddingValues ->
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+            ) {
+                // Discovery views
+                when (discoveryMode) {
+                    DiscoveryMode.MAP -> MapDiscoveryView(
+                        students = nearbyVM.mapStudents(),
+                        themeColor = themeColor
+                    )
+                    DiscoveryMode.LIST -> ListDiscoveryView(
+                        viewModel = nearbyVM,
+                        currentFloor = currentFloor,
+                        themeColor = themeColor
+                    )
+                    DiscoveryMode.AR -> ARDiscoveryView(
+                        viewModel = nearbyVM,
+                        currentFloor = currentFloor,
+                        themeColor = themeColor
+                    )
+                }
+
+                // Top overlay bar
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Visibility toggle
+                        IconButton(
+                            onClick = { appViewModel.toggleVisibility() },
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(CircleShape)
+                                .background(
+                                    if (isVisible) ColageColors.Online.copy(alpha = 0.15f)
+                                    else ColageColors.Surface
+                                )
+                        ) {
+                            Icon(
+                                if (isVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                                contentDescription = "Toggle visibility",
+                                tint = if (isVisible) ColageColors.Online else ColageColors.TextTertiary,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+
+                        Spacer(Modifier.weight(1f))
+
+                        // Mode picker
+                        DiscoveryModePicker(
+                            activeMode = discoveryMode,
+                            onModeSelected = { appViewModel.setDiscoveryMode(it) }
+                        )
+
+                        Spacer(Modifier.weight(1f))
+
+                        // Profile button
+                        IconButton(onClick = { showOwnProfile = true }) {
+                            AvatarView(
+                                imageUrl = currentProfile?.profilePhotoURL,
+                                size = 36.dp,
+                                borderColor = themeColor,
+                                initials = currentProfile?.displayName?.initials()
+                            )
+                        }
+                    }
+
+                    // University label
+                    university?.let { uni ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 4.dp),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                uni.name,
+                                style = ColageFonts.CaptionBold.copy(color = ColageColors.TextSecondary)
+                            )
+                            Spacer(Modifier.width(6.dp))
+                            Box(
+                                modifier = Modifier
+                                    .size(6.dp)
+                                    .clip(CircleShape)
+                                    .background(ColageColors.Online)
+                            )
+                            Spacer(Modifier.width(6.dp))
+                            Text(
+                                "${nearbyVM.mapStudents().size} nearby",
+                                style = ColageFonts.Caption.copy(color = ColageColors.TextTertiary)
+                            )
+                        }
+                    }
+                }
+
+                // Floor picker — left side (only on Map mode)
+                if (discoveryMode == DiscoveryMode.MAP) {
+                    Column(
+                        modifier = Modifier
+                            .align(Alignment.CenterStart)
+                            .padding(start = 12.dp)
+                    ) {
+                        FloorPicker(
+                            selectedFloor = currentFloor,
+                            onFloorSelected = { appViewModel.setFloor(it) }
+                        )
+                    }
+                }
+
+                // Ad banner at bottom (only on Map mode)
+                if (discoveryMode == DiscoveryMode.MAP) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .padding(horizontal = 12.dp, vertical = 16.dp)
+                    ) {
+                        AdBannerView()
+                    }
+                }
+            }
+        }
+    }
+
+    // Full-screen overlays
+    if (showOwnProfile) {
+        OwnProfileScreen(
+            appViewModel = appViewModel,
+            onDismiss = { showOwnProfile = false },
+            onEditProfile = {
+                showOwnProfile = false
+                showEditProfile = true
+            },
+            onSettings = {
+                showOwnProfile = false
+                showSettings = true
+            }
+        )
+    }
+
+    if (showEditProfile) {
+        EditProfileScreen(
+            appViewModel = appViewModel,
+            onDismiss = { showEditProfile = false }
+        )
+    }
+
+    if (showSettings) {
+        SettingsScreen(
+            appViewModel = appViewModel,
+            onDismiss = { showSettings = false }
+        )
+    }
+}
+
+@Composable
+fun DiscoveryModePicker(
+    activeMode: DiscoveryMode,
+    onModeSelected: (DiscoveryMode) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .background(ColageColors.Surface, RoundedCornerShape(12.dp))
+            .padding(4.dp),
+        horizontalArrangement = Arrangement.spacedBy(2.dp)
+    ) {
+        DiscoveryMode.entries.forEach { mode ->
+            val isSelected = activeMode == mode
+            Text(
+                text = mode.label,
+                style = ColageFonts.CaptionBold.copy(
+                    color = if (isSelected) ColageColors.TextPrimary else ColageColors.TextTertiary
+                ),
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(if (isSelected) ColageColors.Primary.copy(alpha = 0.2f) else Color.Transparent)
+                    .clickable { onModeSelected(mode) }
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+            )
+        }
+    }
+}
+
+@Composable
+fun FloorPicker(
+    selectedFloor: Int,
+    onFloorSelected: (Int) -> Unit
+) {
+    val floors = listOf(6, 5, 4, 3, 2, 1, -1, -2)
+
+    Column(
+        modifier = Modifier
+            .background(ColageColors.Surface.copy(alpha = 0.9f), RoundedCornerShape(12.dp))
+            .padding(vertical = 4.dp, horizontal = 6.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        floors.forEach { floor ->
+            val isSelected = selectedFloor == floor
+            val label = when {
+                floor < 0 -> "B${kotlin.math.abs(floor)}"
+                else -> "$floor"
+            }
+            Text(
+                text = label,
+                style = ColageFonts.MonoSmall.copy(
+                    color = if (isSelected) ColageColors.Primary else ColageColors.TextTertiary
+                ),
+                modifier = Modifier
+                    .clip(RoundedCornerShape(6.dp))
+                    .background(if (isSelected) ColageColors.Primary.copy(alpha = 0.15f) else Color.Transparent)
+                    .clickable { onFloorSelected(floor) }
+                    .padding(horizontal = 10.dp, vertical = 6.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun ColageBottomBar(
+    selectedMode: DiscoveryMode,
+    onModeSelected: (DiscoveryMode) -> Unit
+) {
+    NavigationBar(
+        containerColor = ColageColors.Surface,
+        contentColor = ColageColors.TextPrimary,
+        tonalElevation = 0.dp
+    ) {
+        BottomNavItem.entries.forEach { item ->
+            val selected = selectedMode == item.mode
+            NavigationBarItem(
+                selected = selected,
+                onClick = { onModeSelected(item.mode) },
+                icon = {
+                    Icon(
+                        imageVector = if (selected) item.selectedIcon else item.icon,
+                        contentDescription = item.label,
+                        modifier = Modifier.size(24.dp)
+                    )
+                },
+                label = {
+                    Text(text = item.label, style = ColageFonts.Caption)
+                },
+                colors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = ColageColors.Primary,
+                    selectedTextColor = ColageColors.Primary,
+                    unselectedIconColor = ColageColors.TextSecondary,
+                    unselectedTextColor = ColageColors.TextSecondary,
+                    indicatorColor = ColageColors.Primary.copy(alpha = 0.12f)
+                )
+            )
+        }
+    }
+}
+
+private enum class BottomNavItem(
+    val mode: DiscoveryMode,
+    val label: String,
+    val icon: ImageVector,
+    val selectedIcon: ImageVector
+) {
+    MAP(DiscoveryMode.MAP, "Map", Icons.Default.Map, Icons.Default.Map),
+    LIST(DiscoveryMode.LIST, "List", Icons.Default.People, Icons.Default.People),
+    AR(DiscoveryMode.AR, "AR", Icons.Default.ViewInAr, Icons.Default.ViewInAr);
+}
+
+// initials() extension is in Components.kt
