@@ -46,7 +46,7 @@ fun PhoneOTPScreen(
             OnboardingProgress(currentStep = 3, totalSteps = 10, modifier = Modifier.padding(top = 8.dp))
 
             Column(
-                modifier = Modifier.padding(top = 48.dp),
+                modifier = Modifier.fillMaxWidth().padding(top = 48.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {

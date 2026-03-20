@@ -92,7 +92,9 @@ fun LoginScreen(
 
             // Header
             Column(
-                modifier = Modifier.padding(top = 32.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 32.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
@@ -175,7 +177,10 @@ fun LoginScreen(
                 }
 
                 LoginStep.OTP -> {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
                         OTPCodeField(
                             code = code,
                             onCodeChange = {
