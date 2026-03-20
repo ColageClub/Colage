@@ -55,7 +55,7 @@ fun MapDiscoveryView(
                     val bitmap = createAvatarBitmap(
                         initials = student.profile.displayName.initials(),
                         borderColor = themeArgb,
-                        size = 28
+                        size = 44
                     )
                     val options = PointAnnotationOptions()
                         .withPoint(Point.fromLngLat(student.location.longitude, student.location.latitude))
@@ -63,9 +63,9 @@ fun MapDiscoveryView(
                         .withIconSize(1.0)
                         .withIconAnchor(com.mapbox.maps.extension.style.layers.properties.generated.IconAnchor.CENTER)
                         .withTextField(student.profile.displayName.split(" ").first())
-                        .withTextSize(9.0)
+                        .withTextSize(11.0)
                         .withTextColor(android.graphics.Color.WHITE)
-                        .withTextOffset(listOf(0.0, 1.8))
+                        .withTextOffset(listOf(0.0, 2.5))
                         .withTextHaloColor(android.graphics.Color.BLACK)
                         .withTextHaloWidth(1.5)
                     val annotation = manager.create(options)

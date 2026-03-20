@@ -82,17 +82,7 @@ struct MapboxMapView: UIViewRepresentable {
         private var pendingDownloads: Set<String> = []
 
         func setupAnnotations(mapView: MapView) {
-            let manager = mapView.annotations.makePointAnnotationManager(
-                id: "students",
-                clusterOptions: ClusterOptions(
-                    circleRadius: .constant(18),
-                    circleColor: .constant(StyleColor(UIColor(ColageColors.primary))),
-                    textColor: .constant(StyleColor(.white)),
-                    textSize: .constant(12),
-                    clusterRadius: 40,
-                    clusterMaxZoom: 16
-                )
-            )
+            let manager = mapView.annotations.makePointAnnotationManager()
             manager.delegate = self
             self.annotationManager = manager
         }
@@ -118,7 +108,7 @@ struct MapboxMapView: UIViewRepresentable {
                         .compactMap { $0.first.map(String.init) }
                         .joined()
                         .uppercased()
-                    let placeholder = createAvatarImage(initials: initials, color: themeColor, size: 28)
+                    let placeholder = createAvatarImage(initials: initials, color: themeColor, size: 44)
                     try? mapView.mapboxMap.style.addImage(placeholder, id: imageId)
                     downloadAvatar(for: student, mapView: mapView)
                 }
@@ -132,9 +122,9 @@ struct MapboxMapView: UIViewRepresentable {
 
                 // Name label below photo
                 annotation.textField = student.profile.displayName.components(separatedBy: " ").first ?? ""
-                annotation.textSize = 9
+                annotation.textSize = 11
                 annotation.textColor = StyleColor(.white)
-                annotation.textOffset = [0, 1.8]
+                annotation.textOffset = [0, 2.5]
                 annotation.textHaloColor = StyleColor(.black)
                 annotation.textHaloWidth = 1.5
 
@@ -162,7 +152,7 @@ struct MapboxMapView: UIViewRepresentable {
 
             URLSession.shared.dataTask(with: url) { [weak self] data, _, _ in
                 guard let self, let data, let downloaded = UIImage(data: data) else { return }
-                let circular = self.createCircularImage(from: downloaded, borderColor: themeColor, size: 28)
+                let circular = self.createCircularImage(from: downloaded, borderColor: themeColor, size: 44)
                 DispatchQueue.main.async {
                     self.imageCache[userId] = circular
                     self.pendingDownloads.remove(userId)
