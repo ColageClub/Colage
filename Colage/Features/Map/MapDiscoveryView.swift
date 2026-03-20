@@ -4,6 +4,7 @@ import SwiftUI
 /// Map discovery view — Mapbox-powered with university theming
 struct MapDiscoveryView: View {
     @ObservedObject var students: NearbyStudentsViewModel
+    var allMapStudents: [NearbyStudent]
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var universityService: UniversityService
     @State private var selectedStudent: NearbyStudent?
@@ -18,7 +19,7 @@ struct MapDiscoveryView: View {
         ZStack {
             MapboxMapView(
                 viewport: $viewport,
-                students: students.mapStudents,
+                students: allMapStudents,
                 universityTheme: universityService.currentTheme,
                 onStudentTapped: { student in
                     selectedStudent = student
@@ -230,7 +231,7 @@ extension MapboxMapView.Coordinator: AnnotationInteractionDelegate {
         let vm = NearbyStudentsViewModel()
         vm.loadMockData()
         return vm
-    }())
+    }(), allMapStudents: [])
     .environmentObject(AppState())
     .environmentObject(UniversityService())
 }

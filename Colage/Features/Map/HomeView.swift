@@ -20,7 +20,10 @@ struct HomeView: View {
             Group {
                 switch appState.activeMode {
                 case .map:
-                    MapDiscoveryView(students: nearbyStudents)
+                    MapDiscoveryView(
+                        students: nearbyStudents,
+                        allMapStudents: nearbyStudents.mapStudentsWithSelf(location: locationService)
+                    )
                 case .list:
                     ListDiscoveryView(students: nearbyStudents)
                 case .ar:
@@ -153,6 +156,28 @@ class NearbyStudentsViewModel: ObservableObject {
             filterFloor == nil || student.location.floor == filterFloor
         }
         .sorted { $0.distance < $1.distance }
+    }
+
+    /// Map students + self marker
+    func mapStudentsWithSelf(location: LocationService) -> [NearbyStudent] {
+        var result = mapStudents
+        if let profile = UserProfile.current,
+           let coord = location.currentLocation {
+            let selfStudent = NearbyStudent(
+                profile: profile,
+                location: StudentLocation(
+                    userId: profile.userId,
+                    latitude: coord.latitude,
+                    longitude: coord.longitude,
+                    altitude: location.currentAltitude,
+                    floor: location.currentFloor,
+                    timestamp: Date()
+                ),
+                distance: 0
+            )
+            result.insert(selfStudent, at: 0)
+        }
+        return result
     }
 
     /// Distance + floor filtered students — used by List

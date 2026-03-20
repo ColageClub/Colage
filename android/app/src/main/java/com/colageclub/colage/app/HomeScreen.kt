@@ -57,10 +57,27 @@ fun HomeScreen(appViewModel: AppViewModel) {
     Box(modifier = Modifier.fillMaxSize().background(ColageColors.Background)) {
                 // Discovery views
                 when (discoveryMode) {
-                    DiscoveryMode.MAP -> MapDiscoveryView(
-                        students = nearbyVM.mapStudents(),
-                        themeColor = themeColor
-                    )
+                    DiscoveryMode.MAP -> {
+                        // Add self to map markers
+                        val mapStudents = nearbyVM.mapStudents().toMutableList()
+                        currentProfile?.let { profile ->
+                            val selfStudent = com.colageclub.colage.data.models.NearbyStudent(
+                                profile = profile,
+                                location = com.colageclub.colage.data.models.StudentLocation(
+                                    userId = profile.userId,
+                                    latitude = 42.2780, // TODO: real GPS location
+                                    longitude = -83.7382,
+                                    floor = currentFloor
+                                ),
+                                distance = 0.0
+                            )
+                            mapStudents.add(0, selfStudent)
+                        }
+                        MapDiscoveryView(
+                            students = mapStudents,
+                            themeColor = themeColor
+                        )
+                    }
                     DiscoveryMode.LIST -> ListDiscoveryView(
                         viewModel = nearbyVM,
                         currentFloor = currentFloor,
