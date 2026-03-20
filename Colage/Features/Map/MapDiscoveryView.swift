@@ -78,17 +78,13 @@ struct MapboxMapView: UIViewRepresentable {
             self.parent = parent
         }
 
+        private var imageCache: [String: UIImage] = [:]
+        private var pendingDownloads: Set<String> = []
+
         func setupAnnotations(mapView: MapView) {
             let manager = mapView.annotations.makePointAnnotationManager()
             manager.delegate = self
             self.annotationManager = manager
-
-            // Register custom circle marker image
-            let dotImage = createDotImage(
-                color: UIColor(parent.universityTheme?.primary ?? ColageColors.primary),
-                size: 32
-            )
-            try? mapView.mapboxMap.style.addImage(dotImage, id: "student-dot")
         }
 
         func updateStudentAnnotations(students: [NearbyStudent], mapView: MapView) {
@@ -96,8 +92,27 @@ struct MapboxMapView: UIViewRepresentable {
 
             studentMap = [:]
             var annotations: [PointAnnotation] = []
+            let themeColor = UIColor(parent.universityTheme?.primary ?? ColageColors.primary)
 
             for student in students {
+                let imageId = "avatar-\(student.profile.userId)"
+
+                // Register avatar image if we have it cached
+                if let cached = imageCache[student.profile.userId] {
+                    try? mapView.mapboxMap.style.addImage(cached, id: imageId)
+                } else {
+                    // Use initials placeholder and start downloading
+                    let initials = student.profile.displayName
+                        .components(separatedBy: " ")
+                        .prefix(2)
+                        .compactMap { $0.first.map(String.init) }
+                        .joined()
+                        .uppercased()
+                    let placeholder = createAvatarImage(initials: initials, color: themeColor, size: 44)
+                    try? mapView.mapboxMap.style.addImage(placeholder, id: imageId)
+                    downloadAvatar(for: student, mapView: mapView)
+                }
+
                 var annotation = PointAnnotation(
                     coordinate: CLLocationCoordinate2D(
                         latitude: student.location.latitude,
@@ -105,20 +120,19 @@ struct MapboxMapView: UIViewRepresentable {
                     )
                 )
 
-                // Name label below dot
+                // Name label below photo
                 annotation.textField = student.profile.displayName.components(separatedBy: " ").first ?? ""
                 annotation.textSize = 11
                 annotation.textColor = StyleColor(.white)
-                annotation.textOffset = [0, 2.2]
+                annotation.textOffset = [0, 2.5]
                 annotation.textHaloColor = StyleColor(.black)
                 annotation.textHaloWidth = 1.5
 
-                // Colored circle dot
-                annotation.iconImage = "student-dot"
+                // Profile photo circle
+                annotation.iconImage = imageId
                 annotation.iconSize = 1.0
                 annotation.iconAnchor = .center
 
-                // Map annotation ID to student for tap handling
                 studentMap[annotation.id] = student
                 annotations.append(annotation)
             }
@@ -126,36 +140,74 @@ struct MapboxMapView: UIViewRepresentable {
             manager.annotations = annotations
         }
 
-        /// Create a circle dot UIImage for map markers
-        private func createDotImage(color: UIColor, size: CGFloat) -> UIImage {
+        /// Download a student's profile photo and update the map marker
+        private func downloadAvatar(for student: NearbyStudent, mapView: MapView) {
+            let userId = student.profile.userId
+            guard !pendingDownloads.contains(userId) else { return }
+            guard let urlStr = student.profile.profilePhotoURL,
+                  let url = URL(string: urlStr) else { return }
+
+            pendingDownloads.insert(userId)
+            let themeColor = UIColor(parent.universityTheme?.primary ?? ColageColors.primary)
+
+            URLSession.shared.dataTask(with: url) { [weak self] data, _, _ in
+                guard let self, let data, let downloaded = UIImage(data: data) else { return }
+                let circular = self.createCircularImage(from: downloaded, borderColor: themeColor, size: 44)
+                DispatchQueue.main.async {
+                    self.imageCache[userId] = circular
+                    self.pendingDownloads.remove(userId)
+                    let imageId = "avatar-\(userId)"
+                    try? mapView.mapboxMap.style.addImage(circular, id: imageId)
+                }
+            }.resume()
+        }
+
+        /// Create a circular avatar with initials (placeholder)
+        private func createAvatarImage(initials: String, color: UIColor, size: CGFloat) -> UIImage {
             let renderer = UIGraphicsImageRenderer(size: CGSize(width: size, height: size))
             return renderer.image { ctx in
-                // Outer glow
-                let glowRect = CGRect(x: 2, y: 2, width: size - 4, height: size - 4)
-                ctx.cgContext.setFillColor(color.withAlphaComponent(0.3).cgColor)
-                ctx.cgContext.fillEllipse(in: glowRect)
-
-                // Inner circle
-                let innerSize: CGFloat = size * 0.55
-                let innerRect = CGRect(
-                    x: (size - innerSize) / 2,
-                    y: (size - innerSize) / 2,
-                    width: innerSize,
-                    height: innerSize
-                )
+                // Border
+                let borderWidth: CGFloat = 2
                 ctx.cgContext.setFillColor(color.cgColor)
-                ctx.cgContext.fillEllipse(in: innerRect)
+                ctx.cgContext.fillEllipse(in: CGRect(x: 0, y: 0, width: size, height: size))
 
-                // White center dot
-                let centerSize: CGFloat = size * 0.2
-                let centerRect = CGRect(
-                    x: (size - centerSize) / 2,
-                    y: (size - centerSize) / 2,
-                    width: centerSize,
-                    height: centerSize
+                // Background
+                let inner = CGRect(x: borderWidth, y: borderWidth, width: size - borderWidth * 2, height: size - borderWidth * 2)
+                ctx.cgContext.setFillColor(UIColor(white: 0.15, alpha: 1).cgColor)
+                ctx.cgContext.fillEllipse(in: inner)
+
+                // Initials
+                let attrs: [NSAttributedString.Key: Any] = [
+                    .font: UIFont.systemFont(ofSize: size * 0.32, weight: .bold),
+                    .foregroundColor: UIColor.white
+                ]
+                let text = initials as NSString
+                let textSize = text.size(withAttributes: attrs)
+                let textRect = CGRect(
+                    x: (size - textSize.width) / 2,
+                    y: (size - textSize.height) / 2,
+                    width: textSize.width,
+                    height: textSize.height
                 )
-                ctx.cgContext.setFillColor(UIColor.white.cgColor)
-                ctx.cgContext.fillEllipse(in: centerRect)
+                text.draw(in: textRect, withAttributes: attrs)
+            }
+        }
+
+        /// Crop + circle a downloaded image with a colored border
+        private func createCircularImage(from image: UIImage, borderColor: UIColor, size: CGFloat) -> UIImage {
+            let renderer = UIGraphicsImageRenderer(size: CGSize(width: size, height: size))
+            return renderer.image { ctx in
+                let borderWidth: CGFloat = 2
+
+                // Border circle
+                ctx.cgContext.setFillColor(borderColor.cgColor)
+                ctx.cgContext.fillEllipse(in: CGRect(x: 0, y: 0, width: size, height: size))
+
+                // Clip to inner circle and draw image
+                let innerRect = CGRect(x: borderWidth, y: borderWidth, width: size - borderWidth * 2, height: size - borderWidth * 2)
+                ctx.cgContext.addEllipse(in: innerRect)
+                ctx.cgContext.clip()
+                image.draw(in: innerRect)
             }
         }
     }
