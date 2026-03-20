@@ -36,23 +36,8 @@ fun MiniProfileSheet(
             .background(ColageColors.Background)
             .verticalScroll(scrollState)
             .padding(horizontal = 20.dp)
-            .padding(bottom = 40.dp)
+            .padding(top = 8.dp, bottom = 40.dp)
     ) {
-        // Drag handle
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 12.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Box(
-                modifier = Modifier
-                    .width(40.dp)
-                    .height(4.dp)
-                    .background(ColageColors.Border, RoundedCornerShape(2.dp))
-            )
-        }
-
         // Mini content — avatar + info
         Row(
             modifier = Modifier.fillMaxWidth(),

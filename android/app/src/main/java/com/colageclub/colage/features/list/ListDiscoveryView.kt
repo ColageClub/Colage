@@ -111,7 +111,7 @@ fun ListDiscoveryView(
 
     // Bottom sheet
     selectedStudent?.let { student ->
-        val sheetState = rememberModalBottomSheetState()
+        val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
         ModalBottomSheet(
             onDismissRequest = { selectedStudent = null },
             sheetState = sheetState,

@@ -26,7 +26,6 @@ fun MapDiscoveryView(
     onStudentTapped: (NearbyStudent) -> Unit = {}
 ) {
     var selectedStudent by remember { mutableStateOf<NearbyStudent?>(null) }
-    val sheetState = rememberModalBottomSheetState()
 
     Box(modifier = Modifier.fillMaxSize()) {
         // Mapbox map
@@ -76,9 +75,10 @@ fun MapDiscoveryView(
 
     // Bottom sheet for selected student
     selectedStudent?.let { student ->
+        val studentSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
         ModalBottomSheet(
             onDismissRequest = { selectedStudent = null },
-            sheetState = sheetState,
+            sheetState = studentSheetState,
             containerColor = ColageColors.Background,
             dragHandle = { BottomSheetDefaults.DragHandle(color = ColageColors.Border) }
         ) {

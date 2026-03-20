@@ -1,5 +1,9 @@
 package com.colageclub.colage.features.profile
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -37,6 +41,13 @@ fun EditProfileScreen(
         )
     }
     var isSaving by remember { mutableStateOf(false) }
+    var selectedPhotoUri by remember { mutableStateOf<Uri?>(null) }
+
+    val photoPicker = rememberLauncherForActivityResult(
+        ActivityResultContracts.PickVisualMedia()
+    ) { uri ->
+        uri?.let { selectedPhotoUri = it }
+    }
 
     val editablePlatforms = listOf(
         SocialPlatform.INSTAGRAM, SocialPlatform.TIKTOK, SocialPlatform.X,
@@ -70,14 +81,18 @@ fun EditProfileScreen(
 
                 // Avatar
                 AvatarView(
-                    imageUrl = profile?.profilePhotoURL,
+                    imageUrl = selectedPhotoUri?.toString() ?: profile?.profilePhotoURL,
                     size = 120.dp,
                     initials = profile?.displayName?.initials()
                 )
 
                 Spacer(Modifier.height(12.dp))
 
-                TextButton(onClick = { /* TODO: photo picker */ }) {
+                TextButton(onClick = {
+                    photoPicker.launch(
+                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                    )
+                }) {
                     Text("Change Photo", style = ColageFonts.CaptionBold.copy(color = ColageColors.Primary))
                 }
 

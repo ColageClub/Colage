@@ -54,21 +54,7 @@ fun HomeScreen(appViewModel: AppViewModel) {
         nearbyVM.setFilterFloor(currentFloor)
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        Scaffold(
-            containerColor = ColageColors.Background,
-            bottomBar = {
-                ColageBottomBar(
-                    selectedMode = discoveryMode,
-                    onModeSelected = { appViewModel.setDiscoveryMode(it) }
-                )
-            }
-        ) { paddingValues ->
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-            ) {
+    Box(modifier = Modifier.fillMaxSize().background(ColageColors.Background)) {
                 // Discovery views
                 when (discoveryMode) {
                     DiscoveryMode.MAP -> MapDiscoveryView(
@@ -164,33 +150,27 @@ fun HomeScreen(appViewModel: AppViewModel) {
                     }
                 }
 
-                // Floor picker — left side (only on Map mode)
-                if (discoveryMode == DiscoveryMode.MAP) {
-                    Column(
-                        modifier = Modifier
-                            .align(Alignment.CenterStart)
-                            .padding(start = 12.dp)
-                    ) {
-                        FloorPicker(
-                            selectedFloor = currentFloor,
-                            onFloorSelected = { appViewModel.setFloor(it) }
-                        )
-                    }
+                // Floor picker — left side (all modes)
+                Column(
+                    modifier = Modifier
+                        .align(Alignment.CenterStart)
+                        .padding(start = 12.dp)
+                ) {
+                    FloorPicker(
+                        selectedFloor = currentFloor,
+                        onFloorSelected = { appViewModel.setFloor(it) }
+                    )
                 }
 
-                // Ad banner at bottom (only on Map mode)
-                if (discoveryMode == DiscoveryMode.MAP) {
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .padding(horizontal = 12.dp, vertical = 16.dp)
-                    ) {
-                        AdBannerView()
-                    }
+                // Ad banner at bottom (all modes)
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(horizontal = 12.dp, vertical = 16.dp)
+                ) {
+                    AdBannerView()
                 }
             }
-        }
-    }
 
     // Full-screen overlays
     if (showOwnProfile) {
@@ -283,54 +263,6 @@ fun FloorPicker(
             )
         }
     }
-}
-
-@Composable
-private fun ColageBottomBar(
-    selectedMode: DiscoveryMode,
-    onModeSelected: (DiscoveryMode) -> Unit
-) {
-    NavigationBar(
-        containerColor = ColageColors.Surface,
-        contentColor = ColageColors.TextPrimary,
-        tonalElevation = 0.dp
-    ) {
-        BottomNavItem.entries.forEach { item ->
-            val selected = selectedMode == item.mode
-            NavigationBarItem(
-                selected = selected,
-                onClick = { onModeSelected(item.mode) },
-                icon = {
-                    Icon(
-                        imageVector = if (selected) item.selectedIcon else item.icon,
-                        contentDescription = item.label,
-                        modifier = Modifier.size(24.dp)
-                    )
-                },
-                label = {
-                    Text(text = item.label, style = ColageFonts.Caption)
-                },
-                colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = ColageColors.Primary,
-                    selectedTextColor = ColageColors.Primary,
-                    unselectedIconColor = ColageColors.TextSecondary,
-                    unselectedTextColor = ColageColors.TextSecondary,
-                    indicatorColor = ColageColors.Primary.copy(alpha = 0.12f)
-                )
-            )
-        }
-    }
-}
-
-private enum class BottomNavItem(
-    val mode: DiscoveryMode,
-    val label: String,
-    val icon: ImageVector,
-    val selectedIcon: ImageVector
-) {
-    MAP(DiscoveryMode.MAP, "Map", Icons.Default.Map, Icons.Default.Map),
-    LIST(DiscoveryMode.LIST, "List", Icons.Default.People, Icons.Default.People),
-    AR(DiscoveryMode.AR, "AR", Icons.Default.ViewInAr, Icons.Default.ViewInAr);
 }
 
 // initials() extension is in Components.kt
