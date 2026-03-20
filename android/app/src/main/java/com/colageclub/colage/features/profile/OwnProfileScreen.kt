@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import com.colageclub.colage.app.AppViewModel
 import com.colageclub.colage.core.design.*
 import com.colageclub.colage.core.university.primaryComposeColor
+import com.colageclub.colage.features.discovery.icon
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -238,7 +239,4 @@ fun SectionHeader(title: String) {
     )
 }
 
-// Extension to get icon for SocialPlatform
-private fun com.colageclub.colage.data.models.SocialPlatform.icon(): androidx.compose.ui.graphics.vector.ImageVector {
-    return com.colageclub.colage.features.discovery.icon()
-}
+// icon() extension is defined in MiniProfileSheet.kt (discovery package)

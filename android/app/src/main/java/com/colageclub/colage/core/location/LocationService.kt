@@ -114,7 +114,7 @@ class LocationService @Inject constructor(
         // Convert pressure to altitude using standard barometric formula
         // altitude (m) = 44330 * (1 - (P/P0)^(1/5.255)), P0 = 1013.25 hPa
         val seaLevel = SensorManager.PRESSURE_STANDARD_ATMOSPHERE // 1013.25 hPa
-        val altitudeM = 44330.0 * (1.0 - (pressureHPa / seaLevel).pow(1.0 / 5.255))
+        val altitudeM = 44330.0 * (1.0 - (pressureHPa.toDouble() / seaLevel.toDouble()).pow(1.0 / 5.255))
 
         if (groundAltitude == null) {
             groundAltitude = altitudeM

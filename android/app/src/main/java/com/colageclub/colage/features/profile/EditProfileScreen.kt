@@ -32,7 +32,7 @@ fun EditProfileScreen(
     var bio by remember { mutableStateOf(profile?.bio ?: "") }
     var major by remember { mutableStateOf(profile?.major ?: "") }
     var socialLinks by remember {
-        mutableStateOf(
+        mutableStateOf<Map<SocialPlatform, String>>(
             profile?.socialLinks?.associate { it.platform to it.handle } ?: emptyMap()
         )
     }
@@ -169,8 +169,8 @@ fun EditProfileScreen(
                                 modifier = Modifier.size(16.dp)
                             )
                             OutlinedTextField(
-                                value = socialLinks[platform] ?: "",
-                                onValueChange = { socialLinks = socialLinks + (platform to it) },
+                                value = socialLinks.getOrDefault(platform, ""),
+                                onValueChange = { newVal -> socialLinks = socialLinks.toMutableMap().apply { put(platform, newVal) } },
                                 placeholder = { Text(platform.displayName, style = ColageFonts.Body.copy(color = ColageColors.TextTertiary)) },
                                 modifier = Modifier.weight(1f),
                                 textStyle = ColageFonts.Body.copy(color = ColageColors.TextPrimary),
@@ -202,7 +202,7 @@ fun EditProfileScreen(
                     title = "Save",
                     onClick = {
                         isSaving = true
-                        val links = socialLinks.mapNotNull { (platform, handle) ->
+                        val links = socialLinks.entries.mapNotNull { (platform, handle) ->
                             if (handle.isNotEmpty()) SocialLink(platform, handle) else null
                         }
                         val updated = (profile ?: return@ColagePrimaryButton).copy(
