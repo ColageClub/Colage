@@ -53,3 +53,4 @@ website/.next/
 # Environment
 .env*
 .env.local
+.github/workflows/

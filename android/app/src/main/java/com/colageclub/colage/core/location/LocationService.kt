@@ -17,10 +17,19 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlin.math.abs
 import kotlin.math.pow
 import kotlin.math.roundToInt
 
+/**
+ * Event-driven location service — broadcasts only when the user actually moves.
+ *
+ * Uses FusedLocationProvider with displacement-based updates instead of fixed timers:
+ * - 5m displacement filter triggers location updates only on real movement
+ * - 3m minimum broadcast distance filters GPS jitter
+ * - 3s minimum broadcast interval throttles rapid-fire updates
+ * - 30s heartbeat keeps server TTL alive when stationary
+ * - Floor changes trigger immediate broadcast
+ */
 @Singleton
 class LocationService @Inject constructor(
     @ApplicationContext private val context: Context,
@@ -49,18 +58,60 @@ class LocationService @Inject constructor(
     private var groundAltitude: Double? = null
     private var currentAltitude = 0.0
 
-    private var broadcastJob: Job? = null
+    // Movement-based broadcasting state
+    private var lastBroadcastLocation: Location? = null
+    private var lastBroadcastTime: Long = 0
+    private var lastBroadcastFloor: Int = 0
+    private var currentUserId: String = ""
+
+    /** Min distance (meters) before OS triggers a location update */
+    private val movementThreshold = 5f
+
+    /** Min distance (meters) before we actually broadcast to server */
+    private val broadcastMinDistance = 3.0
+
+    /** Min time (ms) between broadcasts — throttle rapid updates */
+    private val broadcastMinIntervalMs = 3000L
+
+    /** Heartbeat interval (ms) — keep-alive when stationary */
+    private val heartbeatIntervalMs = 30_000L
+
+    private var heartbeatJob: Job? = null
     private val serviceScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 
+    // FusedLocationProvider: displacement-based, not timer-based
     private val locationRequest = LocationRequest.Builder(
-        Priority.PRIORITY_HIGH_ACCURACY, 2000L
+        Priority.PRIORITY_HIGH_ACCURACY, 5000L // Max interval hint — displacement is the real trigger
     ).apply {
-        setMinUpdateDistanceMeters(2f)
+        setMinUpdateDistanceMeters(movementThreshold)
+        setMinUpdateIntervalMillis(2000L) // Won't fire faster than 2s even if moving fast
     }.build()
 
     private val locationCallback = object : LocationCallback() {
         override fun onLocationResult(result: LocationResult) {
-            result.lastLocation?.let { _currentLocation.value = it }
+            val location = result.lastLocation ?: return
+
+            // Filter stale or inaccurate readings
+            val age = System.currentTimeMillis() - location.time
+            if (age > 10_000 || location.accuracy > 100f) return
+
+            _currentLocation.value = location
+
+            // Decide whether to broadcast
+            val now = System.currentTimeMillis()
+            val lastLoc = lastBroadcastLocation
+
+            val shouldBroadcast = if (lastLoc != null) {
+                val distance = location.distanceTo(lastLoc)
+                val timeSinceLast = now - lastBroadcastTime
+                distance >= broadcastMinDistance && timeSinceLast >= broadcastMinIntervalMs
+            } else {
+                true // First location — always broadcast
+            }
+
+            if (shouldBroadcast) {
+                broadcastLocation(location)
+            }
         }
     }
 
@@ -68,6 +119,7 @@ class LocationService @Inject constructor(
     fun startTracking(userId: String) {
         if (_isTracking.value) return
         _isTracking.value = true
+        currentUserId = userId
 
         fusedLocationClient.requestLocationUpdates(
             locationRequest,
@@ -79,10 +131,11 @@ class LocationService @Inject constructor(
             sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL)
         }
 
-        broadcastJob = serviceScope.launch {
+        // Heartbeat: keep server TTL alive when standing still
+        heartbeatJob = serviceScope.launch {
             while (isActive) {
-                delay(5000L)
-                broadcastLocation(userId)
+                delay(heartbeatIntervalMs)
+                _currentLocation.value?.let { broadcastLocation(it) }
             }
         }
     }
@@ -92,8 +145,9 @@ class LocationService @Inject constructor(
         _isTracking.value = false
         fusedLocationClient.removeLocationUpdates(locationCallback)
         sensorManager.unregisterListener(this)
-        broadcastJob?.cancel()
-        broadcastJob = null
+        heartbeatJob?.cancel()
+        heartbeatJob = null
+        lastBroadcastLocation = null
     }
 
     fun recalibrateGround() {
@@ -106,21 +160,27 @@ class LocationService @Inject constructor(
         groundAltitude = currentAltitude - (floor - 1) * metersPerFloor
     }
 
-    // MARK: - SensorEventListener
+    // MARK: - SensorEventListener (barometer → floor detection)
 
     override fun onSensorChanged(event: SensorEvent?) {
         if (event?.sensor?.type != Sensor.TYPE_PRESSURE) return
-        val pressureHPa = event.values[0] // hPa
-        // Convert pressure to altitude using standard barometric formula
-        // altitude (m) = 44330 * (1 - (P/P0)^(1/5.255)), P0 = 1013.25 hPa
-        val seaLevel = SensorManager.PRESSURE_STANDARD_ATMOSPHERE // 1013.25 hPa
+        val pressureHPa = event.values[0]
+        val seaLevel = SensorManager.PRESSURE_STANDARD_ATMOSPHERE
         val altitudeM = 44330.0 * (1.0 - (pressureHPa.toDouble() / seaLevel.toDouble()).pow(1.0 / 5.255))
 
         if (groundAltitude == null) {
             groundAltitude = altitudeM
         }
         currentAltitude = altitudeM
-        _currentFloor.value = computeFloor(altitudeM)
+        val newFloor = computeFloor(altitudeM)
+
+        // Floor change → immediate broadcast (even if we haven't moved laterally)
+        if (newFloor != _currentFloor.value) {
+            _currentFloor.value = newFloor
+            _currentLocation.value?.let { broadcastLocation(it) }
+        } else {
+            _currentFloor.value = newFloor
+        }
     }
 
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
@@ -135,16 +195,21 @@ class LocationService @Inject constructor(
         }
     }
 
-    private fun broadcastLocation(userId: String) {
-        val loc = _currentLocation.value ?: return
+    // MARK: - Broadcasting
+
+    private fun broadcastLocation(location: Location) {
         val studentLocation = StudentLocation(
-            userId = userId,
-            latitude = loc.latitude,
-            longitude = loc.longitude,
+            userId = currentUserId,
+            latitude = location.latitude,
+            longitude = location.longitude,
             altitude = currentAltitude,
             floor = _currentFloor.value,
             timestamp = System.currentTimeMillis()
         )
         webSocketManager.sendLocationUpdate(studentLocation)
+
+        lastBroadcastLocation = location
+        lastBroadcastTime = System.currentTimeMillis()
+        lastBroadcastFloor = _currentFloor.value
     }
 }
