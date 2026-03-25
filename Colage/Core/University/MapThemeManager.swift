@@ -42,7 +42,7 @@ class MapThemeManager {
     /// Get theme config for a university domain
     func config(for domain: String) -> MapThemeConfig {
         themes[domain] ?? MapThemeConfig(
-            roadColor: "#6C5CE7",    // Default purple
+            roadColor: "#A51C30",    // Default crimson
             waterColor: "#1A1A2E",
             buildingColor: "#1E1E2E",
             labelColor: "#A0A0A0",

@@ -130,7 +130,7 @@ fun UniversityTheme.primaryComposeColor(): Color {
         val hex = primaryColor.trimStart('#')
         Color(android.graphics.Color.parseColor("#$hex"))
     } catch (_: Exception) {
-        Color(0xFF6C5CE7)
+        Color(0xFFA51C30)
     }
 }
 

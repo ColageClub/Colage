@@ -271,7 +271,7 @@ struct LiveARView: UIViewRepresentable {
 
                 // Simple sphere for now — custom meshes later
                 let mesh = MeshResource.generateSphere(radius: 0.08)
-                let material = SimpleMaterial(color: .systemPurple, isMetallic: false)
+                let material = SimpleMaterial(color: UIColor(red: 0.647, green: 0.110, blue: 0.188, alpha: 1.0), isMetallic: false) // Crimson
                 let entity = ModelEntity(mesh: mesh, materials: [material])
                 entity.name = student.id
 

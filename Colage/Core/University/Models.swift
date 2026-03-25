@@ -28,7 +28,7 @@ struct UniversityTheme: Codable, Identifiable {
     static let `default` = UniversityTheme(
         id: "default",
         name: "Classic",
-        primaryColor: "#6C5CE7",
+        primaryColor: "#A51C30",
         accentColor: "#00CEC9",
         textColor: "#FFFFFF",
         backgroundAsset: nil

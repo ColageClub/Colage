@@ -10,8 +10,8 @@ object ColageColors {
     val Border = Color(0xFF333333)
 
     // Brand
-    val Primary = Color(0xFF6C5CE7)
-    val PrimaryLight = Color(0xFFA29BFE)
+    val Primary = Color(0xFFA51C30)
+    val PrimaryLight = Color(0xFFD43B50)
     val Secondary = Color(0xFF00CEC9)
 
     // Text
@@ -26,6 +26,6 @@ object ColageColors {
     val Warning = Color(0xFFFFD740)
 
     // University defaults
-    val DefaultUniversityPrimary = Color(0xFF6C5CE7)
+    val DefaultUniversityPrimary = Color(0xFFA51C30)
     val DefaultUniversityAccent = Color(0xFF00CEC9)
 }

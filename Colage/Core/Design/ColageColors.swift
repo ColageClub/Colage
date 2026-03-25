@@ -9,8 +9,8 @@ enum ColageColors {
     static let border = Color(hex: "333333")
 
     // MARK: - Brand
-    static let primary = Color(hex: "6C5CE7")        // Purple — main brand
-    static let primaryLight = Color(hex: "A29BFE")
+    static let primary = Color(hex: "A51C30")        // Crimson — main brand
+    static let primaryLight = Color(hex: "D43B50")
     static let secondary = Color(hex: "00CEC9")      // Teal accent
 
     // MARK: - Text
@@ -25,7 +25,7 @@ enum ColageColors {
     static let warning = Color(hex: "FFD740")
 
     // MARK: - University defaults
-    static let defaultUniversityPrimary = Color(hex: "6C5CE7")
+    static let defaultUniversityPrimary = Color(hex: "A51C30")
     static let defaultUniversityAccent = Color(hex: "00CEC9")
 }
 
