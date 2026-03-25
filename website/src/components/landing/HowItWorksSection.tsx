@@ -5,8 +5,8 @@ import { useRef } from "react";
 import { SectionWrapper, SectionHeading } from "./Section";
 
 const steps = [
-  { num: "01", icon: "📧", title: "Sign up with your .edu email", desc: "Only verified students and graduates from accredited universities can join. Your .edu email is your key." },
-  { num: "02", icon: "🎓", title: "Choose Student or Alumni", desc: "Current students join their school's server. Graduates join the global Alumni Network — one community, every school." },
+  { num: "01", icon: "📧", title: "Sign up with your .edu email", desc: "Only verified students from accredited universities can join. Your .edu email is your key in." },
+  { num: "02", icon: "🎓", title: "Join your school's server", desc: "You're automatically placed into your university's server with other students from your campus." },
   { num: "03", icon: "📍", title: "Discover people around you", desc: "See who's nearby on the map, browse the list, or explore in AR. Connect through social links — Instagram, Snapchat, LinkedIn, and more." },
 ];
 

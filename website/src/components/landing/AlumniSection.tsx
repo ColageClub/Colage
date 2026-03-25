@@ -21,16 +21,16 @@ export default function AlumniSection() {
             Alumni Network
           </span>
           <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "clamp(32px, 3.5vw, 52px)", fontWeight: 300, lineHeight: 1.15 }}>
-            Graduate? You&apos;re still in.
+            Life after graduation.
           </h2>
           <p style={{ marginTop: 20, fontSize: 18, color: "rgba(255,255,255,0.5)", fontWeight: 300, lineHeight: 1.7 }}>
-            The Alumni Network is one global server for graduates from every university. No matter where you went to school, you&apos;re part of the same community. Network, reconnect, or just see who&apos;s around — your Colage experience doesn&apos;t end at graduation.
+            When you graduate, your school server is behind you. But Colage doesn&apos;t have to be. The Alumni Network is a completely separate server — one global community exclusively for graduates. No crossover with student servers. Alumni discover other alumni, wherever they are. A new chapter, not an extension of the old one.
           </p>
           <div style={{ marginTop: 32, display: "flex", gap: 40 }}>
             {[
-              { val: "1", label: "Global server" },
-              { val: "All", label: "Schools welcome" },
-              { val: "∞", label: "Connections" },
+              { val: "1", label: "Separate server" },
+              { val: "All", label: "Schools represented" },
+              { val: "0", label: "Student crossover" },
             ].map((s) => (
               <div key={s.label}>
                 <p style={{ fontFamily: "var(--font-serif)", fontSize: 32, fontWeight: 300, color: "#A51C30" }}>{s.val}</p>

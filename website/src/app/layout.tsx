@@ -19,11 +19,11 @@ const dmSans = DM_Sans({
 export const metadata: Metadata = {
   title: "Colage — Be You.",
   description:
-    "The social discovery app for college students and alumni. Find people on campus. Be yourself.",
+    "The social discovery app for college students. See who's on campus. Connect in real life.",
   openGraph: {
     title: "Colage — Be You.",
     description:
-      "The social discovery app for college students and alumni. Find people on campus.",
+      "The social discovery app for college students. See who's on campus.",
     url: "https://colageclub.com",
     siteName: "Colage",
     type: "website",
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Colage — Be You.",
-    description: "The social discovery app for college students and alumni.",
+    description: "The social discovery app for college students. See who's on campus.",
   },
 };
 

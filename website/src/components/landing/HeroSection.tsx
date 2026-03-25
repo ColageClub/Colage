@@ -30,7 +30,7 @@ export default function HeroSection() {
           transition={{ duration: 1, delay: 0.7 }}
           style={{ marginTop: 24, fontSize: "clamp(16px, 2vw, 20px)", color: "rgba(255,255,255,0.6)", fontWeight: 300, letterSpacing: "0.02em", maxWidth: 500 }}
         >
-          The social discovery app for college students and alumni.
+          See who&apos;s on campus. Connect in real life.
         </motion.p>
 
         <motion.div

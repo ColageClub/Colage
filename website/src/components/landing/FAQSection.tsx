@@ -9,7 +9,7 @@ const faqs = [
   { q: "What schools are supported?", a: "Any accredited university or college with a .edu email domain. If your school isn't on Colage yet, you'll be the first — and your school's server will be created automatically." },
   { q: "How is this different from other social apps?", a: "Colage is discovery-only. There's no messaging, no feed, no algorithm deciding what you see. You discover real people near you and connect through your existing social links." },
   { q: "What happens to my location data?", a: "Your location is only shared when you're visible on the map. You can toggle visibility off at any time. We never sell location data and it's not stored permanently." },
-  { q: "Can I use Colage after I graduate?", a: "Absolutely. When you graduate, you can switch to the Alumni Network — a single global server for graduates from every school." },
+  { q: "What happens when I graduate?", a: "You can switch to the Alumni Network — a completely separate server for graduates only. You leave your school's student server and join a global alumni community. There's no overlap between student and alumni servers." },
   { q: "Is there messaging in the app?", a: "No. Colage is purely for discovery. You connect with people through their social links — Instagram, Snapchat, LinkedIn, etc. This keeps the app focused and safe." },
   { q: "What platforms is Colage available on?", a: "Colage is available on iOS and Android. Download from the App Store or Google Play." },
 ];

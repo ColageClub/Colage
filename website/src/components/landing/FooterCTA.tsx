@@ -21,7 +21,7 @@ export default function FooterCTA() {
           Be You.
         </h2>
         <p style={{ marginTop: 20, fontSize: 18, color: "rgba(255,255,255,0.5)", fontWeight: 300 }}>
-          Download Colage and start discovering the people around you.
+          See who&apos;s on your campus right now.
         </p>
 
         <div style={{ marginTop: 40, display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
