@@ -4,27 +4,23 @@ import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
-interface School {
-  domain: string;
-  name: string;
-  students: number;
-  city: string;
-}
+interface School { domain: string; name: string; students: number; city: string; }
+interface Session { businessId: string; email: string; businessName: string; }
 
-interface Session {
-  businessId: string;
-  email: string;
-  businessName: string;
-}
+const card: React.CSSProperties = { padding: 32, borderRadius: 20, background: "#fff", border: "1px solid #E8E3DB" };
+const input: React.CSSProperties = { width: "100%", padding: "12px 16px", borderRadius: 12, border: "1px solid #E8E3DB", background: "#F9F6F2", fontSize: 14, color: "#1E1E1E", outline: "none" };
+const label: React.CSSProperties = { display: "block", fontSize: 12, fontWeight: 600, color: "#6B6B6B", marginBottom: 6 };
+const btn: React.CSSProperties = { flex: 1, padding: "14px 0", borderRadius: 12, fontWeight: 600, fontSize: 14, border: "none", cursor: "pointer" };
+
+const commonEmojis = ["☕", "🍕", "🍔", "🏋️", "📚", "🎮", "✂️", "🚗", "🎵", "👕", "💊", "🏪", "🍣", "🌮", "🥗", "🧁"];
 
 export function CreateAdClient({ session }: { session: Session }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const editId = searchParams.get("edit");
-
-  const [step, setStep] = useState(1); // 1: school, 2: ad details, 3: budget, 4: preview
+  const [step, setStep] = useState(1);
   const [schools, setSchools] = useState<School[]>([]);
-  const [selectedSchool, setSelectedSchool] = useState<string>("");
+  const [selectedSchool, setSelectedSchool] = useState("");
   const [businessName, setBusinessName] = useState(session.businessName);
   const [bio, setBio] = useState("");
   const [deal, setDeal] = useState("");
@@ -33,410 +29,172 @@ export function CreateAdClient({ session }: { session: Session }) {
   const [logoEmoji, setLogoEmoji] = useState("🏪");
   const [isLoading, setIsLoading] = useState(false);
 
-  const commonEmojis = ["☕", "🍕", "🍔", "🏋️", "📚", "🎮", "✂️", "🚗", "🎵", "👕", "💊", "🏪", "🍣", "🌮", "🥗", "🧁"];
-
-  useEffect(() => {
-    fetchData();
-  }, []);
+  useEffect(() => { fetchData(); }, []);
 
   async function fetchData() {
-    const res = await fetch("/api/ads");
-    if (res.ok) {
-      const data = await res.json();
-      setSchools(data.schools);
-
-      // If editing, load existing ad
-      if (editId) {
-        const ad = data.ads.find((a: { id: string }) => a.id === editId);
-        if (ad) {
-          setSelectedSchool(ad.school);
-          setBusinessName(ad.businessName);
-          setBio(ad.bio);
-          setDeal(ad.deal);
-          setDailyBudget(ad.dailyBudget);
-          setLogoEmoji(ad.emoji || "🏪");
-          setAddress(ad.address || "");
-          setStep(2);
-        }
-      }
-    }
+    const r = await fetch("/api/ads"); if (!r.ok) return;
+    const d = await r.json(); setSchools(d.schools);
+    if (editId) { const ad = d.ads.find((a: { id: string }) => a.id === editId); if (ad) { setSelectedSchool(ad.school); setBusinessName(ad.businessName); setBio(ad.bio); setDeal(ad.deal); setDailyBudget(ad.dailyBudget); setLogoEmoji(ad.emoji || "🏪"); setAddress(ad.address || ""); setStep(2); } }
   }
 
   async function handleSubmit() {
     setIsLoading(true);
-
-    const payload = {
-      school: selectedSchool,
-      businessName,
-      bio,
-      deal,
-      emoji: logoEmoji,
-      address,
-      dailyBudget,
-    };
-
-    const res = await fetch("/api/ads", {
-      method: editId ? "PUT" : "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(editId ? { id: editId, ...payload } : payload),
-    });
-
-    if (res.ok) {
-      router.push("/ads/dashboard");
-    } else {
-      const data = await res.json();
-      alert(data.error || "Failed to create ad");
-    }
+    const payload = { school: selectedSchool, businessName, bio, deal, emoji: logoEmoji, address, dailyBudget };
+    const r = await fetch("/api/ads", { method: editId ? "PUT" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(editId ? { id: editId, ...payload } : payload) });
+    if (r.ok) router.push("/ads/dashboard"); else { const d = await r.json(); alert(d.error || "Failed"); }
     setIsLoading(false);
   }
 
   return (
-    <div className="min-h-screen bg-[var(--colage-bg)]">
-      {/* Nav */}
-      <nav className="fixed top-0 w-full z-50 backdrop-blur-xl bg-[var(--colage-bg)]/80 border-b border-[var(--colage-border)]">
-        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link href="/ads/dashboard" className="text-[var(--colage-text-secondary)] hover:text-[var(--colage-text)] transition">
-              ← Back
-            </Link>
-          </div>
-          <span className="text-sm font-semibold text-[var(--colage-primary)]">
-            {editId ? "Edit Ad" : "Create Ad"}
-          </span>
+    <div style={{ minHeight: "100vh", background: "#F9F6F2" }}>
+      <nav style={{ position: "fixed", top: 0, width: "100%", zIndex: 50, background: "rgba(255,255,255,0.95)", backdropFilter: "blur(12px)", borderBottom: "1px solid #E8E3DB" }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 48px", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <Link href="/ads/dashboard" style={{ fontSize: 14, color: "#6B6B6B", textDecoration: "none" }}>← Back</Link>
+          <span style={{ fontSize: 14, fontWeight: 600, color: "#A51C30" }}>{editId ? "Edit Ad" : "Create Ad"}</span>
         </div>
       </nav>
 
-      <div className="pt-24 pb-20 px-6">
-        <div className="max-w-2xl mx-auto">
-          {/* Progress */}
-          <div className="flex gap-2 mb-10">
-            {["School", "Details", "Budget", "Preview"].map((label, i) => (
-              <div key={label} className="flex-1">
-                <div
-                  className={`h-1 rounded-full mb-2 transition ${
-                    i + 1 <= step ? "bg-[var(--colage-primary)]" : "bg-[var(--colage-border)]"
-                  }`}
-                />
-                <div className={`text-xs font-medium ${i + 1 <= step ? "text-[var(--colage-primary-light)]" : "text-[var(--colage-text-tertiary)]"}`}>
-                  {label}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Step 1: Select School (single) */}
-          {step === 1 && (
-            <div>
-              <h2 className="text-2xl font-bold mb-2">Select a School</h2>
-              <p className="text-sm text-[var(--colage-text-secondary)] mb-8">
-                Choose which campus will see your ad
-              </p>
-
-              <div className="space-y-3 mb-8">
-                {schools.map((school) => {
-                  const isSelected = selectedSchool === school.domain;
-                  return (
-                    <button
-                      key={school.domain}
-                      onClick={() => setSelectedSchool(school.domain)}
-                      className={`w-full p-5 rounded-2xl border text-left flex items-center gap-4 transition ${
-                        isSelected
-                          ? "bg-[var(--colage-primary)]/10 border-[var(--colage-primary)]/40"
-                          : "bg-[var(--colage-surface)] border-[var(--colage-border)] hover:border-[var(--colage-primary)]/20"
-                      }`}
-                    >
-                      <div
-                        className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition ${
-                          isSelected ? "border-[var(--colage-primary)] bg-[var(--colage-primary)]" : "border-[var(--colage-border)]"
-                        }`}
-                      >
-                        {isSelected && <span className="text-white text-xs">✓</span>}
-                      </div>
-                      <div className="flex-1">
-                        <div className="font-semibold">{school.name}</div>
-                        <div className="text-xs text-[var(--colage-text-tertiary)]">
-                          {school.city} · {school.students} students
-                        </div>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-
-              <button
-                onClick={() => setStep(2)}
-                disabled={!selectedSchool}
-                className="w-full py-3 rounded-xl bg-[var(--colage-primary)] text-white font-semibold hover:bg-[var(--colage-primary-light)] transition disabled:opacity-30"
-              >
-                Continue
-              </button>
+      <div style={{ paddingTop: 96, maxWidth: 640, margin: "0 auto", padding: "96px 48px 80px" }}>
+        {/* Progress */}
+        <div style={{ display: "flex", gap: 8, marginBottom: 40 }}>
+          {["School", "Details", "Budget", "Preview"].map((l, i) => (
+            <div key={l} style={{ flex: 1 }}>
+              <div style={{ height: 4, borderRadius: 999, marginBottom: 8, background: i + 1 <= step ? "#A51C30" : "#E8E3DB", transition: "background 0.3s" }} />
+              <div style={{ fontSize: 12, fontWeight: 500, color: i + 1 <= step ? "#A51C30" : "#6B6B6B" }}>{l}</div>
             </div>
-          )}
-
-          {/* Step 2: Ad Details */}
-          {step === 2 && (
-            <div>
-              <h2 className="text-2xl font-bold mb-2">Ad Details</h2>
-              <p className="text-sm text-[var(--colage-text-secondary)] mb-8">
-                This is what students will see
-              </p>
-
-              <div className="space-y-5 mb-8">
-                {/* Logo emoji picker */}
-                <div>
-                  <label className="block text-xs font-semibold text-[var(--colage-text-secondary)] mb-2">Logo / Icon</label>
-                  <div className="flex flex-wrap gap-2">
-                    {commonEmojis.map((emoji) => (
-                      <button
-                        key={emoji}
-                        onClick={() => setLogoEmoji(emoji)}
-                        className={`w-12 h-12 rounded-xl text-2xl flex items-center justify-center transition ${
-                          logoEmoji === emoji
-                            ? "bg-[var(--colage-primary)]/20 border-2 border-[var(--colage-primary)]"
-                            : "bg-[var(--colage-surface)] border border-[var(--colage-border)] hover:border-[var(--colage-primary)]/30"
-                        }`}
-                      >
-                        {emoji}
-                      </button>
-                    ))}
-                  </div>
-                  <p className="text-[10px] text-[var(--colage-text-tertiary)] mt-2">Logo upload coming soon — pick an emoji for now</p>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-[var(--colage-text-secondary)] mb-1.5">Business Name</label>
-                  <input
-                    type="text"
-                    value={businessName}
-                    onChange={(e) => setBusinessName(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl bg-[var(--colage-surface)] border border-[var(--colage-border)] text-[var(--colage-text)] text-sm focus:outline-none focus:border-[var(--colage-primary)] transition"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-[var(--colage-text-secondary)] mb-1.5">Bio / Tagline</label>
-                  <input
-                    type="text"
-                    value={bio}
-                    onChange={(e) => setBio(e.target.value.slice(0, 50))}
-                    placeholder="Student-favorite coffee shop since 2019"
-                    maxLength={50}
-                    className="w-full px-4 py-3 rounded-xl bg-[var(--colage-surface)] border border-[var(--colage-border)] text-[var(--colage-text)] text-sm focus:outline-none focus:border-[var(--colage-primary)] transition"
-                  />
-                  <div className="text-right text-[10px] text-[var(--colage-text-tertiary)] mt-1">{bio.length}/50</div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-[var(--colage-text-secondary)] mb-1.5">Deal</label>
-                  <input
-                    type="text"
-                    value={deal}
-                    onChange={(e) => setDeal(e.target.value)}
-                    placeholder="15% off any drink — show this ad"
-                    className="w-full px-4 py-3 rounded-xl bg-[var(--colage-surface)] border border-[var(--colage-border)] text-[var(--colage-text)] text-sm focus:outline-none focus:border-[var(--colage-primary)] transition"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-[var(--colage-text-secondary)] mb-1.5">Business Address</label>
-                  <input
-                    type="text"
-                    value={address}
-                    onChange={(e) => setAddress(e.target.value)}
-                    placeholder="123 S State St, Ann Arbor, MI 48104"
-                    className="w-full px-4 py-3 rounded-xl bg-[var(--colage-surface)] border border-[var(--colage-border)] text-[var(--colage-text)] text-sm focus:outline-none focus:border-[var(--colage-primary)] transition"
-                  />
-                  <p className="text-[10px] text-[var(--colage-text-tertiary)] mt-1">Used to show distance to students on the map</p>
-                </div>
-              </div>
-
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setStep(1)}
-                  className="flex-1 py-3 rounded-xl bg-[var(--colage-surface)] text-[var(--colage-text-secondary)] font-semibold border border-[var(--colage-border)] hover:bg-[var(--colage-surface-elevated)] transition"
-                >
-                  Back
-                </button>
-                <button
-                  onClick={() => setStep(3)}
-                  disabled={!businessName || !deal}
-                  className="flex-1 py-3 rounded-xl bg-[var(--colage-primary)] text-white font-semibold hover:bg-[var(--colage-primary-light)] transition disabled:opacity-30"
-                >
-                  Continue
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Step 3: Budget */}
-          {step === 3 && (
-            <div>
-              <h2 className="text-2xl font-bold mb-2">Set Your Budget</h2>
-              <p className="text-sm text-[var(--colage-text-secondary)] mb-8">
-                Higher budget = more impressions. You&apos;re only charged when your ad is shown.
-              </p>
-
-              <div className="p-8 rounded-2xl bg-[var(--colage-surface)] border border-[var(--colage-border)] mb-8">
-                <div className="text-center mb-8">
-                  <div className="text-5xl font-extrabold text-[var(--colage-primary)]">${dailyBudget}</div>
-                  <div className="text-sm text-[var(--colage-text-secondary)] mt-2">per day</div>
-                </div>
-
-                <input
-                  type="range"
-                  min={1}
-                  max={100}
-                  value={dailyBudget}
-                  onChange={(e) => setDailyBudget(parseInt(e.target.value))}
-                  className="w-full accent-[var(--colage-primary)] mb-4"
-                />
-
-                <div className="flex justify-between text-xs text-[var(--colage-text-tertiary)]">
-                  <span>$1/day</span>
-                  <span>$100/day</span>
-                </div>
-
-                <div className="mt-6 p-4 rounded-xl bg-[var(--colage-bg)] space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-[var(--colage-text-secondary)]">School</span>
-                    <span className="font-semibold">{selectedSchool}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-[var(--colage-text-secondary)]">Daily budget</span>
-                    <span className="font-semibold text-[var(--colage-primary)]">
-                      ${dailyBudget}/day
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-[var(--colage-text-secondary)]">Monthly estimate</span>
-                    <span className="font-semibold text-[var(--colage-warning)]">
-                      ~${(dailyBudget * 30).toLocaleString()}/mo
-                    </span>
-                  </div>
-                </div>
-
-                <div className="mt-4 p-3 rounded-xl bg-[var(--colage-warning)]/10 border border-[var(--colage-warning)]/20">
-                  <p className="text-xs text-[var(--colage-warning)]">
-                    Make sure you have enough funds in your account. You can add funds from your dashboard.
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setStep(2)}
-                  className="flex-1 py-3 rounded-xl bg-[var(--colage-surface)] text-[var(--colage-text-secondary)] font-semibold border border-[var(--colage-border)] hover:bg-[var(--colage-surface-elevated)] transition"
-                >
-                  Back
-                </button>
-                <button
-                  onClick={() => setStep(4)}
-                  className="flex-1 py-3 rounded-xl bg-[var(--colage-primary)] text-white font-semibold hover:bg-[var(--colage-primary-light)] transition"
-                >
-                  Preview Ad
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Step 4: Preview & Confirm */}
-          {step === 4 && (
-            <div>
-              <h2 className="text-2xl font-bold mb-2">Preview Your Ad</h2>
-              <p className="text-sm text-[var(--colage-text-secondary)] mb-8">
-                This is exactly what students will see on their phone
-              </p>
-
-              {/* Phone mockup with ad */}
-              <div className="max-w-sm mx-auto mb-8">
-                {/* Banner preview (what shows on the map) */}
-                <div className="mb-4">
-                  <div className="text-xs font-semibold text-[var(--colage-text-tertiary)] mb-2 uppercase tracking-wider">Map Banner</div>
-                  <div className="h-16 rounded-2xl bg-[var(--colage-surface)] border border-[var(--colage-border)] flex items-center px-4 gap-3 relative overflow-hidden">
-                    {/* Transparent logo bg */}
-                    <div className="absolute right-4 text-6xl opacity-10">{logoEmoji}</div>
-                    <div className="w-11 h-11 rounded-xl bg-[var(--colage-primary)]/20 flex items-center justify-center text-xl z-10">
-                      {logoEmoji}
-                    </div>
-                    <div className="flex-1 z-10">
-                      <div className="text-sm font-bold">{businessName}</div>
-                      <div className="text-xs text-[var(--colage-online)]">{deal}</div>
-                    </div>
-                    <div className="text-[10px] text-[var(--colage-text-tertiary)] z-10">0.3 mi</div>
-                  </div>
-                </div>
-
-                {/* Expanded preview (what shows on tap) */}
-                <div className="text-xs font-semibold text-[var(--colage-text-tertiary)] mb-2 uppercase tracking-wider">When Tapped</div>
-                <div className="rounded-2xl bg-[var(--colage-surface)] border border-[var(--colage-border)] overflow-hidden">
-                  <div className="relative h-40 bg-gradient-to-br from-[var(--colage-primary)]/20 to-[var(--colage-bg)] flex items-center justify-center">
-                    <span className="text-8xl opacity-15">{logoEmoji}</span>
-                    <div className="absolute inset-0 bg-gradient-to-t from-[var(--colage-surface)] to-transparent" />
-                  </div>
-                  <div className="p-6 -mt-6 relative">
-                    <div className="w-14 h-14 rounded-2xl bg-[var(--colage-primary)]/20 border-2 border-[var(--colage-primary)] flex items-center justify-center text-2xl mb-3">
-                      {logoEmoji}
-                    </div>
-                    <h3 className="text-xl font-bold">{businessName}</h3>
-                    {bio && <p className="text-sm text-[var(--colage-text-secondary)] mt-1">{bio}</p>}
-                    {address && (
-                      <p className="text-xs text-[var(--colage-text-tertiary)] mt-1">{address}</p>
-                    )}
-                    <div className="mt-4 px-4 py-3 rounded-xl bg-[var(--colage-online)]/10 border border-[var(--colage-online)]/20">
-                      <p className="text-sm font-semibold text-[var(--colage-online)]">🎉 {deal}</p>
-                    </div>
-                    <div className="mt-3 flex items-center gap-4 text-xs text-[var(--colage-text-tertiary)]">
-                      <span>📍 0.3 mi away</span>
-                      <span>📸 Screenshot to redeem</span>
-                    </div>
-                    <button className="w-full mt-4 py-3 rounded-xl bg-[var(--colage-primary)]/10 text-[var(--colage-primary)] font-semibold text-sm">
-                      Get Directions
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Summary */}
-              <div className="p-6 rounded-2xl bg-[var(--colage-surface)] border border-[var(--colage-border)] mb-8">
-                <h3 className="font-bold mb-4">Summary</h3>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-[var(--colage-text-secondary)]">School</span>
-                    <span>{selectedSchool}</span>
-                  </div>
-                  {address && (
-                    <div className="flex justify-between">
-                      <span className="text-[var(--colage-text-secondary)]">Address</span>
-                      <span className="text-right max-w-[60%]">{address}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between">
-                    <span className="text-[var(--colage-text-secondary)]">Daily budget</span>
-                    <span className="font-bold text-[var(--colage-primary)]">
-                      ${dailyBudget}/day
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setStep(3)}
-                  className="flex-1 py-3 rounded-xl bg-[var(--colage-surface)] text-[var(--colage-text-secondary)] font-semibold border border-[var(--colage-border)] hover:bg-[var(--colage-surface-elevated)] transition"
-                >
-                  Back
-                </button>
-                <button
-                  onClick={handleSubmit}
-                  disabled={isLoading}
-                  className="flex-1 py-3 rounded-xl bg-[var(--colage-online)] text-white font-semibold hover:bg-[var(--colage-online)]/80 transition disabled:opacity-50"
-                >
-                  {isLoading ? "Creating..." : editId ? "Save Changes" : "Launch Ad"}
-                </button>
-              </div>
-            </div>
-          )}
+          ))}
         </div>
+
+        {/* Step 1: School */}
+        {step === 1 && (
+          <div>
+            <h2 style={{ fontSize: 24, fontWeight: 700, marginBottom: 8, color: "#1E1E1E" }}>Select a School</h2>
+            <p style={{ fontSize: 14, color: "#6B6B6B", marginBottom: 32 }}>Choose which campus will see your ad</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 32 }}>
+              {schools.map((s) => {
+                const sel = selectedSchool === s.domain;
+                return (
+                  <button key={s.domain} onClick={() => setSelectedSchool(s.domain)} style={{ width: "100%", padding: 20, borderRadius: 16, border: sel ? "2px solid #A51C30" : "1px solid #E8E3DB", background: sel ? "rgba(165,28,48,0.04)" : "#fff", textAlign: "left", display: "flex", alignItems: "center", gap: 16, cursor: "pointer" }}>
+                    <div style={{ width: 24, height: 24, borderRadius: "50%", border: sel ? "none" : "2px solid #E8E3DB", background: sel ? "#A51C30" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 12 }}>{sel && "✓"}</div>
+                    <div><div style={{ fontWeight: 600, color: "#1E1E1E" }}>{s.name}</div><div style={{ fontSize: 12, color: "#6B6B6B" }}>{s.city} · {s.students} students</div></div>
+                  </button>
+                );
+              })}
+            </div>
+            <button onClick={() => setStep(2)} disabled={!selectedSchool} style={{ ...btn, width: "100%", background: "#A51C30", color: "#fff", opacity: selectedSchool ? 1 : 0.3 }}>Continue</button>
+          </div>
+        )}
+
+        {/* Step 2: Details */}
+        {step === 2 && (
+          <div>
+            <h2 style={{ fontSize: 24, fontWeight: 700, marginBottom: 8, color: "#1E1E1E" }}>Ad Details</h2>
+            <p style={{ fontSize: 14, color: "#6B6B6B", marginBottom: 32 }}>This is what students will see</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 20, marginBottom: 32 }}>
+              <div>
+                <span style={label}>Logo / Icon</span>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                  {commonEmojis.map((e) => (
+                    <button key={e} onClick={() => setLogoEmoji(e)} style={{ width: 48, height: 48, borderRadius: 12, fontSize: 24, display: "flex", alignItems: "center", justifyContent: "center", border: logoEmoji === e ? "2px solid #A51C30" : "1px solid #E8E3DB", background: logoEmoji === e ? "rgba(165,28,48,0.08)" : "#fff", cursor: "pointer" }}>{e}</button>
+                  ))}
+                </div>
+              </div>
+              <div><span style={label}>Business Name</span><input type="text" value={businessName} onChange={(e) => setBusinessName(e.target.value)} style={input} /></div>
+              <div><span style={label}>Bio / Tagline</span><input type="text" value={bio} onChange={(e) => setBio(e.target.value.slice(0, 50))} placeholder="Student-favorite coffee shop since 2019" maxLength={50} style={input} /><div style={{ textAlign: "right", fontSize: 10, color: "#6B6B6B", marginTop: 4 }}>{bio.length}/50</div></div>
+              <div><span style={label}>Deal</span><input type="text" value={deal} onChange={(e) => setDeal(e.target.value)} placeholder="15% off any drink — show this ad" style={input} /></div>
+              <div><span style={label}>Business Address</span><input type="text" value={address} onChange={(e) => setAddress(e.target.value)} placeholder="123 S State St, Ann Arbor, MI 48104" style={input} /><div style={{ fontSize: 10, color: "#6B6B6B", marginTop: 4 }}>Used to show distance to students</div></div>
+            </div>
+            <div style={{ display: "flex", gap: 12 }}>
+              <button onClick={() => setStep(1)} style={{ ...btn, background: "#fff", color: "#6B6B6B", border: "1px solid #E8E3DB" }}>Back</button>
+              <button onClick={() => setStep(3)} disabled={!businessName || !deal} style={{ ...btn, background: "#A51C30", color: "#fff", opacity: businessName && deal ? 1 : 0.3 }}>Continue</button>
+            </div>
+          </div>
+        )}
+
+        {/* Step 3: Budget */}
+        {step === 3 && (
+          <div>
+            <h2 style={{ fontSize: 24, fontWeight: 700, marginBottom: 8, color: "#1E1E1E" }}>Set Your Budget</h2>
+            <p style={{ fontSize: 14, color: "#6B6B6B", marginBottom: 32 }}>Higher budget = more impressions. Only charged when shown.</p>
+            <div style={{ ...card, marginBottom: 32 }}>
+              <div style={{ textAlign: "center", marginBottom: 32 }}>
+                <div style={{ fontSize: 48, fontWeight: 700, color: "#A51C30" }}>${dailyBudget}</div>
+                <div style={{ fontSize: 14, color: "#6B6B6B", marginTop: 8 }}>per day</div>
+              </div>
+              <input type="range" min={1} max={100} value={dailyBudget} onChange={(e) => setDailyBudget(parseInt(e.target.value))} style={{ width: "100%", accentColor: "#A51C30", marginBottom: 16 }} />
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#6B6B6B" }}><span>$1/day</span><span>$100/day</span></div>
+              <div style={{ marginTop: 24, padding: 16, borderRadius: 12, background: "#F9F6F2" }}>
+                {[
+                  { l: "School", v: selectedSchool },
+                  { l: "Daily budget", v: `$${dailyBudget}/day` },
+                  { l: "Monthly estimate", v: `~$${(dailyBudget * 30).toLocaleString()}/mo` },
+                ].map((r) => (
+                  <div key={r.l} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", fontSize: 14 }}>
+                    <span style={{ color: "#6B6B6B" }}>{r.l}</span><span style={{ fontWeight: 600 }}>{r.v}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: 12 }}>
+              <button onClick={() => setStep(2)} style={{ ...btn, background: "#fff", color: "#6B6B6B", border: "1px solid #E8E3DB" }}>Back</button>
+              <button onClick={() => setStep(4)} style={{ ...btn, background: "#A51C30", color: "#fff" }}>Preview Ad</button>
+            </div>
+          </div>
+        )}
+
+        {/* Step 4: Preview */}
+        {step === 4 && (
+          <div>
+            <h2 style={{ fontSize: 24, fontWeight: 700, marginBottom: 8, color: "#1E1E1E" }}>Preview Your Ad</h2>
+            <p style={{ fontSize: 14, color: "#6B6B6B", marginBottom: 32 }}>This is exactly what students will see</p>
+
+            <div style={{ maxWidth: 380, margin: "0 auto", marginBottom: 32 }}>
+              <div style={{ fontSize: 10, fontWeight: 600, color: "#6B6B6B", letterSpacing: "0.08em", textTransform: "uppercase" as const, marginBottom: 8 }}>Map Banner</div>
+              <div style={{ height: 64, borderRadius: 16, background: "#fff", border: "1px solid #E8E3DB", display: "flex", alignItems: "center", padding: "0 16px", gap: 12, position: "relative", overflow: "hidden" }}>
+                <span style={{ position: "absolute", right: 16, fontSize: 48, opacity: 0.08 }}>{logoEmoji}</span>
+                <div style={{ width: 44, height: 44, borderRadius: 12, background: "rgba(165,28,48,0.08)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, zIndex: 1 }}>{logoEmoji}</div>
+                <div style={{ flex: 1, zIndex: 1 }}><div style={{ fontSize: 14, fontWeight: 700, color: "#1E1E1E" }}>{businessName}</div><div style={{ fontSize: 12, color: "#10b981" }}>{deal}</div></div>
+                <span style={{ fontSize: 10, color: "#6B6B6B", zIndex: 1 }}>0.3 mi</span>
+              </div>
+
+              <div style={{ fontSize: 10, fontWeight: 600, color: "#6B6B6B", letterSpacing: "0.08em", textTransform: "uppercase" as const, marginTop: 24, marginBottom: 8 }}>When Tapped</div>
+              <div style={{ ...card, overflow: "hidden", padding: 0 }}>
+                <div style={{ height: 140, background: "linear-gradient(135deg, rgba(165,28,48,0.12), #F9F6F2)", display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
+                  <span style={{ fontSize: 72, opacity: 0.12 }}>{logoEmoji}</span>
+                  <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 48, background: "linear-gradient(to top, #fff, transparent)" }} />
+                </div>
+                <div style={{ padding: 24, marginTop: -20, position: "relative" }}>
+                  <div style={{ width: 48, height: 48, borderRadius: 14, background: "rgba(165,28,48,0.08)", border: "2px solid #A51C30", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, marginBottom: 12 }}>{logoEmoji}</div>
+                  <h3 style={{ fontSize: 20, fontWeight: 700, color: "#1E1E1E" }}>{businessName}</h3>
+                  {bio && <p style={{ fontSize: 14, color: "#6B6B6B", marginTop: 4 }}>{bio}</p>}
+                  {address && <p style={{ fontSize: 12, color: "#6B6B6B", marginTop: 4 }}>{address}</p>}
+                  <div style={{ marginTop: 16, padding: "12px 16px", borderRadius: 12, background: "rgba(16,185,129,0.06)", border: "1px solid rgba(16,185,129,0.2)" }}>
+                    <p style={{ fontSize: 14, fontWeight: 600, color: "#10b981" }}>🎉 {deal}</p>
+                  </div>
+                  <div style={{ marginTop: 12, display: "flex", gap: 16, fontSize: 12, color: "#6B6B6B" }}><span>📍 0.3 mi</span><span>📸 Screenshot to redeem</span></div>
+                </div>
+              </div>
+            </div>
+
+            <div style={{ ...card, marginBottom: 32 }}>
+              <h3 style={{ fontWeight: 700, marginBottom: 16, color: "#1E1E1E" }}>Summary</h3>
+              {[
+                { l: "School", v: selectedSchool },
+                ...(address ? [{ l: "Address", v: address }] : []),
+                { l: "Daily budget", v: `$${dailyBudget}/day` },
+              ].map((r) => (
+                <div key={r.l} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", fontSize: 14 }}>
+                  <span style={{ color: "#6B6B6B" }}>{r.l}</span><span style={{ fontWeight: 600 }}>{r.v}</span>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ display: "flex", gap: 12 }}>
+              <button onClick={() => setStep(3)} style={{ ...btn, background: "#fff", color: "#6B6B6B", border: "1px solid #E8E3DB" }}>Back</button>
+              <button onClick={handleSubmit} disabled={isLoading} style={{ ...btn, background: "#10b981", color: "#fff", opacity: isLoading ? 0.5 : 1 }}>{isLoading ? "Creating..." : editId ? "Save Changes" : "Launch Ad"}</button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

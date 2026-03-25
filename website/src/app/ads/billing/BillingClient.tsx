@@ -3,137 +3,98 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 
-interface Session {
-  businessId: string;
-  email: string;
-  businessName: string;
-}
+interface Session { businessId: string; email: string; businessName: string; }
+interface Ad { id: string; businessName: string; emoji: string; school: string; dailyBudget: number; totalSpend: number; todaySpend: number; }
 
-interface Ad {
-  id: string;
-  businessName: string;
-  emoji: string;
-  school: string;
-  dailyBudget: number;
-  totalSpend: number;
-  todaySpend: number;
-}
+const card: React.CSSProperties = { padding: 24, borderRadius: 20, background: "#fff", border: "1px solid #E8E3DB" };
 
 export function BillingClient({ session }: { session: Session }) {
   const [balance, setBalance] = useState(0);
   const [ads, setAds] = useState<Ad[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  useEffect(() => { fetchData(); }, []);
 
   async function fetchData() {
-    const [balanceRes, adsRes] = await Promise.all([
-      fetch("/api/billing/balance"),
-      fetch("/api/ads"),
-    ]);
-
-    if (balanceRes.ok) {
-      const data = await balanceRes.json();
-      setBalance(data.balance);
-    }
-    if (adsRes.ok) {
-      const data = await adsRes.json();
-      setAds(data.ads);
-    }
+    const [bRes, aRes] = await Promise.all([fetch("/api/billing/balance"), fetch("/api/ads")]);
+    if (bRes.ok) { const d = await bRes.json(); setBalance(d.balance); }
+    if (aRes.ok) { const d = await aRes.json(); setAds(d.ads); }
     setLoading(false);
   }
 
-  const totalSpend = ads.reduce((sum, a) => sum + a.totalSpend, 0);
-  const todaySpend = ads.reduce((sum, a) => sum + (a.todaySpend || 0), 0);
+  const totalSpend = ads.reduce((s, a) => s + a.totalSpend, 0);
+  const todaySpend = ads.reduce((s, a) => s + (a.todaySpend || 0), 0);
 
   return (
-    <div className="min-h-screen bg-[var(--colage-bg)]">
-      {/* Nav */}
-      <nav className="fixed top-0 w-full z-50 backdrop-blur-xl bg-[var(--colage-bg)]/80 border-b border-[var(--colage-border)]">
-        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link href="/ads/dashboard" className="text-[var(--colage-text-secondary)] hover:text-[var(--colage-text)] transition">
-              ← Back to Dashboard
-            </Link>
-          </div>
-          <span className="text-sm font-semibold text-[var(--colage-primary)]">Billing</span>
+    <div style={{ minHeight: "100vh", background: "#F9F6F2" }}>
+      <nav style={{ position: "fixed", top: 0, width: "100%", zIndex: 50, background: "rgba(255,255,255,0.95)", backdropFilter: "blur(12px)", borderBottom: "1px solid #E8E3DB" }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 48px", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <Link href="/ads/dashboard" style={{ fontSize: 14, color: "#6B6B6B", textDecoration: "none" }}>← Back to Dashboard</Link>
+          <span style={{ fontSize: 14, fontWeight: 600, color: "#A51C30" }}>Billing</span>
         </div>
       </nav>
 
-      <div className="pt-24 pb-20 px-6">
-        <div className="max-w-4xl mx-auto">
-          <h1 className="text-3xl font-bold mb-2">Billing & Usage</h1>
-          <p className="text-sm text-[var(--colage-text-secondary)] mb-8">
-            Track your spending and manage your ad budget
-          </p>
+      <div style={{ paddingTop: 96, maxWidth: 900, margin: "0 auto", padding: "96px 48px 80px" }}>
+        <h1 style={{ fontSize: 28, fontWeight: 700, marginBottom: 8, color: "#1E1E1E" }}>Billing & Usage</h1>
+        <p style={{ fontSize: 14, color: "#6B6B6B", marginBottom: 32 }}>Track your spending and manage your ad budget</p>
 
-          {loading ? (
-            <div className="text-center py-20 text-[var(--colage-text-tertiary)]">Loading...</div>
-          ) : (
-            <>
-              {/* Balance overview */}
-              <div className="grid md:grid-cols-3 gap-4 mb-10">
-                <div className="p-6 rounded-2xl bg-gradient-to-br from-[var(--colage-primary)]/10 to-[var(--colage-primary-light)]/5 border border-[var(--colage-primary)]/20">
-                  <div className="text-xs font-medium text-[var(--colage-text-tertiary)] mb-1">Current Balance</div>
-                  <div className="text-3xl font-extrabold text-[var(--colage-primary)]">${balance.toFixed(2)}</div>
-                </div>
-                <div className="p-6 rounded-2xl bg-[var(--colage-surface)] border border-[var(--colage-border)]">
-                  <div className="text-xs font-medium text-[var(--colage-text-tertiary)] mb-1">Today&apos;s Spend</div>
-                  <div className="text-3xl font-extrabold text-[var(--colage-warning)]">${todaySpend.toFixed(2)}</div>
-                </div>
-                <div className="p-6 rounded-2xl bg-[var(--colage-surface)] border border-[var(--colage-border)]">
-                  <div className="text-xs font-medium text-[var(--colage-text-tertiary)] mb-1">Total Spend</div>
-                  <div className="text-3xl font-extrabold text-[var(--colage-text)]">${totalSpend.toFixed(2)}</div>
-                </div>
+        {loading ? (
+          <div style={{ textAlign: "center", padding: 80, color: "#6B6B6B" }}>Loading...</div>
+        ) : (
+          <>
+            <div className="grid-3" style={{ marginBottom: 40 }}>
+              <div style={{ ...card, background: "linear-gradient(135deg, rgba(165,28,48,0.04), rgba(165,28,48,0.01))", border: "1px solid rgba(165,28,48,0.15)" }}>
+                <div style={{ fontSize: 12, fontWeight: 600, color: "#6B6B6B", marginBottom: 4 }}>Current Balance</div>
+                <div style={{ fontSize: 32, fontWeight: 700, color: "#A51C30" }}>${balance.toFixed(2)}</div>
               </div>
+              <div style={card}>
+                <div style={{ fontSize: 12, fontWeight: 600, color: "#6B6B6B", marginBottom: 4 }}>Today&apos;s Spend</div>
+                <div style={{ fontSize: 32, fontWeight: 700, color: "#BF5700" }}>${todaySpend.toFixed(2)}</div>
+              </div>
+              <div style={card}>
+                <div style={{ fontSize: 12, fontWeight: 600, color: "#6B6B6B", marginBottom: 4 }}>Total Spend</div>
+                <div style={{ fontSize: 32, fontWeight: 700, color: "#1E1E1E" }}>${totalSpend.toFixed(2)}</div>
+              </div>
+            </div>
 
-              {/* Spend by ad */}
-              <div className="mb-10">
-                <h2 className="text-xl font-bold mb-4">Spend by Ad</h2>
-                {ads.length === 0 ? (
-                  <p className="text-sm text-[var(--colage-text-tertiary)]">No ads yet.</p>
-                ) : (
-                  <div className="space-y-3">
-                    {ads.map((ad) => (
-                      <div key={ad.id} className="p-4 rounded-xl bg-[var(--colage-surface)] border border-[var(--colage-border)] flex items-center gap-4">
-                        <span className="text-2xl">{ad.emoji || "🏪"}</span>
-                        <div className="flex-1">
-                          <div className="font-semibold text-sm">{ad.businessName}</div>
-                          <div className="text-xs text-[var(--colage-text-tertiary)]">{ad.school}</div>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-sm font-bold">${(ad.todaySpend || 0).toFixed(2)} today</div>
-                          <div className="text-xs text-[var(--colage-text-tertiary)]">${ad.totalSpend.toFixed(2)} total</div>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-xs text-[var(--colage-text-tertiary)]">Budget</div>
-                          <div className="text-sm font-semibold text-[var(--colage-primary)]">${ad.dailyBudget}/day</div>
-                        </div>
+            <div style={{ marginBottom: 40 }}>
+              <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 16, color: "#1E1E1E" }}>Spend by Ad</h2>
+              {ads.length === 0 ? (
+                <p style={{ fontSize: 14, color: "#6B6B6B" }}>No ads yet.</p>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  {ads.map((ad) => (
+                    <div key={ad.id} style={{ ...card, display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+                      <span style={{ fontSize: 24 }}>{ad.emoji || "🏪"}</span>
+                      <div style={{ flex: "1 1 200px" }}>
+                        <div style={{ fontWeight: 600, fontSize: 14, color: "#1E1E1E" }}>{ad.businessName}</div>
+                        <div style={{ fontSize: 12, color: "#6B6B6B" }}>{ad.school}</div>
                       </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Auto-reload placeholder */}
-              <div className="p-6 rounded-2xl bg-[var(--colage-surface)] border border-[var(--colage-border)]">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-bold mb-1">Auto-Reload</h3>
-                    <p className="text-sm text-[var(--colage-text-secondary)]">
-                      Automatically add funds when your balance drops below a threshold.
-                    </p>
-                  </div>
-                  <div className="px-3 py-1 rounded-full bg-[var(--colage-text-tertiary)]/10 text-[var(--colage-text-tertiary)] text-xs font-medium">
-                    Coming Soon
-                  </div>
+                      <div style={{ textAlign: "right" }}>
+                        <div style={{ fontSize: 14, fontWeight: 700 }}>${(ad.todaySpend || 0).toFixed(2)} today</div>
+                        <div style={{ fontSize: 12, color: "#6B6B6B" }}>${ad.totalSpend.toFixed(2)} total</div>
+                      </div>
+                      <div style={{ textAlign: "right" }}>
+                        <div style={{ fontSize: 12, color: "#6B6B6B" }}>Budget</div>
+                        <div style={{ fontSize: 14, fontWeight: 600, color: "#A51C30" }}>${ad.dailyBudget}/day</div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
+              )}
+            </div>
+
+            <div style={card}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div>
+                  <h3 style={{ fontWeight: 700, marginBottom: 4, color: "#1E1E1E" }}>Auto-Reload</h3>
+                  <p style={{ fontSize: 14, color: "#6B6B6B" }}>Automatically add funds when balance drops below a threshold.</p>
+                </div>
+                <span style={{ padding: "4px 12px", borderRadius: 999, background: "rgba(107,107,107,0.1)", color: "#6B6B6B", fontSize: 12, fontWeight: 500 }}>Coming Soon</span>
               </div>
-            </>
-          )}
-        </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
