@@ -35,8 +35,8 @@ function makeTexture(text: string, color: string) {
   ctx.font = "bold 36px 'DM Sans', sans-serif";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillStyle = color;
-  ctx.globalAlpha = 0.7;
+  ctx.fillStyle = "#ffffff";
+  ctx.globalAlpha = 0.55;
   ctx.fillText(text, 128, 64);
   const t = new THREE.CanvasTexture(c);
   t.needsUpdate = true;
