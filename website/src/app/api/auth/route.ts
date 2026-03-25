@@ -1,81 +1,57 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getBusiness, getBusinessByEmail, createBusiness } from "@/lib/models/business";
-import { cookies } from "next/headers";
+import { setSession, setTokens, logout as serverLogout } from "@/lib/auth";
+import { createBusiness, getBusinessByEmail } from "@/lib/models/business";
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const { action, email, businessName, address, category } = body;
+  const { action } = body;
 
-  if (!email) {
-    return NextResponse.json({ error: "Email required" }, { status: 400 });
-  }
+  try {
+    // ─── Login: receive tokens from client-side Cognito auth ───
+    if (action === "login") {
+      const { email, businessName, sub, accessToken, idToken, refreshToken } = body;
 
-  if (action === "login") {
-    // Dev mode: auto-login, create business if doesn't exist
-    let biz = await getBusinessByEmail(email);
-    if (!biz) {
-      biz = await createBusiness({
-        id: `biz-${Date.now()}`,
-        email,
-        name: email.split("@")[0],
-        address: "",
-        category: "Other",
-        logoUrl: null,
-        stripeCustomerId: null,
-        balance: 0,
-        createdAt: new Date().toISOString(),
-      });
+      if (!accessToken || !idToken || !email || !sub) {
+        return NextResponse.json({ error: "Missing auth data" }, { status: 400 });
+      }
+
+      // Store tokens in httpOnly cookies
+      await setTokens(accessToken, idToken, refreshToken);
+
+      // Create or fetch business record in our DB
+      let biz = await getBusinessByEmail(email);
+      if (!biz) {
+        biz = await createBusiness({
+          id: sub,
+          email,
+          name: businessName || email.split("@")[0],
+          address: "",
+          category: "Other",
+          logoUrl: null,
+          stripeCustomerId: null,
+          balance: 0,
+          createdAt: new Date().toISOString(),
+        });
+      }
+
+      await setSession({ businessId: biz.id, email: biz.email, businessName: biz.name });
+
+      return NextResponse.json({ success: true, business: biz });
     }
 
-    const session = { businessId: biz.id, email: biz.email, businessName: biz.name };
-    const cookieStore = await cookies();
-    cookieStore.set("colage_session", JSON.stringify(session), {
-      httpOnly: true,
-      path: "/",
-      maxAge: 60 * 60 * 24 * 30,
-    });
-
-    return NextResponse.json({ success: true, business: biz });
-  }
-
-  if (action === "signup") {
-    if (!businessName) {
-      return NextResponse.json({ error: "Business name required" }, { status: 400 });
+    // ─── Logout ───
+    if (action === "logout") {
+      await serverLogout();
+      return NextResponse.json({ success: true });
     }
 
-    const existing = await getBusinessByEmail(email);
-    if (existing) {
-      return NextResponse.json({ error: "Account already exists. Try logging in." }, { status: 400 });
-    }
-
-    const biz = await createBusiness({
-      id: `biz-${Date.now()}`,
-      email,
-      name: businessName,
-      address: address || "",
-      category: category || "Other",
-      logoUrl: null,
-      stripeCustomerId: null,
-      balance: 0,
-      createdAt: new Date().toISOString(),
-    });
-
-    const session = { businessId: biz.id, email: biz.email, businessName: biz.name };
-    const cookieStore = await cookies();
-    cookieStore.set("colage_session", JSON.stringify(session), {
-      httpOnly: true,
-      path: "/",
-      maxAge: 60 * 60 * 24 * 30,
-    });
-
-    return NextResponse.json({ success: true, business: biz });
+    return NextResponse.json({ error: "Invalid action" }, { status: 400 });
+  } catch (err: unknown) {
+    const error = err as { code?: string; message?: string };
+    console.error("[auth]", error);
+    return NextResponse.json(
+      { error: error.message || "Auth failed" },
+      { status: 500 }
+    );
   }
-
-  if (action === "logout") {
-    const cookieStore = await cookies();
-    cookieStore.delete("colage_session");
-    return NextResponse.json({ success: true });
-  }
-
-  return NextResponse.json({ error: "Invalid action" }, { status: 400 });
 }
