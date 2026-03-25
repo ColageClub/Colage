@@ -639,8 +639,8 @@ Resources:
           BUSINESSES_TABLE: !Sub colage-businesses-${Stage}
           DAILY_SPEND_TABLE: !Sub colage-daily-spend-${Stage}
           IMPRESSIONS_TABLE: !Sub colage-impressions-${Stage}
-          # TODO: Move to SSM Parameter Store for production
-          STRIPE_SECRET_KEY: !Sub "{{resolve:ssm:/colage/${Stage}/stripe-secret-key}}"
+          # TODO: Move to SSM Parameter Store once IAM has ssm:GetParameters
+          STRIPE_SECRET_KEY: "CONFIGURE_ME"
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Sub colage-ads-${Stage}

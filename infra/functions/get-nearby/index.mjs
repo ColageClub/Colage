@@ -1,6 +1,6 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, QueryCommand, BatchGetCommand } from '@aws-sdk/lib-dynamodb';
-import { response, isValidCoordinate, sanitize, rateLimit, getClientIP } from '../shared/validate.mjs';
+import { response, isValidCoordinate, sanitize, rateLimit, getClientIP } from './shared/validate.mjs';
 
 const ddb = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 const LOCATIONS_TABLE = process.env.LOCATIONS_TABLE;

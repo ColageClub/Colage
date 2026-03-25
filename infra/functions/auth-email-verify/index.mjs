@@ -1,5 +1,5 @@
 import { CognitoIdentityProviderClient, SignUpCommand, AdminGetUserCommand } from '@aws-sdk/client-cognito-identity-provider';
-import { response, parseBody, isValidEduEmail, sanitize, rateLimit, getClientIP } from '../shared/validate.mjs';
+import { response, parseBody, isValidEduEmail, sanitize, rateLimit, getClientIP } from './shared/validate.mjs';
 
 const cognito = new CognitoIdentityProviderClient({});
 const USER_POOL_ID = process.env.USER_POOL_ID;

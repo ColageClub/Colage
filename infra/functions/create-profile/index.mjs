@@ -1,7 +1,7 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, PutCommand, GetCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
 import { randomUUID } from 'crypto';
-import { response, parseBody, validate, sanitize, isValidEduEmail, rateLimit, getClientIP } from '../shared/validate.mjs';
+import { response, parseBody, validate, sanitize, isValidEduEmail, rateLimit, getClientIP } from './shared/validate.mjs';
 
 const ddb = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 const USERS_TABLE = process.env.USERS_TABLE;

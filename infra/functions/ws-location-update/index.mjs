@@ -1,7 +1,7 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, PutCommand, GetCommand, QueryCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb';
 import { ApiGatewayManagementApiClient, PostToConnectionCommand } from '@aws-sdk/client-apigatewaymanagementapi';
-import { isValidCoordinate } from '../shared/validate.mjs';
+import { isValidCoordinate } from './shared/validate.mjs';
 
 const ddb = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 const CONNECTIONS_TABLE = process.env.CONNECTIONS_TABLE || 'colage-connections-dev';
