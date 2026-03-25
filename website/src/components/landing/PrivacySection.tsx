@@ -18,7 +18,7 @@ export default function PrivacySection() {
   return (
     <SectionWrapper id="privacy" bg="#F9F6F2">
       <SectionHeading badge="Privacy & Safety" title="Built with trust in mind." subtitle="Your safety isn't a feature — it's the foundation." />
-      <div ref={ref} style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 24 }}>
+      <div ref={ref} className="grid-2">
         {items.map((item, i) => (
           <motion.div
             key={item.title}
@@ -38,14 +38,6 @@ export default function PrivacySection() {
           </motion.div>
         ))}
       </div>
-
-      <style jsx>{`
-        @media (max-width: 768px) {
-          div[style*="grid-template-columns: repeat(2"] {
-            grid-template-columns: 1fr !important;
-          }
-        }
-      `}</style>
     </SectionWrapper>
   );
 }

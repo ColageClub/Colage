@@ -22,12 +22,13 @@ export function CreateAdClient({ session }: { session: Session }) {
   const searchParams = useSearchParams();
   const editId = searchParams.get("edit");
 
-  const [step, setStep] = useState(1); // 1: schools, 2: ad details, 3: budget, 4: preview
+  const [step, setStep] = useState(1); // 1: school, 2: ad details, 3: budget, 4: preview
   const [schools, setSchools] = useState<School[]>([]);
-  const [selectedSchools, setSelectedSchools] = useState<string[]>([]);
+  const [selectedSchool, setSelectedSchool] = useState<string>("");
   const [businessName, setBusinessName] = useState(session.businessName);
   const [bio, setBio] = useState("");
   const [deal, setDeal] = useState("");
+  const [address, setAddress] = useState("");
   const [dailyBudget, setDailyBudget] = useState(5);
   const [logoEmoji, setLogoEmoji] = useState("🏪");
   const [isLoading, setIsLoading] = useState(false);
@@ -48,33 +49,30 @@ export function CreateAdClient({ session }: { session: Session }) {
       if (editId) {
         const ad = data.ads.find((a: { id: string }) => a.id === editId);
         if (ad) {
-          setSelectedSchools(ad.schools);
+          setSelectedSchool(ad.school);
           setBusinessName(ad.businessName);
           setBio(ad.bio);
           setDeal(ad.deal);
           setDailyBudget(ad.dailyBudget);
+          setLogoEmoji(ad.emoji || "🏪");
+          setAddress(ad.address || "");
           setStep(2);
         }
       }
     }
   }
 
-  function toggleSchool(domain: string) {
-    setSelectedSchools((prev) =>
-      prev.includes(domain) ? prev.filter((s) => s !== domain) : [...prev, domain]
-    );
-  }
-
   async function handleSubmit() {
     setIsLoading(true);
 
     const payload = {
-      schools: selectedSchools,
+      school: selectedSchool,
       businessName,
       bio,
       deal,
+      emoji: logoEmoji,
+      address,
       dailyBudget,
-      logoUrl: null,
     };
 
     const res = await fetch("/api/ads", {
@@ -112,7 +110,7 @@ export function CreateAdClient({ session }: { session: Session }) {
         <div className="max-w-2xl mx-auto">
           {/* Progress */}
           <div className="flex gap-2 mb-10">
-            {["Schools", "Details", "Budget", "Preview"].map((label, i) => (
+            {["School", "Details", "Budget", "Preview"].map((label, i) => (
               <div key={label} className="flex-1">
                 <div
                   className={`h-1 rounded-full mb-2 transition ${
@@ -126,21 +124,21 @@ export function CreateAdClient({ session }: { session: Session }) {
             ))}
           </div>
 
-          {/* Step 1: Select Schools */}
+          {/* Step 1: Select School (single) */}
           {step === 1 && (
             <div>
-              <h2 className="text-2xl font-bold mb-2">Select Schools</h2>
+              <h2 className="text-2xl font-bold mb-2">Select a School</h2>
               <p className="text-sm text-[var(--colage-text-secondary)] mb-8">
-                Choose which campuses will see your ad
+                Choose which campus will see your ad
               </p>
 
               <div className="space-y-3 mb-8">
                 {schools.map((school) => {
-                  const isSelected = selectedSchools.includes(school.domain);
+                  const isSelected = selectedSchool === school.domain;
                   return (
                     <button
                       key={school.domain}
-                      onClick={() => toggleSchool(school.domain)}
+                      onClick={() => setSelectedSchool(school.domain)}
                       className={`w-full p-5 rounded-2xl border text-left flex items-center gap-4 transition ${
                         isSelected
                           ? "bg-[var(--colage-primary)]/10 border-[var(--colage-primary)]/40"
@@ -167,7 +165,7 @@ export function CreateAdClient({ session }: { session: Session }) {
 
               <button
                 onClick={() => setStep(2)}
-                disabled={selectedSchools.length === 0}
+                disabled={!selectedSchool}
                 className="w-full py-3 rounded-xl bg-[var(--colage-primary)] text-white font-semibold hover:bg-[var(--colage-primary-light)] transition disabled:opacity-30"
               >
                 Continue
@@ -238,6 +236,18 @@ export function CreateAdClient({ session }: { session: Session }) {
                     className="w-full px-4 py-3 rounded-xl bg-[var(--colage-surface)] border border-[var(--colage-border)] text-[var(--colage-text)] text-sm focus:outline-none focus:border-[var(--colage-primary)] transition"
                   />
                 </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-[var(--colage-text-secondary)] mb-1.5">Business Address</label>
+                  <input
+                    type="text"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                    placeholder="123 S State St, Ann Arbor, MI 48104"
+                    className="w-full px-4 py-3 rounded-xl bg-[var(--colage-surface)] border border-[var(--colage-border)] text-[var(--colage-text)] text-sm focus:outline-none focus:border-[var(--colage-primary)] transition"
+                  />
+                  <p className="text-[10px] text-[var(--colage-text-tertiary)] mt-1">Used to show distance to students on the map</p>
+                </div>
               </div>
 
               <div className="flex gap-3">
@@ -269,7 +279,7 @@ export function CreateAdClient({ session }: { session: Session }) {
               <div className="p-8 rounded-2xl bg-[var(--colage-surface)] border border-[var(--colage-border)] mb-8">
                 <div className="text-center mb-8">
                   <div className="text-5xl font-extrabold text-[var(--colage-primary)]">${dailyBudget}</div>
-                  <div className="text-sm text-[var(--colage-text-secondary)] mt-2">per day, per school</div>
+                  <div className="text-sm text-[var(--colage-text-secondary)] mt-2">per day</div>
                 </div>
 
                 <input
@@ -288,21 +298,27 @@ export function CreateAdClient({ session }: { session: Session }) {
 
                 <div className="mt-6 p-4 rounded-xl bg-[var(--colage-bg)] space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span className="text-[var(--colage-text-secondary)]">Schools selected</span>
-                    <span className="font-semibold">{selectedSchools.length}</span>
+                    <span className="text-[var(--colage-text-secondary)]">School</span>
+                    <span className="font-semibold">{selectedSchool}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-[var(--colage-text-secondary)]">Daily total</span>
+                    <span className="text-[var(--colage-text-secondary)]">Daily budget</span>
                     <span className="font-semibold text-[var(--colage-primary)]">
-                      ${dailyBudget * selectedSchools.length}/day
+                      ${dailyBudget}/day
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-[var(--colage-text-secondary)]">Monthly estimate</span>
                     <span className="font-semibold text-[var(--colage-warning)]">
-                      ~${(dailyBudget * selectedSchools.length * 30).toLocaleString()}/mo
+                      ~${(dailyBudget * 30).toLocaleString()}/mo
                     </span>
                   </div>
+                </div>
+
+                <div className="mt-4 p-3 rounded-xl bg-[var(--colage-warning)]/10 border border-[var(--colage-warning)]/20">
+                  <p className="text-xs text-[var(--colage-warning)]">
+                    Make sure you have enough funds in your account. You can add funds from your dashboard.
+                  </p>
                 </div>
               </div>
 
@@ -363,6 +379,9 @@ export function CreateAdClient({ session }: { session: Session }) {
                     </div>
                     <h3 className="text-xl font-bold">{businessName}</h3>
                     {bio && <p className="text-sm text-[var(--colage-text-secondary)] mt-1">{bio}</p>}
+                    {address && (
+                      <p className="text-xs text-[var(--colage-text-tertiary)] mt-1">{address}</p>
+                    )}
                     <div className="mt-4 px-4 py-3 rounded-xl bg-[var(--colage-online)]/10 border border-[var(--colage-online)]/20">
                       <p className="text-sm font-semibold text-[var(--colage-online)]">🎉 {deal}</p>
                     </div>
@@ -382,17 +401,19 @@ export function CreateAdClient({ session }: { session: Session }) {
                 <h3 className="font-bold mb-4">Summary</h3>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-[var(--colage-text-secondary)]">Schools</span>
-                    <span>{selectedSchools.join(", ")}</span>
+                    <span className="text-[var(--colage-text-secondary)]">School</span>
+                    <span>{selectedSchool}</span>
                   </div>
+                  {address && (
+                    <div className="flex justify-between">
+                      <span className="text-[var(--colage-text-secondary)]">Address</span>
+                      <span className="text-right max-w-[60%]">{address}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between">
                     <span className="text-[var(--colage-text-secondary)]">Daily budget</span>
-                    <span>${dailyBudget}/school/day</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-[var(--colage-text-secondary)]">Daily total</span>
                     <span className="font-bold text-[var(--colage-primary)]">
-                      ${dailyBudget * selectedSchools.length}/day
+                      ${dailyBudget}/day
                     </span>
                   </div>
                 </div>
@@ -410,7 +431,7 @@ export function CreateAdClient({ session }: { session: Session }) {
                   disabled={isLoading}
                   className="flex-1 py-3 rounded-xl bg-[var(--colage-online)] text-white font-semibold hover:bg-[var(--colage-online)]/80 transition disabled:opacity-50"
                 >
-                  {isLoading ? "Creating..." : editId ? "Save Changes" : "🚀 Launch Ad"}
+                  {isLoading ? "Creating..." : editId ? "Save Changes" : "Launch Ad"}
                 </button>
               </div>
             </div>

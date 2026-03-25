@@ -16,8 +16,8 @@ export function SectionWrapper({
   style?: CSSProperties;
 }) {
   return (
-    <section id={id} style={{ padding: "120px 0", background: bg, ...style }}>
-      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 48px" }}>
+    <section id={id} className="section-wrapper" style={{ padding: "120px 0", background: bg, ...style }}>
+      <div className="section-inner">
         {children}
       </div>
     </section>
@@ -46,37 +46,15 @@ export function SectionHeading({
       style={{ textAlign: "center", marginBottom: 64 }}
     >
       {badge && (
-        <span
-          style={{
-            display: "inline-block",
-            padding: "6px 16px",
-            fontSize: 12,
-            fontWeight: 600,
-            letterSpacing: "0.08em",
-            textTransform: "uppercase",
-            background: "rgba(165,28,48,0.1)",
-            color: "#A51C30",
-            borderRadius: 999,
-            marginBottom: 16,
-          }}
-        >
+        <span style={{ display: "inline-block", padding: "6px 16px", fontSize: 12, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", background: "rgba(165,28,48,0.1)", color: "#A51C30", borderRadius: 999, marginBottom: 16 }}>
           {badge}
         </span>
       )}
-      <h2
-        style={{
-          fontFamily: "var(--font-serif)",
-          fontSize: "clamp(36px, 4vw, 56px)",
-          fontWeight: 300,
-          color: "#1E1E1E",
-          lineHeight: 1.15,
-          letterSpacing: "-0.01em",
-        }}
-      >
+      <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "clamp(36px, 4vw, 56px)", fontWeight: 300, color: "#1E1E1E", lineHeight: 1.15, letterSpacing: "-0.01em" }}>
         {title}
       </h2>
       {subtitle && (
-        <p style={{ marginTop: 16, fontSize: 18, color: "#6B6B6B", fontWeight: 300, maxWidth: 600, margin: "16px auto 0" }}>
+        <p style={{ marginTop: 16, fontSize: 18, color: "#6B6B6B", fontWeight: 300, maxWidth: 600, marginLeft: "auto", marginRight: "auto" }}>
           {subtitle}
         </p>
       )}
@@ -106,55 +84,21 @@ export function FeatureRow({
   const inView = useInView(ref, { once: true, margin: "-80px" });
 
   return (
-    <section id={id} style={{ padding: "120px 0", background: bg }}>
-      <div
-        ref={ref}
-        style={{
-          maxWidth: 1200,
-          margin: "0 auto",
-          padding: "0 48px",
-          display: "flex",
-          flexDirection: reversed ? "row-reverse" : "row",
-          alignItems: "center",
-          gap: 80,
-          flexWrap: "wrap",
-        }}
-      >
+    <section id={id} className="section-wrapper" style={{ padding: "120px 0", background: bg }}>
+      <div ref={ref} className={reversed ? "flex-row-wrap-reverse section-inner" : "flex-row-wrap section-inner"}>
         {/* Text side */}
         <motion.div
           initial={{ opacity: 0, x: reversed ? 40 : -40 }}
           animate={inView ? { opacity: 1, x: 0 } : {}}
           transition={{ duration: 0.7 }}
-          style={{ flex: "1 1 400px", minWidth: 0 }}
+          className="flex-child"
         >
           {badge && (
-            <span
-              style={{
-                display: "inline-block",
-                padding: "6px 16px",
-                fontSize: 12,
-                fontWeight: 600,
-                letterSpacing: "0.08em",
-                textTransform: "uppercase",
-                background: "rgba(165,28,48,0.1)",
-                color: "#A51C30",
-                borderRadius: 999,
-                marginBottom: 16,
-              }}
-            >
+            <span style={{ display: "inline-block", padding: "6px 16px", fontSize: 12, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", background: "rgba(165,28,48,0.1)", color: "#A51C30", borderRadius: 999, marginBottom: 16 }}>
               {badge}
             </span>
           )}
-          <h2
-            style={{
-              fontFamily: "var(--font-serif)",
-              fontSize: "clamp(32px, 3.5vw, 52px)",
-              fontWeight: 300,
-              color: "#1E1E1E",
-              lineHeight: 1.15,
-              letterSpacing: "-0.01em",
-            }}
-          >
+          <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "clamp(32px, 3.5vw, 52px)", fontWeight: 300, color: "#1E1E1E", lineHeight: 1.15, letterSpacing: "-0.01em" }}>
             {title}
           </h2>
           <p style={{ marginTop: 20, fontSize: 18, lineHeight: 1.7, color: "#6B6B6B", fontWeight: 300 }}>
@@ -167,7 +111,8 @@ export function FeatureRow({
           initial={{ opacity: 0, x: reversed ? -40 : 40 }}
           animate={inView ? { opacity: 1, x: 0 } : {}}
           transition={{ duration: 0.7, delay: 0.15 }}
-          style={{ flex: "1 1 400px", display: "flex", justifyContent: "center", minWidth: 0 }}
+          className="flex-child"
+          style={{ display: "flex", justifyContent: "center" }}
         >
           {visual}
         </motion.div>

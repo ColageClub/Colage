@@ -1,16 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
-import { store } from "@/lib/store";
 import { getSession } from "@/lib/auth";
+import * as AdModel from "@/lib/models/ad";
+import { getSpendForAds } from "@/lib/models/daily-spend";
 
-// GET /api/ads — list ads for current business
+// GET /api/ads — list ads for current business + today's spend
 export async function GET() {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const ads = store.getAdsByBusiness(session.businessId);
-  const schools = store.getSchools();
+  const ads = await AdModel.getAdsByBusiness(session.businessId);
+  const schools = AdModel.getSchools();
 
-  return NextResponse.json({ ads, schools });
+  // Get today's spend for each ad
+  const adIds = ads.map(a => a.id);
+  const spendMap = await getSpendForAds(adIds);
+  const adsWithSpend = ads.map(ad => ({
+    ...ad,
+    todaySpend: spendMap.get(ad.id)?.spend || 0,
+    todayImpressions: spendMap.get(ad.id)?.impressionCount || 0,
+  }));
+
+  return NextResponse.json({ ads: adsWithSpend, schools });
 }
 
 // POST /api/ads — create a new ad
@@ -19,20 +29,28 @@ export async function POST(req: NextRequest) {
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await req.json();
-  const { schools, businessName, bio, deal, logoUrl, dailyBudget } = body;
+  const { school, businessName, bio, deal, emoji, address, dailyBudget } = body;
 
-  if (!schools?.length || !businessName || !deal || !dailyBudget) {
+  if (!school || !businessName || !deal || !dailyBudget) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
 
-  const ad = store.createAd({
+  // TODO: Geocode address with Mapbox when token is available
+  // For now, store address as-is and set lat/lng to 0,0
+  let lat = 0;
+  let lng = 0;
+
+  const ad = await AdModel.createAd({
     id: `ad-${Date.now()}`,
     businessId: session.businessId,
-    schools,
+    school,
+    emoji: emoji || "🏪",
     businessName,
     bio: bio || "",
     deal,
-    logoUrl: logoUrl || null,
+    address: address || "",
+    lat,
+    lng,
     dailyBudget: Math.max(1, Math.min(100, dailyBudget)),
     status: "active",
     impressions: 0,
@@ -54,21 +72,23 @@ export async function PUT(req: NextRequest) {
 
   if (!id) return NextResponse.json({ error: "Ad ID required" }, { status: 400 });
 
-  const ad = store.getAd(id);
+  const ad = await AdModel.getAd(id);
   if (!ad || ad.businessId !== session.businessId) {
     return NextResponse.json({ error: "Ad not found" }, { status: 404 });
   }
 
   // Only allow updating certain fields
-  const allowed: Partial<typeof ad> = {};
+  const allowed: Partial<AdModel.Ad> = {};
   if (updates.bio !== undefined) allowed.bio = updates.bio;
   if (updates.deal !== undefined) allowed.deal = updates.deal;
   if (updates.dailyBudget !== undefined) allowed.dailyBudget = Math.max(1, Math.min(100, updates.dailyBudget));
   if (updates.status !== undefined) allowed.status = updates.status;
-  if (updates.schools !== undefined) allowed.schools = updates.schools;
+  if (updates.school !== undefined) allowed.school = updates.school;
   if (updates.businessName !== undefined) allowed.businessName = updates.businessName;
+  if (updates.emoji !== undefined) allowed.emoji = updates.emoji;
+  if (updates.address !== undefined) allowed.address = updates.address;
 
-  const updated = store.updateAd(id, allowed);
+  const updated = await AdModel.updateAd(id, allowed);
   return NextResponse.json({ ad: updated });
 }
 
@@ -81,11 +101,11 @@ export async function DELETE(req: NextRequest) {
   const id = searchParams.get("id");
   if (!id) return NextResponse.json({ error: "Ad ID required" }, { status: 400 });
 
-  const ad = store.getAd(id);
+  const ad = await AdModel.getAd(id);
   if (!ad || ad.businessId !== session.businessId) {
     return NextResponse.json({ error: "Ad not found" }, { status: 404 });
   }
 
-  store.deleteAd(id);
+  await AdModel.deleteAd(id);
   return NextResponse.json({ success: true });
 }

@@ -17,7 +17,7 @@ export default function TestimonialsSection() {
   return (
     <SectionWrapper bg="#fff">
       <SectionHeading badge="What Students Say" title="Real stories from real people." />
-      <div ref={ref} style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 32 }}>
+      <div ref={ref} className="grid-3">
         {testimonials.map((t, i) => (
           <motion.div
             key={t.name}
@@ -35,14 +35,6 @@ export default function TestimonialsSection() {
           </motion.div>
         ))}
       </div>
-
-      <style jsx>{`
-        @media (max-width: 768px) {
-          div[style*="grid-template-columns: repeat(3"] {
-            grid-template-columns: 1fr !important;
-          }
-        }
-      `}</style>
     </SectionWrapper>
   );
 }

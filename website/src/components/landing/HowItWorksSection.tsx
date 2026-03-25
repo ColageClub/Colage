@@ -17,7 +17,7 @@ export default function HowItWorksSection() {
   return (
     <SectionWrapper id="how-it-works" bg="#F9F6F2">
       <SectionHeading badge="How It Works" title="Three steps to get started." />
-      <div ref={ref} style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 48 }}>
+      <div ref={ref} className="grid-3">
         {steps.map((s, i) => (
           <motion.div
             key={s.num}
@@ -35,14 +35,6 @@ export default function HowItWorksSection() {
           </motion.div>
         ))}
       </div>
-
-      <style jsx>{`
-        @media (max-width: 768px) {
-          div[style*="grid-template-columns"] {
-            grid-template-columns: 1fr !important;
-          }
-        }
-      `}</style>
     </SectionWrapper>
   );
 }

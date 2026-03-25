@@ -8,14 +8,14 @@ export default function AlumniSection() {
   const inView = useInView(ref, { once: true, margin: "-80px" });
 
   return (
-    <section id="alumni" style={{ padding: "120px 0", background: "#1a0a0e", color: "#fff", overflow: "hidden" }}>
-      <div ref={ref} style={{ maxWidth: 1200, margin: "0 auto", padding: "0 48px", display: "flex", alignItems: "center", gap: 80, flexWrap: "wrap" }}>
+    <section id="alumni" className="section-wrapper" style={{ padding: "120px 0", background: "#1a0a0e", color: "#fff", overflow: "hidden" }}>
+      <div ref={ref} className="flex-row-wrap section-inner">
         {/* Text */}
         <motion.div
           initial={{ opacity: 0, x: -40 }}
           animate={inView ? { opacity: 1, x: 0 } : {}}
           transition={{ duration: 0.7 }}
-          style={{ flex: "1 1 400px" }}
+          className="flex-child"
         >
           <span style={{ display: "inline-block", padding: "6px 16px", fontSize: 12, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase" as const, background: "rgba(165,28,48,0.3)", color: "#C23B4A", borderRadius: 999, marginBottom: 16 }}>
             Alumni Network
@@ -45,7 +45,8 @@ export default function AlumniSection() {
           initial={{ opacity: 0, scale: 0.8 }}
           animate={inView ? { opacity: 1, scale: 1 } : {}}
           transition={{ duration: 0.8, delay: 0.2 }}
-          style={{ flex: "1 1 400px", display: "flex", justifyContent: "center" }}
+          className="flex-child"
+          style={{ display: "flex", justifyContent: "center" }}
         >
           <div style={{ position: "relative", width: 340, height: 340 }}>
             {[0, 1, 2].map((i) => (

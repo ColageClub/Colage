@@ -46,10 +46,10 @@ export function StatsCounter() {
         const { count, ref } = useCountUp(stat.value);
         return (
           <div key={stat.label} ref={ref} className="text-center">
-            <div className="text-4xl lg:text-5xl font-black text-[#6C5CE7]">
+            <div className="text-4xl lg:text-5xl font-black gradient-text">
               {count.toLocaleString()}{stat.suffix}
             </div>
-            <div className="text-sm text-[#9090a8] mt-2 font-medium">{stat.label}</div>
+            <div className="text-sm text-[#A0A0A0] mt-2 font-medium">{stat.label}</div>
           </div>
         );
       })}

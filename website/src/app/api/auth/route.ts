@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { store } from "@/lib/store";
+import { getBusiness, getBusinessByEmail, createBusiness } from "@/lib/models/business";
 import { cookies } from "next/headers";
 
 export async function POST(req: NextRequest) {
@@ -12,16 +12,17 @@ export async function POST(req: NextRequest) {
 
   if (action === "login") {
     // Dev mode: auto-login, create business if doesn't exist
-    let biz = store.getBusinessByEmail(email);
+    let biz = await getBusinessByEmail(email);
     if (!biz) {
-      // In dev mode, auto-create on login attempt
-      biz = store.createBusiness({
+      biz = await createBusiness({
         id: `biz-${Date.now()}`,
         email,
         name: email.split("@")[0],
         address: "",
         category: "Other",
         logoUrl: null,
+        stripeCustomerId: null,
+        balance: 0,
         createdAt: new Date().toISOString(),
       });
     }
@@ -42,19 +43,20 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Business name required" }, { status: 400 });
     }
 
-    // Check if already exists
-    const existing = store.getBusinessByEmail(email);
+    const existing = await getBusinessByEmail(email);
     if (existing) {
       return NextResponse.json({ error: "Account already exists. Try logging in." }, { status: 400 });
     }
 
-    const biz = store.createBusiness({
+    const biz = await createBusiness({
       id: `biz-${Date.now()}`,
       email,
       name: businessName,
       address: address || "",
       category: category || "Other",
       logoUrl: null,
+      stripeCustomerId: null,
+      balance: 0,
       createdAt: new Date().toISOString(),
     });
 
