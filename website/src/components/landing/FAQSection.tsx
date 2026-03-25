@@ -2,68 +2,39 @@
 
 import { useState, useRef } from "react";
 import { motion, useInView, AnimatePresence } from "framer-motion";
+import { SectionWrapper, SectionHeading } from "./Section";
 
 const faqs = [
-  {
-    q: "Is Colage free?",
-    a: "Yes. Colage is completely free for students and alumni. We make money through local business advertising, not your data.",
-  },
-  {
-    q: "What schools are supported?",
-    a: "Any accredited college or university with a .edu email domain. When you sign up, we automatically detect your school and create its server if it doesn't exist yet.",
-  },
-  {
-    q: "How is this different from other social apps?",
-    a: "Colage is discovery-only — no DMs, no feeds, no posts. You discover people near you and connect through your real social links (Instagram, Snapchat, etc.). It's about real-world connection, not another timeline.",
-  },
-  {
-    q: "What happens to my location data?",
-    a: "Your location is only shared while you're actively visible. You can toggle visibility off anytime. We don't store location history or sell your data. Ever.",
-  },
-  {
-    q: "Can I use Colage after I graduate?",
-    a: "Absolutely. When you graduate, you can join the Alumni Network — a single global server for graduates from every school. Your Colage experience doesn't end with your degree.",
-  },
-  {
-    q: "Is there messaging in the app?",
-    a: "No. By design, Colage has no in-app messaging. You connect through your social media links. This keeps the app focused on discovery and reduces harassment.",
-  },
-  {
-    q: "What platforms is Colage available on?",
-    a: "iOS and Android. Both apps have full feature parity — map, list, and AR discovery modes.",
-  },
+  { q: "Is Colage free?", a: "Yes — Colage is completely free for students and alumni. Download, sign up with your .edu email, and start discovering." },
+  { q: "What schools are supported?", a: "Any accredited university or college with a .edu email domain. If your school isn't on Colage yet, you'll be the first — and your school's server will be created automatically." },
+  { q: "How is this different from other social apps?", a: "Colage is discovery-only. There's no messaging, no feed, no algorithm deciding what you see. You discover real people near you and connect through your existing social links." },
+  { q: "What happens to my location data?", a: "Your location is only shared when you're visible on the map. You can toggle visibility off at any time. We never sell location data and it's not stored permanently." },
+  { q: "Can I use Colage after I graduate?", a: "Absolutely. When you graduate, you can switch to the Alumni Network — a single global server for graduates from every school." },
+  { q: "Is there messaging in the app?", a: "No. Colage is purely for discovery. You connect with people through their social links — Instagram, Snapchat, LinkedIn, etc. This keeps the app focused and safe." },
+  { q: "What platforms is Colage available on?", a: "Colage is available on iOS and Android. Download from the App Store or Google Play." },
 ];
 
-function FAQItem({ q, a, isOpen, onToggle }: { q: string; a: string; isOpen: boolean; onToggle: () => void }) {
+function Item({ q, a }: { q: string; a: string }) {
+  const [open, setOpen] = useState(false);
   return (
-    <div className="border-b border-[#E8E3DB]">
+    <div style={{ borderBottom: "1px solid #E8E3DB" }}>
       <button
-        onClick={onToggle}
-        className="w-full py-6 flex items-center justify-between text-left group"
+        onClick={() => setOpen(!open)}
+        style={{ width: "100%", padding: "24px 0", display: "flex", justifyContent: "space-between", alignItems: "center", background: "none", border: "none", cursor: "pointer", textAlign: "left" }}
       >
-        <span className="text-lg font-medium text-[#1E1E1E] group-hover:text-[#A51C30] transition-colors pr-8">
-          {q}
-        </span>
-        <motion.span
-          animate={{ rotate: isOpen ? 45 : 0 }}
-          transition={{ duration: 0.2 }}
-          className="text-2xl text-[#A51C30] shrink-0"
-        >
-          +
-        </motion.span>
+        <span style={{ fontSize: 18, fontWeight: 500, color: "#1E1E1E", paddingRight: 32 }}>{q}</span>
+        <motion.span animate={{ rotate: open ? 45 : 0 }} transition={{ duration: 0.2 }} style={{ fontSize: 24, color: "#A51C30", flexShrink: 0 }}>+</motion.span>
       </button>
       <AnimatePresence>
-        {isOpen && (
+        {open && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="overflow-hidden"
+            style={{ overflow: "hidden" }}
           >
-            <p className="pb-6 text-[#6B6B6B] font-light leading-relaxed max-w-3xl">
-              {a}
-            </p>
+            <p style={{ paddingBottom: 24, fontSize: 16, color: "#6B6B6B", fontWeight: 300, lineHeight: 1.7, maxWidth: 600 }}>{a}</p>
           </motion.div>
         )}
       </AnimatePresence>
@@ -72,44 +43,15 @@ function FAQItem({ q, a, isOpen, onToggle }: { q: string; a: string; isOpen: boo
 }
 
 export default function FAQSection() {
-  const [openIndex, setOpenIndex] = useState<number | null>(null);
   const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-100px" });
+  const inView = useInView(ref, { once: true, margin: "-80px" });
 
   return (
-    <section id="faq" className="py-24 md:py-32 bg-white">
-      <div ref={ref} className="max-w-4xl mx-auto px-6 md:px-16 lg:px-24">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.8 }}
-          className="text-center mb-16"
-        >
-          <p className="text-sm font-medium text-[#A51C30] tracking-wider uppercase mb-3">
-            FAQ
-          </p>
-          <h2
-            className="text-4xl md:text-5xl lg:text-6xl font-light text-[#1E1E1E] tracking-tight"
-            style={{ fontFamily: "var(--font-cormorant)" }}
-          >
-            Questions? Answered.
-          </h2>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.8, delay: 0.2 }}
-        >
-          {faqs.map((faq, i) => (
-            <FAQItem
-              key={i}
-              q={faq.q}
-              a={faq.a}
-              isOpen={openIndex === i}
-              onToggle={() => setOpenIndex(openIndex === i ? null : i)}
-            />
-          ))}
+    <section id="faq" style={{ padding: "120px 0", background: "#fff" }}>
+      <div style={{ maxWidth: 800, margin: "0 auto", padding: "0 48px" }}>
+        <SectionHeading badge="FAQ" title="Questions? Answered." />
+        <motion.div ref={ref} initial={{ opacity: 0, y: 20 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.7, delay: 0.1 }}>
+          {faqs.map((f) => <Item key={f.q} q={f.q} a={f.a} />)}
         </motion.div>
       </div>
     </section>

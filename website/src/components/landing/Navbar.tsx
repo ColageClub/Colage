@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-const NAV_LINKS = [
+const links = [
   { label: "About", href: "#about" },
   { label: "Features", href: "#map" },
   { label: "Alumni", href: "#alumni" },
@@ -13,111 +13,160 @@ const NAV_LINKS = [
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 50);
-    window.addEventListener("scroll", onScroll);
-    return () => window.removeEventListener("scroll", onScroll);
+    const fn = () => setScrolled(window.scrollY > 50);
+    window.addEventListener("scroll", fn);
+    return () => window.removeEventListener("scroll", fn);
   }, []);
 
   return (
     <>
-      <nav
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-          scrolled
-            ? "bg-white/95 backdrop-blur-md shadow-sm"
-            : "bg-transparent"
-        }`}
+      <motion.nav
+        initial={{ y: -80 }}
+        animate={{ y: 0 }}
+        transition={{ duration: 0.6, delay: 0.3 }}
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 50,
+          transition: "background 0.3s, box-shadow 0.3s",
+          background: scrolled ? "rgba(255,255,255,0.95)" : "transparent",
+          backdropFilter: scrolled ? "blur(12px)" : "none",
+          boxShadow: scrolled ? "0 1px 3px rgba(0,0,0,0.08)" : "none",
+        }}
       >
-        <div className="max-w-[1400px] mx-auto px-6 md:px-16 lg:px-24 flex items-center justify-between h-20">
-          {/* Logo */}
+        <div
+          style={{
+            maxWidth: 1400,
+            margin: "0 auto",
+            padding: "0 48px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            height: 72,
+          }}
+        >
           <a
             href="#"
-            className={`text-2xl font-light transition-colors duration-300 ${
-              scrolled ? "text-[#1E1E1E]" : "text-white"
-            }`}
-            style={{ fontFamily: "var(--font-cormorant)" }}
+            style={{
+              fontFamily: "var(--font-serif)",
+              fontSize: 28,
+              fontWeight: 300,
+              color: scrolled ? "#1E1E1E" : "#fff",
+              textDecoration: "none",
+              transition: "color 0.3s",
+            }}
           >
             Colage
           </a>
 
-          {/* Desktop links */}
-          <div className="hidden md:flex items-center gap-8">
-            {NAV_LINKS.map((link) => (
+          {/* Desktop */}
+          <div style={{ display: "flex", alignItems: "center", gap: 32 }} className="nav-desktop">
+            {links.map((l) => (
               <a
-                key={link.href}
-                href={link.href}
-                className={`text-sm font-medium transition-colors duration-300 hover:text-[#A51C30] ${
-                  scrolled ? "text-[#6B6B6B]" : "text-white/70"
-                }`}
+                key={l.href}
+                href={l.href}
+                style={{
+                  fontSize: 14,
+                  fontWeight: 500,
+                  color: scrolled ? "#6B6B6B" : "rgba(255,255,255,0.7)",
+                  textDecoration: "none",
+                  transition: "color 0.2s",
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = "#A51C30")}
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.color = scrolled ? "#6B6B6B" : "rgba(255,255,255,0.7)")
+                }
               >
-                {link.label}
+                {l.label}
               </a>
             ))}
             <a
               href="#"
-              className="px-5 py-2 bg-[#A51C30] text-white text-sm font-medium rounded-full hover:bg-[#8C1515] transition-colors"
+              style={{
+                padding: "10px 24px",
+                background: "#A51C30",
+                color: "#fff",
+                fontSize: 14,
+                fontWeight: 500,
+                borderRadius: 999,
+                textDecoration: "none",
+                transition: "background 0.2s",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = "#8C1515")}
+              onMouseLeave={(e) => (e.currentTarget.style.background = "#A51C30")}
             >
               Download
             </a>
           </div>
 
-          {/* Mobile hamburger */}
+          {/* Mobile toggle */}
           <button
-            onClick={() => setMobileOpen(!mobileOpen)}
-            className="md:hidden flex flex-col gap-1.5"
+            onClick={() => setOpen(!open)}
+            className="nav-mobile-btn"
+            style={{
+              display: "none",
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              padding: 8,
+            }}
           >
-            <span
-              className={`w-6 h-0.5 transition-all duration-300 ${
-                scrolled ? "bg-[#1E1E1E]" : "bg-white"
-              } ${mobileOpen ? "rotate-45 translate-y-2" : ""}`}
-            />
-            <span
-              className={`w-6 h-0.5 transition-all duration-300 ${
-                scrolled ? "bg-[#1E1E1E]" : "bg-white"
-              } ${mobileOpen ? "opacity-0" : ""}`}
-            />
-            <span
-              className={`w-6 h-0.5 transition-all duration-300 ${
-                scrolled ? "bg-[#1E1E1E]" : "bg-white"
-              } ${mobileOpen ? "-rotate-45 -translate-y-2" : ""}`}
-            />
+            <div style={{ width: 24, height: 2, background: scrolled ? "#1E1E1E" : "#fff", marginBottom: 6, transition: "0.3s" }} />
+            <div style={{ width: 24, height: 2, background: scrolled ? "#1E1E1E" : "#fff", marginBottom: 6, transition: "0.3s" }} />
+            <div style={{ width: 24, height: 2, background: scrolled ? "#1E1E1E" : "#fff", transition: "0.3s" }} />
           </button>
         </div>
-      </nav>
+      </motion.nav>
 
       {/* Mobile menu */}
       <AnimatePresence>
-        {mobileOpen && (
+        {open && (
           <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="fixed inset-0 z-40 bg-white pt-20 px-6"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{
+              position: "fixed",
+              inset: 0,
+              zIndex: 40,
+              background: "#1a0a0e",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 32,
+            }}
           >
-            <div className="flex flex-col gap-6">
-              {NAV_LINKS.map((link) => (
-                <a
-                  key={link.href}
-                  href={link.href}
-                  onClick={() => setMobileOpen(false)}
-                  className="text-2xl font-light text-[#1E1E1E] hover:text-[#A51C30] transition-colors"
-                  style={{ fontFamily: "var(--font-cormorant)" }}
-                >
-                  {link.label}
-                </a>
-              ))}
+            {links.map((l) => (
               <a
-                href="#"
-                className="mt-4 inline-block text-center px-8 py-3.5 bg-[#A51C30] text-white font-medium rounded-full"
+                key={l.href}
+                href={l.href}
+                onClick={() => setOpen(false)}
+                style={{
+                  fontFamily: "var(--font-serif)",
+                  fontSize: 28,
+                  color: "rgba(255,255,255,0.8)",
+                  textDecoration: "none",
+                }}
               >
-                Download
+                {l.label}
               </a>
-            </div>
+            ))}
           </motion.div>
         )}
       </AnimatePresence>
+
+      <style jsx global>{`
+        @media (max-width: 768px) {
+          .nav-desktop { display: none !important; }
+          .nav-mobile-btn { display: block !important; }
+        }
+      `}</style>
     </>
   );
 }

@@ -1,18 +1,14 @@
 @import "tailwindcss";
 
-:root {
-  /* Harvard Crimson palette */
-  --crimson: #A51C30;
-  --crimson-dark: #8C1515;
-  --crimson-light: #C23B4A;
-  --black: #1E1E1E;
-  --white: #FFFFFF;
-  --off-white: #F9F6F2;
-  --warm-gray: #6B6B6B;
-  --light-gray: #E8E3DB;
-  --accent-gold: #C4963C;
+@theme {
+  --color-crimson: #A51C30;
+  --color-crimson-dark: #8C1515;
+  --color-crimson-light: #C23B4A;
+  --color-dark: #1E1E1E;
+  --color-warm-gray: #6B6B6B;
+  --color-off-white: #F9F6F2;
+  --color-light-gray: #E8E3DB;
 
-  /* Fonts */
   --font-serif: 'Cormorant Garamond', Georgia, serif;
   --font-sans: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
 }
@@ -29,43 +25,16 @@ html {
 
 body {
   font-family: var(--font-sans);
-  color: var(--black);
-  background: var(--white);
+  color: #1E1E1E;
+  background: #fff;
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-}
-::-webkit-scrollbar-track {
-  background: var(--off-white);
-}
-::-webkit-scrollbar-thumb {
-  background: var(--crimson);
-  border-radius: 4px;
-}
-
-/* Selection */
 ::selection {
-  background: var(--crimson);
-  color: var(--white);
+  background: #A51C30;
+  color: #fff;
 }
 
-/* Utility classes */
-.font-serif {
-  font-family: var(--font-serif);
-}
-.font-sans {
-  font-family: var(--font-sans);
-}
-.text-crimson {
-  color: var(--crimson);
-}
-.bg-crimson {
-  background-color: var(--crimson);
-}
-.bg-off-white {
-  background-color: var(--off-white);
-}
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: #F9F6F2; }
+::-webkit-scrollbar-thumb { background: #A51C30; border-radius: 4px; }

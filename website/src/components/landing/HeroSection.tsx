@@ -7,34 +7,28 @@ const LogoTunnel = dynamic(() => import("./LogoTunnel"), { ssr: false });
 
 export default function HeroSection() {
   return (
-    <section className="relative h-screen w-full overflow-hidden bg-[#1a0a0e]">
-      {/* Three.js background */}
+    <section style={{ position: "relative", height: "100vh", width: "100%", overflow: "hidden", background: "#1a0a0e" }}>
       <LogoTunnel />
 
-      {/* Gradient overlays for depth */}
-      <div className="absolute inset-0 z-10 bg-gradient-to-b from-[#1a0a0e]/60 via-transparent to-[#1a0a0e]/80 pointer-events-none" />
-      <div className="absolute inset-0 z-10 bg-radial-[at_center] from-transparent via-transparent to-[#1a0a0e]/70 pointer-events-none" />
+      {/* Overlays */}
+      <div style={{ position: "absolute", inset: 0, zIndex: 10, background: "linear-gradient(to bottom, rgba(26,10,14,0.6), transparent, rgba(26,10,14,0.8))", pointerEvents: "none" }} />
 
-      {/* Content */}
-      <div className="relative z-20 flex flex-col items-center justify-center h-full text-center px-6">
-        <motion.div
+      {/* Content — always centered */}
+      <div style={{ position: "relative", zIndex: 20, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", textAlign: "center", padding: "0 24px" }}>
+        <motion.h1
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, delay: 0.3 }}
+          style={{ fontFamily: "var(--font-serif)", fontSize: "clamp(64px, 10vw, 140px)", fontWeight: 300, color: "#fff", letterSpacing: "-0.02em", lineHeight: 1 }}
         >
-          <h1
-            className="font-serif text-7xl md:text-9xl font-light text-white tracking-tight"
-            style={{ fontFamily: "var(--font-cormorant)" }}
-          >
-            Be You.
-          </h1>
-        </motion.div>
+          Be You.
+        </motion.h1>
 
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, delay: 0.7 }}
-          className="mt-6 text-lg md:text-xl text-white/70 max-w-md font-light tracking-wide"
+          style={{ marginTop: 24, fontSize: "clamp(16px, 2vw, 20px)", color: "rgba(255,255,255,0.6)", fontWeight: 300, letterSpacing: "0.02em", maxWidth: 500 }}
         >
           The social discovery app for college students and alumni.
         </motion.p>
@@ -43,18 +37,12 @@ export default function HeroSection() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, delay: 1.1 }}
-          className="mt-10 flex gap-4"
+          style={{ marginTop: 40, display: "flex", gap: 16 }}
         >
-          <a
-            href="#about"
-            className="px-8 py-3.5 bg-[#A51C30] text-white font-medium rounded-full hover:bg-[#8C1515] transition-colors duration-300 text-sm tracking-wide"
-          >
+          <a href="#about" style={{ padding: "14px 32px", background: "#A51C30", color: "#fff", fontWeight: 500, borderRadius: 999, textDecoration: "none", fontSize: 14, letterSpacing: "0.03em" }}>
             Get Started
           </a>
-          <a
-            href="#how-it-works"
-            className="px-8 py-3.5 border border-white/30 text-white font-medium rounded-full hover:bg-white/10 transition-colors duration-300 text-sm tracking-wide"
-          >
+          <a href="#how-it-works" style={{ padding: "14px 32px", border: "1px solid rgba(255,255,255,0.3)", color: "#fff", fontWeight: 500, borderRadius: 999, textDecoration: "none", fontSize: 14, letterSpacing: "0.03em" }}>
             Learn More
           </a>
         </motion.div>
@@ -63,15 +51,15 @@ export default function HeroSection() {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 2, duration: 1 }}
-          className="absolute bottom-10 left-1/2 -translate-x-1/2"
+          transition={{ delay: 2 }}
+          style={{ position: "absolute", bottom: 40, left: "50%", transform: "translateX(-50%)" }}
         >
           <motion.div
             animate={{ y: [0, 8, 0] }}
             transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-            className="w-6 h-10 border-2 border-white/30 rounded-full flex justify-center pt-2"
+            style={{ width: 24, height: 40, border: "2px solid rgba(255,255,255,0.3)", borderRadius: 999, display: "flex", justifyContent: "center", paddingTop: 8 }}
           >
-            <div className="w-1.5 h-1.5 bg-white/60 rounded-full" />
+            <div style={{ width: 6, height: 6, background: "rgba(255,255,255,0.6)", borderRadius: "50%" }} />
           </motion.div>
         </motion.div>
       </div>

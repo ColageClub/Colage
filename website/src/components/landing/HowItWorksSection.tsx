@@ -1,89 +1,48 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { useInView } from "framer-motion";
+import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
+import { SectionWrapper, SectionHeading } from "./Section";
 
 const steps = [
-  {
-    number: "01",
-    title: "Sign up with your .edu email",
-    description:
-      "Only verified students and graduates from accredited universities can join. Your .edu email is your key.",
-    icon: "📧",
-  },
-  {
-    number: "02",
-    title: "Choose Student or Alumni",
-    description:
-      "Current students join their school's server. Graduates join the global Alumni Network — one community, every school.",
-    icon: "🎓",
-  },
-  {
-    number: "03",
-    title: "Discover people around you",
-    description:
-      "See who's nearby on the map, browse the list, or explore in AR. Connect through social links — Instagram, Snapchat, LinkedIn, and more.",
-    icon: "📍",
-  },
+  { num: "01", icon: "📧", title: "Sign up with your .edu email", desc: "Only verified students and graduates from accredited universities can join. Your .edu email is your key." },
+  { num: "02", icon: "🎓", title: "Choose Student or Alumni", desc: "Current students join their school's server. Graduates join the global Alumni Network — one community, every school." },
+  { num: "03", icon: "📍", title: "Discover people around you", desc: "See who's nearby on the map, browse the list, or explore in AR. Connect through social links — Instagram, Snapchat, LinkedIn, and more." },
 ];
 
 export default function HowItWorksSection() {
   const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-100px" });
+  const inView = useInView(ref, { once: true, margin: "-80px" });
 
   return (
-    <section id="how-it-works" className="py-24 md:py-32 bg-[#F9F6F2]">
-      <div ref={ref} className="max-w-[1400px] mx-auto px-6 md:px-16 lg:px-24">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.8 }}
-          className="text-center mb-20"
-        >
-          <p className="text-sm font-medium text-[#A51C30] tracking-wider uppercase mb-3">
-            How It Works
-          </p>
-          <h2
-            className="text-4xl md:text-5xl lg:text-6xl font-light text-[#1E1E1E] tracking-tight"
-            style={{ fontFamily: "var(--font-cormorant)" }}
+    <SectionWrapper id="how-it-works" bg="#F9F6F2">
+      <SectionHeading badge="How It Works" title="Three steps to get started." />
+      <div ref={ref} style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 48 }}>
+        {steps.map((s, i) => (
+          <motion.div
+            key={s.num}
+            initial={{ opacity: 0, y: 40 }}
+            animate={inView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.7, delay: i * 0.15 }}
+            style={{ textAlign: "center" }}
           >
-            Three steps to get started.
-          </h2>
-        </motion.div>
-
-        <div className="grid md:grid-cols-3 gap-12 md:gap-16">
-          {steps.map((step, i) => (
-            <motion.div
-              key={step.number}
-              initial={{ opacity: 0, y: 40 }}
-              animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.8, delay: i * 0.2 }}
-              className="text-center"
-            >
-              {/* Icon */}
-              <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-white shadow-sm flex items-center justify-center text-3xl">
-                {step.icon}
-              </div>
-
-              {/* Step number */}
-              <span
-                className="text-5xl font-light text-[#A51C30]/20"
-                style={{ fontFamily: "var(--font-cormorant)" }}
-              >
-                {step.number}
-              </span>
-
-              <h3 className="mt-2 text-xl font-semibold text-[#1E1E1E]">
-                {step.title}
-              </h3>
-              <p className="mt-3 text-[#6B6B6B] font-light leading-relaxed max-w-sm mx-auto">
-                {step.description}
-              </p>
-            </motion.div>
-          ))}
-        </div>
+            <div style={{ width: 72, height: 72, margin: "0 auto 20px", borderRadius: 16, background: "#fff", boxShadow: "0 2px 8px rgba(0,0,0,0.06)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 32 }}>
+              {s.icon}
+            </div>
+            <span style={{ fontFamily: "var(--font-serif)", fontSize: 48, fontWeight: 300, color: "rgba(165,28,48,0.2)" }}>{s.num}</span>
+            <h3 style={{ marginTop: 8, fontSize: 20, fontWeight: 600, color: "#1E1E1E" }}>{s.title}</h3>
+            <p style={{ marginTop: 12, fontSize: 16, color: "#6B6B6B", fontWeight: 300, lineHeight: 1.6 }}>{s.desc}</p>
+          </motion.div>
+        ))}
       </div>
-    </section>
+
+      <style jsx>{`
+        @media (max-width: 768px) {
+          div[style*="grid-template-columns"] {
+            grid-template-columns: 1fr !important;
+          }
+        }
+      `}</style>
+    </SectionWrapper>
   );
 }
