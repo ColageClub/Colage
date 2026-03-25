@@ -35,7 +35,9 @@ struct OnboardingFlow: View {
         case .email:
             EmailEntryScreen(onContinue: { path.append(OnboardingStep.emailOTP) })
         case .emailOTP:
-            EmailOTPScreen(onVerified: { path.append(OnboardingStep.phone) })
+            EmailOTPScreen(onVerified: { path.append(OnboardingStep.serverType) })
+        case .serverType:
+            ServerTypeScreen(onContinue: { path.append(OnboardingStep.phone) })
         case .phone:
             PhoneEntryScreen(onContinue: { path.append(OnboardingStep.phoneOTP) })
         case .phoneOTP:
@@ -56,6 +58,7 @@ struct OnboardingFlow: View {
                     guard !handle.isEmpty else { return nil }
                     return SocialLink(platform: platform, handle: handle)
                 }
+                authService.selectedServerType = onboardingData.serverType
                 authService.createDevProfile(
                     name: onboardingData.displayName,
                     bio: onboardingData.bio.isEmpty ? nil : onboardingData.bio,
@@ -69,5 +72,5 @@ struct OnboardingFlow: View {
 }
 
 enum OnboardingStep: Hashable {
-    case email, emailOTP, phone, phoneOTP, photo, info, socialLinks, permissions, welcome
+    case email, emailOTP, serverType, phone, phoneOTP, photo, info, socialLinks, permissions, welcome
 }

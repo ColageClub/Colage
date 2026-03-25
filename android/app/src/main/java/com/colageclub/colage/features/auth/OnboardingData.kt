@@ -1,6 +1,7 @@
 package com.colageclub.colage.features.auth
 
 import android.net.Uri
+import com.colageclub.colage.data.models.ServerType
 import com.colageclub.colage.data.models.SocialLink
 import com.colageclub.colage.data.models.SocialPlatform
 import com.colageclub.colage.data.models.UserProfile
@@ -12,7 +13,8 @@ data class OnboardingData(
     val bio: String = "",
     val major: String = "",
     val profilePhotoUri: Uri? = null,
-    val socialLinks: Map<SocialPlatform, String> = emptyMap()
+    val socialLinks: Map<SocialPlatform, String> = emptyMap(),
+    val serverType: ServerType = ServerType.STUDENT
 ) {
     fun buildProfile(domain: String): UserProfile {
         val links = socialLinks
@@ -28,6 +30,7 @@ data class OnboardingData(
             major = major.ifEmpty { null },
             socialLinks = links,
             isVisible = true,
+            serverType = serverType,
             createdAt = System.currentTimeMillis(),
             updatedAt = System.currentTimeMillis()
         )

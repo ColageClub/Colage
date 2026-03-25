@@ -11,12 +11,14 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.colageclub.colage.features.auth.AuthViewModel
 import com.colageclub.colage.features.auth.screens.*
+import com.colageclub.colage.features.auth.screens.ServerTypeScreen
 
 sealed class Screen(val route: String) {
     object Splash : Screen("splash")
     object Welcome : Screen("welcome")
     object EmailEntry : Screen("email_entry")
     object EmailOTP : Screen("email_otp")
+    object ServerType : Screen("server_type")
     object PhoneEntry : Screen("phone_entry")
     object PhoneOTP : Screen("phone_otp")
     object PhotoUpload : Screen("photo_upload")
@@ -79,7 +81,14 @@ fun OnboardingNavHost(
         composable(Screen.EmailOTP.route) {
             EmailOTPScreen(
                 authViewModel = authViewModel,
-                onVerified = { navController.navigate(Screen.PhoneEntry.route) }
+                onVerified = { navController.navigate(Screen.ServerType.route) }
+            )
+        }
+
+        composable(Screen.ServerType.route) {
+            ServerTypeScreen(
+                authViewModel = authViewModel,
+                onContinue = { navController.navigate(Screen.PhoneEntry.route) }
             )
         }
 

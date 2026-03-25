@@ -8,6 +8,7 @@ import com.colageclub.colage.BuildConfig
 import com.colageclub.colage.core.networking.ApiClient
 import com.colageclub.colage.core.storage.SecureStorage
 import com.colageclub.colage.data.models.*
+import com.colageclub.colage.data.models.ServerType
 import com.google.gson.Gson
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
@@ -185,6 +186,7 @@ class AuthViewModel @Inject constructor(
     fun updateOnboardingMajor(major: String) = _onboardingData.update { it.copy(major = major) }
     fun updateOnboardingPhoto(uri: Uri?) = _onboardingData.update { it.copy(profilePhotoUri = uri) }
     fun updateSocialLinks(links: Map<SocialPlatform, String>) = _onboardingData.update { it.copy(socialLinks = links) }
+    fun updateServerType(type: ServerType) = _onboardingData.update { it.copy(serverType = type) }
 
     fun createProfile(onResult: (Boolean) -> Unit) {
         val data = _onboardingData.value

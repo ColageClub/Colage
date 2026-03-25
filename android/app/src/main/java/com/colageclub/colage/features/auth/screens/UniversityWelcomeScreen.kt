@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -19,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import com.colageclub.colage.core.design.ColageColors
 import com.colageclub.colage.core.design.ColageFonts
 import com.colageclub.colage.core.design.ColagePrimaryButton
+import com.colageclub.colage.data.models.ServerType
 import com.colageclub.colage.features.auth.AuthViewModel
 
 @Composable
@@ -27,12 +29,18 @@ fun UniversityWelcomeScreen(
     onEnter: () -> Unit
 ) {
     val onboardingData by authViewModel.onboardingData.collectAsState()
+    val isAlumni = onboardingData.serverType == ServerType.ALUMNI
 
     // Derive university name from email domain
     val domain = authViewModel.extractDomain(onboardingData.email) ?: "your university"
     val universityName = domain
         .substringBefore(".")
         .replaceFirstChar { it.uppercase() }
+
+    val headerText = if (isAlumni) "The Alumni Network" else universityName
+    val buttonText = if (isAlumni) "Enter Alumni Network" else "Enter $universityName"
+    val memberLabel = if (isAlumni) "Alumni already here" else "Students already here"
+    val icon = if (isAlumni) Icons.Default.Public else Icons.Default.School
 
     // Animation
     var animateIn by remember { mutableStateOf(false) }
@@ -43,11 +51,6 @@ fun UniversityWelcomeScreen(
             stiffness = Spring.StiffnessLow
         ),
         label = "scale"
-    )
-    val alpha by animateFloatAsState(
-        targetValue = if (animateIn) 1f else 0f,
-        animationSpec = tween(durationMillis = 600, delayMillis = 200),
-        label = "alpha"
     )
 
     LaunchedEffect(Unit) {
@@ -87,7 +90,7 @@ fun UniversityWelcomeScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        imageVector = Icons.Default.School,
+                        imageVector = icon,
                         contentDescription = null,
                         tint = ColageColors.Primary,
                         modifier = Modifier
@@ -107,7 +110,7 @@ fun UniversityWelcomeScreen(
                         modifier = Modifier.scale(scale)
                     )
                     Text(
-                        text = universityName,
+                        text = headerText,
                         style = ColageFonts.LargeTitle.copy(color = ColageColors.Primary),
                         textAlign = TextAlign.Center,
                         modifier = Modifier.scale(scale)
@@ -117,14 +120,23 @@ fun UniversityWelcomeScreen(
                         style = ColageFonts.Title2.copy(color = ColageColors.TextPrimary),
                         modifier = Modifier.scale(scale)
                     )
+
+                    if (isAlumni) {
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            text = "Graduates from every school, one community",
+                            style = ColageFonts.Subheadline.copy(color = ColageColors.TextSecondary),
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.scale(scale)
+                        )
+                    }
                 }
 
-                // Member count dot (static placeholder)
+                // Member count
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    modifier = Modifier
-                        .scale(scale)
+                    modifier = Modifier.scale(scale)
                 ) {
                     Box(
                         modifier = Modifier
@@ -133,7 +145,7 @@ fun UniversityWelcomeScreen(
                             .background(ColageColors.Online)
                     )
                     Text(
-                        text = "Students already here",
+                        text = memberLabel,
                         style = ColageFonts.Subheadline.copy(color = ColageColors.TextSecondary)
                     )
                 }
@@ -142,7 +154,7 @@ fun UniversityWelcomeScreen(
             Spacer(Modifier.weight(1f))
 
             ColagePrimaryButton(
-                title = "Enter $universityName",
+                title = buttonText,
                 onClick = onEnter,
                 modifier = Modifier
                     .padding(horizontal = 24.dp)

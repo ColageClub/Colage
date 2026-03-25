@@ -13,6 +13,7 @@
 		0EC56C413E4CFC1AED4F87DA /* OnboardingData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81FA3EAD9639D55E8AECE39D /* OnboardingData.swift */; };
 		13985CB78FEB2EBE0FD2E681 /* EmailOTPScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2795CDE7219F7E3922A63416 /* EmailOTPScreen.swift */; };
 		143D9C1ABCF5A09968B3B034 /* CameraCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = E246967642CBD3D3845D8AC8 /* CameraCapture.swift */; };
+		2BE3156742D5846DA9CDAD3F /* ServerTypeScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AB570ABFF7430B310B2D4A8 /* ServerTypeScreen.swift */; };
 		330B20667796510413BFE562 /* EditProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B6B58532969912532C25927 /* EditProfileView.swift */; };
 		359EBDF3DF5ADFBF84161248 /* EmailEntryScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9CA02623540E71DD9E26993 /* EmailEntryScreen.swift */; };
 		35D87523633CD5DFEC4FC0FF /* AdBannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6682509F9787CE29771E1EB0 /* AdBannerView.swift */; };
@@ -66,6 +67,7 @@
 /* Begin PBXFileReference section */
 		00A89FE83B77667ADF37304D /* SocialLinksScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocialLinksScreen.swift; sourceTree = "<group>"; };
 		071ACDC6D067275AC0CB053A /* ColageColors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColageColors.swift; sourceTree = "<group>"; };
+		0AB570ABFF7430B310B2D4A8 /* ServerTypeScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerTypeScreen.swift; sourceTree = "<group>"; };
 		12444BC41E78DFEE0D066B44 /* ColageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColageTests.swift; sourceTree = "<group>"; };
 		1254BCAFD8797D4E407EE276 /* ARDiscoveryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ARDiscoveryView.swift; sourceTree = "<group>"; };
 		151B405ED0102B29AE644BEB /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
@@ -305,6 +307,7 @@
 				879028394F3D3E85455D4038 /* PhoneOTPScreen.swift */,
 				7FE81311AE937ABFC2163597 /* PhotoUploadScreen.swift */,
 				513360BE5968A8A3BC33262C /* ProfileInfoScreen.swift */,
+				0AB570ABFF7430B310B2D4A8 /* ServerTypeScreen.swift */,
 				00A89FE83B77667ADF37304D /* SocialLinksScreen.swift */,
 				CA1930251905050A938A2C7B /* UniversityWelcomeScreen.swift */,
 				5610F483B0DC5437B9CF19D4 /* WelcomeScreen.swift */,
@@ -347,7 +350,7 @@
 			path = Design;
 			sourceTree = "<group>";
 		};
-		"TEMP_AEE1FCFF-C9F0-49ED-9BB1-A2BA9AFA2AFC" /* Resources */ = {
+		"TEMP_8D2DA437-6C51-4E3D-80CC-61C8738943DF" /* Resources */ = {
 			isa = PBXGroup;
 			children = (
 			);
@@ -486,6 +489,7 @@
 				5D72A377B7BF917A97F98EAB /* PhotoUploadScreen.swift in Sources */,
 				792C7C37DEF17F5CDDBFE35E /* ProfileInfoScreen.swift in Sources */,
 				6247C1F32E69A91D2621AFE9 /* RootView.swift in Sources */,
+				2BE3156742D5846DA9CDAD3F /* ServerTypeScreen.swift in Sources */,
 				DF7812A999E224C3DAAA5AA3 /* SettingsView.swift in Sources */,
 				B54146B473C02D3B58B8DEEB /* SocialLinksScreen.swift in Sources */,
 				E9B9F26EC45921C25B0AEEA0 /* UniversityService.swift in Sources */,

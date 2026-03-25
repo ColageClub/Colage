@@ -9,6 +9,7 @@ class OnboardingData: ObservableObject {
     @Published var major: String = ""
     @Published var profilePhoto: UIImage?
     @Published var socialLinks: [SocialPlatform: String] = [:]
+    @Published var serverType: ServerType = .student
 
     /// Build final profile from onboarding data
     func buildProfile(domain: String) -> UserProfile {
@@ -26,6 +27,7 @@ class OnboardingData: ObservableObject {
             major: major.isEmpty ? nil : major,
             socialLinks: links,
             isVisible: true,
+            serverType: serverType,
             createdAt: Date(),
             updatedAt: Date()
         )

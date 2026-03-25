@@ -150,6 +150,9 @@ class AuthService: ObservableObject {
     }
 
     /// Create profile (local in dev, API in production)
+    /// The server type selected during onboarding (set before profile creation)
+    var selectedServerType: ServerType = .student
+
     func createDevProfile(name: String, bio: String?, major: String?, socialLinks: [SocialLink]) {
         let domain = extractDomain(from: enteredEmail) ?? "umich.edu"
         let profile = UserProfile(
@@ -161,6 +164,7 @@ class AuthService: ObservableObject {
             major: major,
             socialLinks: socialLinks,
             isVisible: true,
+            serverType: selectedServerType,
             createdAt: Date(),
             updatedAt: Date()
         )
@@ -211,6 +215,7 @@ class AuthService: ObservableObject {
                         major: major,
                         socialLinks: socialLinks,
                         isVisible: true,
+                        serverType: self.selectedServerType,
                         createdAt: Date(),
                         updatedAt: Date()
                     )

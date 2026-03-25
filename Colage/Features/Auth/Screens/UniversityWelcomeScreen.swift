@@ -4,7 +4,12 @@ struct UniversityWelcomeScreen: View {
     let onEnter: () -> Void
     @EnvironmentObject var authService: AuthService
     @EnvironmentObject var universityService: UniversityService
+    @EnvironmentObject var onboardingData: OnboardingData
     @State private var animateIn = false
+
+    private var isAlumni: Bool {
+        onboardingData.serverType == .alumni
+    }
 
     private var universityName: String {
         universityService.currentUniversity?.name ?? "Your University"
@@ -14,12 +19,42 @@ struct UniversityWelcomeScreen: View {
         universityService.currentTheme ?? .default
     }
 
+    private var headerText: String {
+        isAlumni ? "The Alumni Network" : universityName
+    }
+
+    private var subtitleText: String {
+        isAlumni ? "on Colage" : "on Colage"
+    }
+
+    private var memberLabel: String {
+        if isAlumni {
+            if let count = universityService.currentUniversity?.memberCount, count > 0 {
+                return "\(count) alumni already here"
+            }
+            return "Be one of the first alumni"
+        } else {
+            if let count = universityService.currentUniversity?.memberCount, count > 0 {
+                return "\(count) students already here"
+            }
+            return ""
+        }
+    }
+
+    private var buttonTitle: String {
+        isAlumni ? "Enter Alumni Network" : "Enter \(universityName)"
+    }
+
+    private var iconName: String {
+        isAlumni ? "globe.americas.fill" : "graduationcap.fill"
+    }
+
     var body: some View {
         ZStack {
-            // University-themed background
+            // Themed background
             LinearGradient(
                 colors: [
-                    theme.primary.opacity(0.3),
+                    (isAlumni ? ColageColors.primary : theme.primary).opacity(0.3),
                     ColageColors.background
                 ],
                 startPoint: .topLeading,
@@ -31,16 +66,16 @@ struct UniversityWelcomeScreen: View {
                 Spacer()
 
                 VStack(spacing: 24) {
-                    // University badge
+                    // Badge
                     ZStack {
                         Circle()
-                            .fill(theme.primary.opacity(0.2))
+                            .fill((isAlumni ? ColageColors.primary : theme.primary).opacity(0.2))
                             .frame(width: 100, height: 100)
                             .scaleEffect(animateIn ? 1 : 0.5)
 
-                        Image(systemName: "graduationcap.fill")
+                        Image(systemName: iconName)
                             .font(.system(size: 44))
-                            .foregroundStyle(theme.primary)
+                            .foregroundStyle(isAlumni ? ColageColors.primary : theme.primary)
                             .scaleEffect(animateIn ? 1 : 0.3)
                     }
 
@@ -50,24 +85,33 @@ struct UniversityWelcomeScreen: View {
                             .foregroundStyle(ColageColors.textSecondary)
                             .opacity(animateIn ? 1 : 0)
 
-                        Text(universityName)
+                        Text(headerText)
                             .font(ColageFonts.largeTitle)
-                            .foregroundStyle(theme.primary)
+                            .foregroundStyle(isAlumni ? ColageColors.primary : theme.primary)
                             .multilineTextAlignment(.center)
                             .opacity(animateIn ? 1 : 0)
 
-                        Text("on Colage")
+                        Text(subtitleText)
                             .font(ColageFonts.title2)
                             .foregroundStyle(ColageColors.textPrimary)
                             .opacity(animateIn ? 1 : 0)
+
+                        if isAlumni {
+                            Text("Graduates from every school, one community")
+                                .font(ColageFonts.subheadline)
+                                .foregroundStyle(ColageColors.textSecondary)
+                                .multilineTextAlignment(.center)
+                                .padding(.top, 4)
+                                .opacity(animateIn ? 1 : 0)
+                        }
                     }
 
-                    if let count = universityService.currentUniversity?.memberCount, count > 0 {
+                    if !memberLabel.isEmpty {
                         HStack(spacing: 6) {
                             Circle()
                                 .fill(ColageColors.online)
                                 .frame(width: 8, height: 8)
-                            Text("\(count) students already here")
+                            Text(memberLabel)
                                 .font(ColageFonts.subheadline)
                                 .foregroundStyle(ColageColors.textSecondary)
                         }
@@ -77,7 +121,7 @@ struct UniversityWelcomeScreen: View {
 
                 Spacer()
 
-                ColagePrimaryButton(title: "Enter \(universityName)", action: {
+                ColagePrimaryButton(title: buttonTitle, action: {
                     onEnter()
                 })
                 .padding(.horizontal, 24)

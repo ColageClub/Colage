@@ -46,6 +46,7 @@ data class UserProfile(
     val major: String? = null,
     val socialLinks: List<SocialLink> = emptyList(),
     val isVisible: Boolean = true,
+    val serverType: ServerType = ServerType.STUDENT,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()
 )
@@ -86,6 +87,18 @@ enum class SocialPlatform(val displayName: String, val iconRes: String) {
     companion object {
         fun fromString(value: String): SocialPlatform? =
             entries.find { it.name.equals(value, ignoreCase = true) }
+    }
+}
+
+// MARK: - Server Type
+
+enum class ServerType(val displayName: String) {
+    STUDENT("Student"),
+    ALUMNI("Alumni");
+
+    companion object {
+        fun fromString(value: String): ServerType =
+            entries.find { it.name.equals(value, ignoreCase = true) } ?: STUDENT
     }
 }
 

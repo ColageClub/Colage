@@ -7,6 +7,7 @@ struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var showLogoutConfirm = false
     @State private var showDeleteConfirm = false
+    @State private var showAlumniConfirm = false
 
     var body: some View {
         NavigationStack {
@@ -15,6 +16,35 @@ struct SettingsView: View {
                 Section("Account") {
                     SettingsRow(icon: "envelope.fill", title: "Email", value: authService.enteredEmail)
                     SettingsRow(icon: "phone.fill", title: "Phone", value: "••••••\(String(authService.enteredPhone.suffix(4)))")
+                }
+
+                // Server
+                Section("Server") {
+                    if let serverType = UserProfile.current?.serverType {
+                        SettingsRow(
+                            icon: serverType == .alumni ? "globe.americas.fill" : "building.columns.fill",
+                            title: "Server",
+                            value: serverType == .alumni ? "Alumni Network" : (universityService.currentUniversity?.name ?? "School")
+                        )
+                    }
+
+                    if UserProfile.current?.serverType == .student {
+                        Button {
+                            showAlumniConfirm = true
+                        } label: {
+                            HStack {
+                                Image(systemName: "graduationcap.fill")
+                                    .foregroundStyle(ColageColors.primary)
+                                    .frame(width: 24)
+                                Text("Join Alumni Server")
+                                    .foregroundStyle(ColageColors.primary)
+                                Spacer()
+                                Image(systemName: "chevron.right")
+                                    .font(.caption)
+                                    .foregroundStyle(ColageColors.textTertiary)
+                            }
+                        }
+                    }
                 }
 
                 // Privacy
@@ -108,6 +138,34 @@ struct SettingsView: View {
                 Button("Cancel", role: .cancel) {}
             } message: {
                 Text("Are you sure you want to log out?")
+            }
+            .alert("Join Alumni Server?", isPresented: $showAlumniConfirm) {
+                Button("Join Alumni", role: .destructive) {
+                    // Switch to alumni server
+                    if var profile = UserProfile.current {
+                        profile = UserProfile(
+                            userId: profile.userId,
+                            universityDomain: profile.universityDomain,
+                            displayName: profile.displayName,
+                            profilePhotoURL: profile.profilePhotoURL,
+                            bio: profile.bio,
+                            major: profile.major,
+                            socialLinks: profile.socialLinks,
+                            isVisible: profile.isVisible,
+                            serverType: .alumni,
+                            createdAt: profile.createdAt,
+                            updatedAt: Date()
+                        )
+                        UserProfile.current = profile
+                        if let data = try? JSONEncoder().encode(profile) {
+                            UserDefaults.standard.set(data, forKey: "dev_profile")
+                        }
+                        // TODO: API call to update server type
+                    }
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("You're about to leave your school's server and join the Alumni Network. You won't be able to rejoin your school's server unless you show proof of re-enrollment.")
             }
             .alert("Delete Account", isPresented: $showDeleteConfirm) {
                 Button("Delete", role: .destructive) {

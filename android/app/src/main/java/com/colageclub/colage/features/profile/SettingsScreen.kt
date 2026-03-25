@@ -38,6 +38,8 @@ fun SettingsScreen(
 
     var showLogoutDialog by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var showAlumniDialog by remember { mutableStateOf(false) }
+    val currentProfile by appViewModel.currentProfile.collectAsState()
 
     Scaffold(
         containerColor = ColageColors.Background,
@@ -59,6 +61,37 @@ fun SettingsScreen(
                 .padding(padding)
                 .verticalScroll(rememberScrollState())
         ) {
+            // Server section
+            SettingsSection("Server") {
+                val serverType = currentProfile?.serverType
+                val serverLabel = if (serverType == com.colageclub.colage.data.models.ServerType.ALUMNI) {
+                    "Alumni Network"
+                } else {
+                    university?.name ?: "School"
+                }
+                val serverIcon = if (serverType == com.colageclub.colage.data.models.ServerType.ALUMNI) {
+                    Icons.Default.Public
+                } else {
+                    Icons.Default.AccountBalance
+                }
+                SettingsRow(serverIcon, "Server", serverLabel)
+
+                if (serverType == com.colageclub.colage.data.models.ServerType.STUDENT) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { showAlumniDialog = true }
+                            .padding(horizontal = 16.dp, vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Default.School, null, tint = ColageColors.Primary, modifier = Modifier.size(20.dp))
+                        Spacer(Modifier.width(12.dp))
+                        Text("Join Alumni Server", style = ColageFonts.Body.copy(color = ColageColors.Primary), modifier = Modifier.weight(1f))
+                        Icon(Icons.Default.ChevronRight, null, tint = ColageColors.TextTertiary, modifier = Modifier.size(16.dp))
+                    }
+                }
+            }
+
             // Account section
             SettingsSection("Account") {
                 SettingsRow(Icons.Default.Email, "Email", "student@umich.edu")
@@ -188,6 +221,30 @@ fun SettingsScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showLogoutDialog = false }) { Text("Cancel") }
+            }
+        )
+    }
+
+    // Alumni dialog
+    if (showAlumniDialog) {
+        AlertDialog(
+            onDismissRequest = { showAlumniDialog = false },
+            title = { Text("Join Alumni Server?") },
+            text = { Text("You're about to leave your school's server and join the Alumni Network. You won't be able to rejoin your school's server unless you show proof of re-enrollment.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    currentProfile?.let { profile ->
+                        val updated = profile.copy(
+                            serverType = com.colageclub.colage.data.models.ServerType.ALUMNI,
+                            updatedAt = System.currentTimeMillis()
+                        )
+                        appViewModel.updateProfile(updated)
+                    }
+                    showAlumniDialog = false
+                }) { Text("Join Alumni", color = ColageColors.Error) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showAlumniDialog = false }) { Text("Cancel") }
             }
         )
     }

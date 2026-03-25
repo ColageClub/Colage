@@ -47,6 +47,7 @@ struct UserProfile: Codable, Identifiable {
     var major: String?
     var socialLinks: [SocialLink]
     var isVisible: Bool
+    var serverType: ServerType
     var createdAt: Date
     var updatedAt: Date
 
@@ -119,6 +120,20 @@ enum SocialPlatform: String, Codable, CaseIterable {
     }
 }
 
+// MARK: - Server Type
+
+enum ServerType: String, Codable {
+    case student
+    case alumni
+
+    var displayName: String {
+        switch self {
+        case .student: return "Student"
+        case .alumni: return "Alumni"
+        }
+    }
+}
+
 // MARK: - Student Location
 
 struct StudentLocation: Codable, Identifiable {
@@ -165,6 +180,7 @@ struct NearbyStudent: Identifiable {
                     SocialLink(platform: .snapchat, handle: name.lowercased().replacingOccurrences(of: " ", with: "_"))
                 ],
                 isVisible: true,
+                serverType: .student,
                 createdAt: Date(),
                 updatedAt: Date()
             ),
