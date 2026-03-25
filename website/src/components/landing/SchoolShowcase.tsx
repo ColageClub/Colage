@@ -21,7 +21,7 @@ export default function SchoolShowcase() {
 
   return (
     <section id="schools" className="py-24 md:py-32 bg-[#F9F6F2]">
-      <div ref={ref} className="max-w-7xl mx-auto px-6 md:px-12">
+      <div ref={ref} className="max-w-[1400px] mx-auto px-6 md:px-16 lg:px-24">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
@@ -32,7 +32,7 @@ export default function SchoolShowcase() {
             Your School
           </p>
           <h2
-            className="text-4xl md:text-5xl font-light text-[#1E1E1E] tracking-tight"
+            className="text-4xl md:text-5xl lg:text-6xl font-light text-[#1E1E1E] tracking-tight"
             style={{ fontFamily: "var(--font-cormorant)" }}
           >
             Every school has its own vibe.
@@ -75,7 +75,7 @@ export default function SchoolShowcase() {
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.4 }}
-          className="max-w-md mx-auto rounded-3xl overflow-hidden shadow-xl"
+          className="max-w-md md:max-w-lg mx-auto rounded-3xl overflow-hidden shadow-xl"
         >
           {/* Header */}
           <div

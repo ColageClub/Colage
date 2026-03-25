@@ -33,7 +33,7 @@ export default function PrivacySection() {
 
   return (
     <section id="privacy" className="py-24 md:py-32 bg-white">
-      <div ref={ref} className="max-w-7xl mx-auto px-6 md:px-12">
+      <div ref={ref} className="max-w-[1400px] mx-auto px-6 md:px-16 lg:px-24">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
@@ -44,7 +44,7 @@ export default function PrivacySection() {
             Privacy & Safety
           </p>
           <h2
-            className="text-4xl md:text-5xl font-light text-[#1E1E1E] tracking-tight"
+            className="text-4xl md:text-5xl lg:text-6xl font-light text-[#1E1E1E] tracking-tight"
             style={{ fontFamily: "var(--font-cormorant)" }}
           >
             Built with trust in mind.

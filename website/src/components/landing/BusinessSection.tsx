@@ -9,7 +9,7 @@ export default function BusinessSection() {
 
   return (
     <section className="py-24 md:py-32 bg-[#F9F6F2]">
-      <div ref={ref} className="max-w-4xl mx-auto px-6 md:px-12 text-center">
+      <div ref={ref} className="max-w-5xl mx-auto px-6 md:px-16 lg:px-24 text-center">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
@@ -19,7 +19,7 @@ export default function BusinessSection() {
             For Businesses
           </p>
           <h2
-            className="text-4xl md:text-5xl font-light text-[#1E1E1E] tracking-tight"
+            className="text-4xl md:text-5xl lg:text-6xl font-light text-[#1E1E1E] tracking-tight"
             style={{ fontFamily: "var(--font-cormorant)" }}
           >
             Reach students where they are.

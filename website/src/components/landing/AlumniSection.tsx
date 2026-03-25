@@ -10,19 +10,19 @@ export default function AlumniSection() {
 
   return (
     <section id="alumni" className="py-24 md:py-32 bg-[#1a0a0e] text-white overflow-hidden">
-      <div ref={ref} className="max-w-7xl mx-auto px-6 md:px-12 flex flex-col md:flex-row items-center gap-16">
+      <div ref={ref} className="max-w-[1400px] mx-auto px-6 md:px-16 lg:px-24 flex flex-col md:flex-row items-center gap-16 lg:gap-24">
         {/* Text */}
         <motion.div
           initial={{ opacity: 0, x: -40 }}
           animate={isInView ? { opacity: 1, x: 0 } : {}}
           transition={{ duration: 0.8 }}
-          className="flex-1 max-w-xl"
+          className="flex-1 max-w-2xl"
         >
           <span className="inline-block px-3 py-1 text-xs font-semibold tracking-wider uppercase bg-[#A51C30]/30 text-[#C23B4A] rounded-full mb-4">
             Alumni Network
           </span>
           <h2
-            className="text-4xl md:text-5xl font-light leading-tight tracking-tight"
+            className="text-4xl md:text-5xl lg:text-6xl font-light leading-tight tracking-tight"
             style={{ fontFamily: "var(--font-cormorant)" }}
           >
             Graduate? You&apos;re still in.

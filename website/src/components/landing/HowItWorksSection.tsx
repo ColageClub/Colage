@@ -34,7 +34,7 @@ export default function HowItWorksSection() {
 
   return (
     <section id="how-it-works" className="py-24 md:py-32 bg-[#F9F6F2]">
-      <div ref={ref} className="max-w-7xl mx-auto px-6 md:px-12">
+      <div ref={ref} className="max-w-[1400px] mx-auto px-6 md:px-16 lg:px-24">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
@@ -45,14 +45,14 @@ export default function HowItWorksSection() {
             How It Works
           </p>
           <h2
-            className="text-4xl md:text-5xl font-light text-[#1E1E1E] tracking-tight"
+            className="text-4xl md:text-5xl lg:text-6xl font-light text-[#1E1E1E] tracking-tight"
             style={{ fontFamily: "var(--font-cormorant)" }}
           >
             Three steps to get started.
           </h2>
         </motion.div>
 
-        <div className="grid md:grid-cols-3 gap-12 md:gap-8">
+        <div className="grid md:grid-cols-3 gap-12 md:gap-16">
           {steps.map((step, i) => (
             <motion.div
               key={step.number}

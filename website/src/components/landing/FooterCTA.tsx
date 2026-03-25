@@ -11,7 +11,7 @@ export default function FooterCTA() {
     <>
       {/* CTA */}
       <section className="py-24 md:py-32 bg-[#1a0a0e] text-white">
-        <div ref={ref} className="max-w-4xl mx-auto px-6 md:px-12 text-center">
+        <div ref={ref} className="max-w-5xl mx-auto px-6 md:px-16 lg:px-24 text-center">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={isInView ? { opacity: 1, y: 0 } : {}}
@@ -52,7 +52,7 @@ export default function FooterCTA() {
 
       {/* Footer */}
       <footer className="py-12 bg-[#110608] text-white/40">
-        <div className="max-w-7xl mx-auto px-6 md:px-12">
+        <div className="max-w-[1400px] mx-auto px-6 md:px-16 lg:px-24">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-2">
               <span
