@@ -596,6 +596,49 @@ Resources:
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketApi}/*
 
+  # ============================================================
+  # AD SYSTEM - DynamoDB Tables
+  # ============================================================
+  # DynamoDB tables for ad system already created manually
+  # Table names: colage-businesses-dev, colage-ads-dev, colage-impressions-dev, colage-daily-spend-dev
+
+  # ============================================================
+  # AD SYSTEM - Nightly Billing Lambda
+  # ============================================================
+  BillingNightlyFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub colage-billing-nightly-${Stage}
+      Handler: index.handler
+      CodeUri: functions/billing-nightly/
+      Runtime: nodejs20.x
+      Timeout: 300
+      MemorySize: 512
+      Environment:
+        Variables:
+          ADS_TABLE: !Sub colage-ads-${Stage}
+          BUSINESSES_TABLE: !Sub colage-businesses-${Stage}
+          DAILY_SPEND_TABLE: !Sub colage-daily-spend-${Stage}
+          IMPRESSIONS_TABLE: !Sub colage-impressions-${Stage}
+          # TODO: Move to SSM Parameter Store for production
+          STRIPE_SECRET_KEY: !Sub "{{resolve:ssm:/colage/${Stage}/stripe-secret-key}}"
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Sub colage-ads-${Stage}
+        - DynamoDBCrudPolicy:
+            TableName: !Sub colage-businesses-${Stage}
+        - DynamoDBCrudPolicy:
+            TableName: !Sub colage-daily-spend-${Stage}
+        - DynamoDBCrudPolicy:
+            TableName: !Sub colage-impressions-${Stage}
+      Events:
+        NightlySchedule:
+          Type: Schedule
+          Properties:
+            Schedule: cron(0 5 * * ? *)
+            Description: Nightly billing at midnight ET (5am UTC)
+            Enabled: true
+
 # ============================================================
 # OUTPUTS
 # ============================================================

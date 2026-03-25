@@ -49,3 +49,7 @@ infra/.aws-sam/
 website/node_modules/
 website/.next/
 .spm-packages/
+
+# Environment
+.env*
+.env.local

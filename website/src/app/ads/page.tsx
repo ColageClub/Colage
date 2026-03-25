@@ -341,18 +341,7 @@ export default async function AdsPage() {
         </Link>
       </footer>
 
-      {/* Responsive styles */}
-      <style jsx global>{`
-        .ads-map-grid {
-          flex-wrap: wrap;
-        }
-        @media (max-width: 680px) {
-          .ads-map-grid {
-            flex-direction: column;
-            align-items: center;
-          }
-        }
-      `}</style>
+      {/* Responsive styles in globals.css */}
     </div>
   );
 }

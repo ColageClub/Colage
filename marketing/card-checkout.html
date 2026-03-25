@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Colage Cards — Checkout Counter</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #f0f0f0;
+    font-family: 'Inter', -apple-system, sans-serif;
+    padding: 40px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 30px;
+    justify-content: center;
+  }
+
+  /* Business card size: 3.5 x 2 inches */
+  .card {
+    width: 3.5in;
+    height: 2in;
+    border-radius: 12px;
+    overflow: hidden;
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  /* ─── CARD 1: Front ─── */
+  .card-front {
+    background: #0A0A0A;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: white;
+  }
+  .card-front .blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(40px);
+  }
+  .card-front .blob-1 {
+    top: -20%;
+    left: -10%;
+    width: 150px;
+    height: 150px;
+    background: rgba(108,92,231,0.25);
+  }
+  .card-front .blob-2 {
+    bottom: -20%;
+    right: -10%;
+    width: 120px;
+    height: 120px;
+    background: rgba(0,206,201,0.15);
+  }
+  .card-front .inner {
+    position: relative;
+    z-index: 10;
+  }
+  .card-front .logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .card-front .logo-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #6C5CE7, #A29BFE);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 900;
+    color: white;
+  }
+  .card-front .logo-text {
+    font-size: 22px;
+    font-weight: 900;
+    letter-spacing: -0.5px;
+    color: white;
+  }
+  .card-front .headline {
+    font-size: 36px;
+    font-weight: 900;
+    line-height: 0.9;
+    letter-spacing: -1px;
+  }
+  .card-front .headline .you {
+    background: linear-gradient(135deg, #6C5CE7, #A29BFE, #00CEC9);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .card-front .sub {
+    font-size: 9px;
+    color: #A0A0A0;
+    margin-top: 8px;
+    font-weight: 500;
+  }
+
+  /* ─── CARD 2: Back ─── */
+  .card-back {
+    background: #0A0A0A;
+    color: white;
+    padding: 20px 24px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .card-back .top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+  .card-back .features {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .card-back .feat {
+    font-size: 9px;
+    color: #ccc;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 500;
+  }
+  .card-back .feat .icon {
+    font-size: 11px;
+  }
+  .card-back .qr {
+    width: 48px;
+    height: 48px;
+    background: white;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 8px;
+    color: #0A0A0A;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .card-back .bottom-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+  .card-back .url {
+    font-size: 14px;
+    font-weight: 700;
+    color: #A29BFE;
+  }
+  .card-back .platforms {
+    font-size: 8px;
+    color: #666;
+    font-weight: 500;
+  }
+  .card-back .free {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 50px;
+    background: rgba(0,230,118,0.1);
+    border: 1px solid rgba(0,230,118,0.2);
+    font-size: 9px;
+    font-weight: 600;
+    color: #00E676;
+  }
+
+  /* ─── CARD 3: "Who's near you?" variant ─── */
+  .card-social {
+    background: #0A0A0A;
+    color: white;
+    display: flex;
+    align-items: center;
+    padding: 0;
+  }
+  .card-social .left-half {
+    flex: 1;
+    padding: 20px 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .card-social .q {
+    font-size: 20px;
+    font-weight: 900;
+    line-height: 1.1;
+    margin-bottom: 6px;
+    letter-spacing: -0.5px;
+  }
+  .card-social .q .highlight {
+    color: #00CEC9;
+  }
+  .card-social .a {
+    font-size: 9px;
+    color: #A0A0A0;
+    line-height: 1.4;
+    margin-bottom: 10px;
+  }
+  .card-social .mini-logo {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .card-social .mini-logo-icon {
+    width: 18px;
+    height: 18px;
+    border-radius: 5px;
+    background: linear-gradient(135deg, #6C5CE7, #A29BFE);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    font-weight: 900;
+    color: white;
+  }
+  .card-social .mini-logo-text {
+    font-size: 13px;
+    font-weight: 900;
+  }
+  .card-social .right-half {
+    width: 120px;
+    height: 100%;
+    background: linear-gradient(to bottom, #00274C, #0A0A0A);
+    position: relative;
+    border-left: 1px solid rgba(255,255,255,0.05);
+  }
+  .card-social .right-half .sdot {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #FFCB05;
+    border: 1.5px solid #0A0A0A;
+  }
+  .card-social .right-half .sdot.me {
+    background: #00E676;
+    width: 10px;
+    height: 10px;
+  }
+  .card-social .right-half .url-tag {
+    position: absolute;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 7px;
+    color: #A29BFE;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  /* ─── CARD 4: Business ad card ─── */
+  .card-biz {
+    background: #0A0A0A;
+    color: white;
+    padding: 20px 24px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .card-biz .top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+  .card-biz .biz-headline {
+    font-size: 16px;
+    font-weight: 900;
+    line-height: 1.2;
+    max-width: 180px;
+  }
+  .card-biz .biz-headline .accent {
+    background: linear-gradient(135deg, #6C5CE7, #00CEC9);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .card-biz .mini-logo {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .card-biz .ml-icon {
+    width: 20px;
+    height: 20px;
+    border-radius: 6px;
+    background: linear-gradient(135deg, #6C5CE7, #A29BFE);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 900;
+  }
+  .card-biz .ml-text {
+    font-size: 14px;
+    font-weight: 900;
+  }
+  .card-biz .selling-points {
+    display: flex;
+    gap: 12px;
+  }
+  .card-biz .sp {
+    font-size: 10px;
+    color: #A0A0A0;
+    font-weight: 600;
+  }
+  .card-biz .sp strong {
+    color: #00CEC9;
+  }
+  .card-biz .bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+  .card-biz .cta {
+    padding: 6px 16px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #6C5CE7, #A29BFE);
+    font-size: 10px;
+    font-weight: 700;
+    color: white;
+  }
+  .card-biz .biz-url {
+    font-size: 10px;
+    color: #A29BFE;
+    font-weight: 600;
+  }
+
+  /* Print label */
+  .label {
+    width: 100%;
+    text-align: center;
+    font-size: 12px;
+    color: #999;
+    margin-top: -15px;
+    margin-bottom: 10px;
+  }
+
+  @media print {
+    body { background: white; }
+    .label { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="label" style="width:100%; flex-basis:100%">── Student Cards (front + back) ──</div>
+
+<!-- CARD: Front -->
+<div class="card card-front">
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="inner">
+    <div class="logo">
+      <div class="logo-icon">C</div>
+      <div class="logo-text">colage</div>
+    </div>
+    <div class="headline">
+      <div>Be</div>
+      <div class="you">You.</div>
+    </div>
+    <div class="sub">Discover your campus</div>
+  </div>
+</div>
+
+<!-- CARD: Back -->
+<div class="card card-back">
+  <div class="top-row">
+    <div class="features">
+      <div class="feat"><span class="icon">🗺️</span> See who's around you on a live map</div>
+      <div class="feat"><span class="icon">📋</span> Browse students by distance</div>
+      <div class="feat"><span class="icon">📱</span> Discover in AR through your camera</div>
+      <div class="feat"><span class="icon">🔗</span> Connect via Instagram & Snapchat</div>
+      <div class="feat"><span class="icon">🔒</span> Verified .edu students only</div>
+    </div>
+    <div class="qr">QR<br>CODE</div>
+  </div>
+  <div class="bottom-row">
+    <div>
+      <div class="url">colageclub.com</div>
+      <div class="platforms">iOS & Android · Free</div>
+    </div>
+    <div class="free">100% Free</div>
+  </div>
+</div>
+
+<div class="label" style="width:100%; flex-basis:100%">── "Who's Near You?" Variant ──</div>
+
+<!-- CARD: Social question -->
+<div class="card card-social">
+  <div class="left-half">
+    <div class="q">Who's <span class="highlight">near you</span> right now?</div>
+    <div class="a">See every verified student around you. Connect through their socials.</div>
+    <div class="mini-logo">
+      <div class="mini-logo-icon">C</div>
+      <div class="mini-logo-text">colage</div>
+    </div>
+  </div>
+  <div class="right-half">
+    <div class="sdot" style="top:20%;left:30%"></div>
+    <div class="sdot" style="top:35%;left:60%"></div>
+    <div class="sdot me" style="top:45%;left:40%"></div>
+    <div class="sdot" style="top:55%;left:25%"></div>
+    <div class="sdot" style="top:40%;left:75%"></div>
+    <div class="sdot" style="top:65%;left:55%"></div>
+    <div class="sdot" style="top:25%;left:50%"></div>
+    <div class="url-tag">colageclub.com</div>
+  </div>
+</div>
+
+<div class="label" style="width:100%; flex-basis:100%">── Business Ad Card (for local shops) ──</div>
+
+<!-- CARD: For businesses -->
+<div class="card card-biz">
+  <div class="top">
+    <div class="biz-headline">Reach <span class="accent">college students</span> where they are</div>
+    <div class="mini-logo">
+      <div class="ml-icon">C</div>
+      <div class="ml-text">colage</div>
+    </div>
+  </div>
+  <div class="selling-points">
+    <div class="sp">From <strong>$1/day</strong></div>
+    <div class="sp"><strong>No</strong> contracts</div>
+    <div class="sp"><strong>50K+</strong> impressions</div>
+  </div>
+  <div class="bottom">
+    <div class="cta">Start Advertising →</div>
+    <div class="biz-url">colageclub.com/ads</div>
+  </div>
+</div>
+
+</body>
+</html>
