@@ -41,8 +41,8 @@ class LocationService: NSObject, ObservableObject, CLLocationManagerDelegate {
         startAltimeter()
         isTracking = true
 
-        // Broadcast location every 5 seconds in foreground
-        broadcastTimer = Timer.scheduledTimer(withTimeInterval: 5, repeats: true) { [weak self] _ in
+        // Broadcast location every 15 seconds in foreground (battery-friendly)
+        broadcastTimer = Timer.scheduledTimer(withTimeInterval: 15, repeats: true) { [weak self] _ in
             self?.broadcastLocation()
         }
     }

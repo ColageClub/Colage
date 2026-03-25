@@ -1,6 +1,6 @@
 import Foundation
 
-/// WebSocket manager for real-time location updates
+/// WebSocket manager for real-time location updates with auto-reconnection
 class WebSocketManager: ObservableObject {
     static let shared = WebSocketManager()
 
@@ -9,6 +9,11 @@ class WebSocketManager: ObservableObject {
     private var webSocketTask: URLSessionWebSocketTask?
     private var session: URLSession
     private var pingTimer: Timer?
+    private var reconnectTimer: Timer?
+    private var reconnectAttempts = 0
+    private var currentDomain: String?
+    private var shouldReconnect = false
+    private let maxReconnectAttempts = 10
 
     var onLocationUpdate: (([StudentLocation]) -> Void)?
     var onStudentJoined: ((StudentLocation) -> Void)?
@@ -20,26 +25,54 @@ class WebSocketManager: ObservableObject {
 
     func connect(universityDomain: String) {
         guard !AppState.devMode else {
-            // In dev mode, simulate WebSocket with mock data
             isConnected = true
             return
         }
 
+        currentDomain = universityDomain
+        shouldReconnect = true
+        reconnectAttempts = 0
+        performConnect()
+    }
+
+    private func performConnect() {
+        guard let domain = currentDomain else { return }
         let userId = UserProfile.current?.userId ?? "anonymous"
-        guard let url = URL(string: "wss://w0m7jw00ak.execute-api.us-east-2.amazonaws.com/dev?domain=\(universityDomain)&userId=\(userId)") else { return }
+        guard let url = URL(string: "wss://w0m7jw00ak.execute-api.us-east-2.amazonaws.com/dev?domain=\(domain)&userId=\(userId)") else { return }
 
         webSocketTask = session.webSocketTask(with: url)
         webSocketTask?.resume()
-        isConnected = true
+        DispatchQueue.main.async { self.isConnected = true }
+        reconnectAttempts = 0
         receiveMessage()
         startPing()
     }
 
     func disconnect() {
+        shouldReconnect = false
+        reconnectTimer?.invalidate()
+        reconnectTimer = nil
         webSocketTask?.cancel(with: .normalClosure, reason: nil)
         webSocketTask = nil
-        isConnected = false
+        DispatchQueue.main.async { self.isConnected = false }
         pingTimer?.invalidate()
+    }
+
+    /// Reconnect with exponential backoff
+    private func scheduleReconnect() {
+        guard shouldReconnect, reconnectAttempts < maxReconnectAttempts else {
+            print("[WS] Max reconnect attempts reached or reconnection disabled")
+            return
+        }
+
+        reconnectAttempts += 1
+        // Exponential backoff: 1s, 2s, 4s, 8s, 16s, 30s cap
+        let delay = min(pow(2.0, Double(reconnectAttempts - 1)), 30.0)
+        print("[WS] Reconnecting in \(delay)s (attempt \(reconnectAttempts)/\(maxReconnectAttempts))")
+
+        reconnectTimer = Timer.scheduledTimer(withTimeInterval: delay, repeats: false) { [weak self] _ in
+            self?.performConnect()
+        }
     }
 
     func sendLocationUpdate(_ location: StudentLocation) {
@@ -68,7 +101,8 @@ class WebSocketManager: ObservableObject {
                 }
                 self?.receiveMessage() // Continue listening
             case .failure:
-                self?.isConnected = false
+                DispatchQueue.main.async { self?.isConnected = false }
+                self?.scheduleReconnect()
             }
         }
     }
@@ -121,7 +155,9 @@ class WebSocketManager: ObservableObject {
         pingTimer = Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { [weak self] _ in
             self?.webSocketTask?.sendPing { error in
                 if error != nil {
-                    self?.isConnected = false
+                    DispatchQueue.main.async { self?.isConnected = false }
+                    self?.pingTimer?.invalidate()
+                    self?.scheduleReconnect()
                 }
             }
         }

@@ -1,4 +1,5 @@
 import { CognitoIdentityProviderClient, SignUpCommand, AdminGetUserCommand } from '@aws-sdk/client-cognito-identity-provider';
+import { response, parseBody, isValidEduEmail, sanitize, rateLimit, getClientIP } from '../shared/validate.mjs';
 
 const cognito = new CognitoIdentityProviderClient({});
 const USER_POOL_ID = process.env.USER_POOL_ID;
@@ -6,32 +7,48 @@ const CLIENT_ID = process.env.USER_POOL_CLIENT_ID;
 
 export const handler = async (event) => {
   try {
-    const { email } = JSON.parse(event.body);
+    // Rate limit: 5 attempts per minute per IP
+    const ip = getClientIP(event);
+    const rl = await rateLimit(`email-verify:${ip}`, 5, 60);
+    if (!rl.allowed) {
+      return response(429, { error: 'Too many requests. Try again in a minute.' });
+    }
 
-    if (!email || !email.includes('@') || !email.toLowerCase().endsWith('.edu')) {
+    const body = parseBody(event);
+    if (!body?.email) {
+      return response(400, { error: 'Email is required' });
+    }
+
+    const email = sanitize(body.email, 254).toLowerCase();
+    if (!isValidEduEmail(email)) {
       return response(400, { error: 'Valid .edu email required' });
+    }
+
+    // Also rate limit per email: 3 attempts per 5 minutes
+    const emailRL = await rateLimit(`email-verify:${email}`, 3, 300);
+    if (!emailRL.allowed) {
+      return response(429, { error: 'Verification code already sent. Check your email or try again in a few minutes.' });
     }
 
     // Check if user already exists
     try {
       await cognito.send(new AdminGetUserCommand({
         UserPoolId: USER_POOL_ID,
-        Username: email.toLowerCase(),
+        Username: email,
       }));
-      // User exists — trigger resend
       return response(200, { message: 'Verification code sent', existing: true });
     } catch (e) {
       if (e.name !== 'UserNotFoundException') throw e;
     }
 
-    // Sign up with temporary password (will be replaced by custom auth)
+    // Sign up with temporary password
     const tempPassword = `Temp${Math.random().toString(36).slice(2)}!1`;
     await cognito.send(new SignUpCommand({
       ClientId: CLIENT_ID,
-      Username: email.toLowerCase(),
+      Username: email,
       Password: tempPassword,
       UserAttributes: [
-        { Name: 'email', Value: email.toLowerCase() },
+        { Name: 'email', Value: email },
       ],
     }));
 
@@ -41,11 +58,3 @@ export const handler = async (event) => {
     return response(500, { error: 'Failed to send verification' });
   }
 };
-
-function response(statusCode, body) {
-  return {
-    statusCode,
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  };
-}

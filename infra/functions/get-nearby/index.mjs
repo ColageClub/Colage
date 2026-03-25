@@ -1,5 +1,6 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, QueryCommand, BatchGetCommand } from '@aws-sdk/lib-dynamodb';
+import { response, isValidCoordinate, sanitize, rateLimit, getClientIP } from '../shared/validate.mjs';
 
 const ddb = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 const LOCATIONS_TABLE = process.env.LOCATIONS_TABLE;
@@ -7,9 +8,31 @@ const USERS_TABLE = process.env.USERS_TABLE;
 
 export const handler = async (event) => {
   try {
-    const { domain, lat, lng, maxDistance } = event.queryStringParameters || {};
+    // Rate limit: 30 requests per minute per IP (map refreshes)
+    const ip = getClientIP(event);
+    const rl = await rateLimit(`get-nearby:${ip}`, 30, 60);
+    if (!rl.allowed) {
+      return response(429, { error: 'Too many requests' });
+    }
 
-    if (!domain) return response(400, { error: 'domain required' });
+    const params = event.queryStringParameters || {};
+    const domain = sanitize(params.domain, 100);
+
+    if (!domain || !domain.endsWith('.edu')) {
+      return response(400, { error: 'Valid .edu domain required' });
+    }
+
+    const lat = params.lat ? parseFloat(params.lat) : null;
+    const lng = params.lng ? parseFloat(params.lng) : null;
+    const maxDistance = params.maxDistance ? parseFloat(params.maxDistance) : 5000;
+
+    // Validate coordinates if provided
+    if (lat !== null && lng !== null && !isValidCoordinate(lat, lng)) {
+      return response(400, { error: 'Invalid coordinates' });
+    }
+
+    // Cap max distance to 10,000 feet (~2 miles) — no stalking across town
+    const cappedMaxDist = Math.min(Math.max(maxDistance, 0), 10000);
 
     // Get all active locations for this university
     const locations = await ddb.send(new QueryCommand({
@@ -22,18 +45,12 @@ export const handler = async (event) => {
       return response(200, { students: [] });
     }
 
-    // Batch get profiles
-    const userIds = locations.Items.map(l => l.userId);
-    const uniqueIds = [...new Set(userIds)];
-
-    // DynamoDB batch get (max 100 at a time)
-    const batches = [];
-    for (let i = 0; i < uniqueIds.length; i += 100) {
-      batches.push(uniqueIds.slice(i, i + 100));
-    }
-
+    // Batch get profiles (max 100 at a time)
+    const userIds = [...new Set(locations.Items.map(l => l.userId))];
     const profiles = {};
-    for (const batch of batches) {
+
+    for (let i = 0; i < userIds.length; i += 100) {
+      const batch = userIds.slice(i, i + 100);
       const result = await ddb.send(new BatchGetCommand({
         RequestItems: {
           [USERS_TABLE]: {
@@ -49,16 +66,12 @@ export const handler = async (event) => {
       }
     }
 
-    // Combine location + profile, calculate distance if caller location provided
-    const callerLat = lat ? parseFloat(lat) : null;
-    const callerLng = lng ? parseFloat(lng) : null;
-    const maxDist = maxDistance ? parseFloat(maxDistance) : 5000; // feet
-
+    // Combine location + profile, calculate distance
     const students = locations.Items
       .filter(loc => profiles[loc.userId])
       .map(loc => {
-        const dist = callerLat && callerLng
-          ? haversineDistance(callerLat, callerLng, loc.latitude, loc.longitude)
+        const dist = lat !== null && lng !== null
+          ? haversineDistance(lat, lng, loc.latitude, loc.longitude)
           : 0;
         return {
           profile: profiles[loc.userId],
@@ -72,7 +85,7 @@ export const handler = async (event) => {
           distance: Math.round(dist),
         };
       })
-      .filter(s => s.distance <= maxDist)
+      .filter(s => s.distance <= cappedMaxDist)
       .sort((a, b) => a.distance - b.distance);
 
     return response(200, { students });
@@ -91,12 +104,4 @@ function haversineDistance(lat1, lon1, lat2, lon2) {
     Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
     Math.sin(dLon / 2) ** 2;
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
-
-function response(statusCode, body) {
-  return {
-    statusCode,
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  };
 }

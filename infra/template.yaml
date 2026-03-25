@@ -16,6 +16,7 @@ Globals:
         USER_POOL_ID: !Ref CognitoUserPool
         USER_POOL_CLIENT_ID: !Ref CognitoUserPoolClient
         CONNECTIONS_TABLE: !Ref ConnectionsTable
+        RATE_LIMIT_TABLE: !Ref RateLimitTable
 
 Parameters:
   Stage:
@@ -165,6 +166,24 @@ Resources:
               KeyType: RANGE
           Projection:
             ProjectionType: ALL
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+
+  # ============================================================
+  # DynamoDB - Rate Limiting
+  # ============================================================
+  RateLimitTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub colage-rate-limits-${Stage}
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: pk
+          AttributeType: S
+      KeySchema:
+        - AttributeName: pk
+          KeyType: HASH
       TimeToLiveSpecification:
         AttributeName: ttl
         Enabled: true
