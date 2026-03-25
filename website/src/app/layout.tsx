@@ -1,20 +1,48 @@
 import type { Metadata } from "next";
+import { Cormorant_Garamond, DM_Sans } from "next/font/google";
 import "./globals.css";
 
+const cormorant = Cormorant_Garamond({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
+  variable: "--font-cormorant",
+  display: "swap",
+});
+
+const dmSans = DM_Sans({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
+  variable: "--font-dm-sans",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
-  title: "Colage — Discover Your Campus",
-  description: "Location-aware social discovery for verified college students. See who's nearby, connect via social links, and explore campus in AR.",
+  title: "Colage — Be You.",
+  description:
+    "The social discovery app for college students and alumni. Find people on campus. Be yourself.",
+  openGraph: {
+    title: "Colage — Be You.",
+    description:
+      "The social discovery app for college students and alumni. Find people on campus.",
+    url: "https://colageclub.com",
+    siteName: "Colage",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Colage — Be You.",
+    description: "The social discovery app for college students and alumni.",
+  },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
-    <html lang="en">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-      </head>
-      <body className="antialiased">{children}</body>
+    <html lang="en" className={`${cormorant.variable} ${dmSans.variable}`}>
+      <body className={dmSans.className}>{children}</body>
     </html>
   );
 }

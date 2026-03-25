@@ -1,52 +1,71 @@
 @import "tailwindcss";
 
 :root {
-  --colage-primary: #6C5CE7;
-  --colage-primary-light: #a29bfe;
-  --colage-bg: #ffffff;
-  --colage-bg-alt: #f8f7ff;
-  --colage-surface: #f3f2ff;
-  --colage-surface-elevated: #ebe9ff;
-  --colage-border: #e5e3f0;
-  --colage-text: #1a1a2e;
-  --colage-text-secondary: #5a5a7a;
-  --colage-text-tertiary: #9090a8;
-  --colage-online: #00b894;
-  --colage-warning: #f39c12;
-  --colage-error: #e74c3c;
+  /* Harvard Crimson palette */
+  --crimson: #A51C30;
+  --crimson-dark: #8C1515;
+  --crimson-light: #C23B4A;
+  --black: #1E1E1E;
+  --white: #FFFFFF;
+  --off-white: #F9F6F2;
+  --warm-gray: #6B6B6B;
+  --light-gray: #E8E3DB;
+  --accent-gold: #C4963C;
+
+  /* Fonts */
+  --font-serif: 'Cormorant Garamond', Georgia, serif;
+  --font-sans: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--colage-bg);
-  color: var(--colage-text);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-sans);
+  color: var(--black);
+  background: var(--white);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Smooth scrolling */
-html { scroll-behavior: smooth; }
-
-/* Custom scrollbar */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: #f5f5f5; }
-::-webkit-scrollbar-thumb { background: rgba(108,92,231,0.2); border-radius: 3px; }
-
-/* Custom animations */
-@keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-12px); }
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--off-white);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--crimson);
+  border-radius: 4px;
 }
 
-@keyframes scan {
-  0% { transform: translateY(0); opacity: 0; }
-  10% { opacity: 1; }
-  90% { opacity: 1; }
-  100% { transform: translateY(400px); opacity: 0; }
+/* Selection */
+::selection {
+  background: var(--crimson);
+  color: var(--white);
 }
 
-.animate-float {
-  animation: float 3s ease-in-out infinite;
+/* Utility classes */
+.font-serif {
+  font-family: var(--font-serif);
 }
-
-.animate-scan {
-  animation: scan 3s linear infinite;
+.font-sans {
+  font-family: var(--font-sans);
+}
+.text-crimson {
+  color: var(--crimson);
+}
+.bg-crimson {
+  background-color: var(--crimson);
+}
+.bg-off-white {
+  background-color: var(--off-white);
 }
