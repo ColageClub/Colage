@@ -86,6 +86,22 @@ export default function Navbar() {
               </a>
             ))}
             <a
+              href="/ads"
+              style={{
+                fontSize: 14,
+                fontWeight: 500,
+                color: scrolled ? "#6B6B6B" : "rgba(255,255,255,0.7)",
+                textDecoration: "none",
+                transition: "color 0.2s",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = "#A51C30")}
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.color = scrolled ? "#6B6B6B" : "rgba(255,255,255,0.7)")
+              }
+            >
+              Ad Manager
+            </a>
+            <a
               href="#"
               style={{
                 padding: "10px 24px",
@@ -157,6 +173,18 @@ export default function Navbar() {
                 {l.label}
               </a>
             ))}
+            <a
+              href="/ads"
+              onClick={() => setOpen(false)}
+              style={{
+                fontFamily: "var(--font-serif)",
+                fontSize: 28,
+                color: "#A51C30",
+                textDecoration: "none",
+              }}
+            >
+              Ad Manager
+            </a>
           </motion.div>
         )}
       </AnimatePresence>
