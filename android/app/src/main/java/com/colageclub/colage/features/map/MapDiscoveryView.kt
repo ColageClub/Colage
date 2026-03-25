@@ -10,6 +10,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import com.colageclub.colage.core.design.ColageColors
+import com.colageclub.colage.core.design.LocalThemeColor
 import com.colageclub.colage.data.models.NearbyStudent
 import com.colageclub.colage.features.discovery.MiniProfileSheet
 import com.mapbox.geojson.Point
@@ -25,7 +26,7 @@ import kotlinx.coroutines.*
 @Composable
 fun MapDiscoveryView(
     students: List<NearbyStudent>,
-    themeColor: Color = ColageColors.Primary,
+    themeColor: Color = LocalThemeColor.current,
     onStudentTapped: (NearbyStudent) -> Unit = {}
 ) {
     var selectedStudent by remember { mutableStateOf<NearbyStudent?>(null) }

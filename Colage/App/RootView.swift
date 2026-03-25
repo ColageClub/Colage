@@ -2,6 +2,7 @@ import SwiftUI
 
 /// Root view — switches between onboarding and main app
 struct RootView: View {
+    @Environment(.themeColor) private var themeColor
     @EnvironmentObject var appState: AppState
 
     var body: some View {
@@ -33,7 +34,7 @@ struct LaunchScreen: View {
             VStack(spacing: 16) {
                 Image(systemName: "location.circle.fill")
                     .font(.system(size: 64))
-                    .foregroundStyle(ColageColors.primary)
+                    .foregroundStyle(themeColor)
                     .scaleEffect(pulse ? 1.1 : 1.0)
                     .opacity(animateIn ? 1 : 0)
 

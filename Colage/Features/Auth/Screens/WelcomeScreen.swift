@@ -15,11 +15,11 @@ struct WelcomeScreen: View {
                 VStack(spacing: 20) {
                     ZStack {
                         Circle()
-                            .fill(ColageColors.primary.opacity(0.15))
+                            .fill(themeColor.opacity(0.15))
                             .frame(width: 120, height: 120)
                         Image(systemName: "location.circle.fill")
                             .font(.system(size: 60))
-                            .foregroundStyle(ColageColors.primary)
+                            .foregroundStyle(themeColor)
                     }
 
                     Text("colage")
@@ -65,7 +65,7 @@ struct WelcomeScreen: View {
                             .foregroundStyle(ColageColors.textSecondary)
                         + Text("Log In")
                             .font(ColageFonts.bodyBold)
-                            .foregroundStyle(ColageColors.primary)
+                            .foregroundStyle(themeColor)
                     }
 
                     Text("For verified .edu students only")
@@ -90,9 +90,9 @@ struct FeatureRow: View {
         HStack(spacing: 16) {
             Image(systemName: icon)
                 .font(.system(size: 22))
-                .foregroundStyle(ColageColors.primary)
+                .foregroundStyle(themeColor)
                 .frame(width: 44, height: 44)
-                .background(ColageColors.primary.opacity(0.12))
+                .background(themeColor.opacity(0.12))
                 .clipShape(RoundedRectangle(cornerRadius: 12))
 
             VStack(alignment: .leading, spacing: 2) {

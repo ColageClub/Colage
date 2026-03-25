@@ -116,7 +116,7 @@ fun ProfileInfoScreen(
                                 .border(1.dp, ColageColors.Border, RoundedCornerShape(16.dp))
                                 .padding(horizontal = 20.dp, vertical = 16.dp),
                             textStyle = ColageFonts.Body.copy(color = ColageColors.TextPrimary),
-                            cursorBrush = androidx.compose.ui.graphics.SolidColor(ColageColors.Primary),
+                            cursorBrush = androidx.compose.ui.graphics.SolidColor(LocalThemeColor.current),
                             decorationBox = { innerTextField ->
                                 if (bio.isEmpty()) {
                                     Text(

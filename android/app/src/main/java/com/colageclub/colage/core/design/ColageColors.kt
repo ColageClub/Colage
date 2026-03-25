@@ -1,6 +1,11 @@
 package com.colageclub.colage.core.design
 
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.graphics.Color
+
+/** CompositionLocal for university theme color — defaults to Colage crimson */
+val LocalThemeColor = compositionLocalOf { Color(0xFFA51C30) }
+val LocalThemeAccent = compositionLocalOf { Color(0xFF00CEC9) }
 
 object ColageColors {
     // Base

@@ -2,6 +2,7 @@ import SwiftUI
 
 /// Full onboarding flow — 10 screens as NavigationStack
 struct OnboardingFlow: View {
+    @Environment(.themeColor) private var themeColor
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var authService: AuthService
     @EnvironmentObject var universityService: UniversityService
@@ -19,7 +20,7 @@ struct OnboardingFlow: View {
                 stepView(for: step)
             }
         }
-        .tint(ColageColors.primary)
+        .tint(themeColor)
         .environmentObject(onboardingData)
         .sheet(isPresented: $showLogin) {
             LoginScreen()

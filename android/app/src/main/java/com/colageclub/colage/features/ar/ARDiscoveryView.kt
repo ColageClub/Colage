@@ -27,7 +27,7 @@ import kotlin.random.Random
 fun ARDiscoveryView(
     viewModel: NearbyStudentsViewModel,
     currentFloor: Int,
-    themeColor: Color = ColageColors.Primary
+    themeColor: Color = LocalThemeColor.current
 ) {
     val arMaxDistance by viewModel.arMaxDistance.collectAsState()
     val students = viewModel.arFilteredStudents()

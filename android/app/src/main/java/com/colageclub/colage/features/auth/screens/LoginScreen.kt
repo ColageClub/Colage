@@ -101,7 +101,7 @@ fun LoginScreen(
                 Icon(
                     imageVector = if (step == LoginStep.EMAIL) Icons.Default.Person else Icons.Default.Lock,
                     contentDescription = null,
-                    tint = ColageColors.Primary,
+                    tint = LocalThemeColor.current,
                     modifier = Modifier.size(44.dp).padding(bottom = 8.dp)
                 )
                 Text(
@@ -115,7 +115,7 @@ fun LoginScreen(
                 if (step == LoginStep.OTP) {
                     Text(
                         text = email,
-                        style = ColageFonts.BodyBold.copy(color = ColageColors.Primary)
+                        style = ColageFonts.BodyBold.copy(color = LocalThemeColor.current)
                     )
                 }
             }
@@ -208,7 +208,7 @@ fun LoginScreen(
                         ) {
                             Text(
                                 text = if (canResend) "Resend code" else "Resend in ${resendCountdown}s",
-                                style = if (canResend) ColageFonts.BodyBold.copy(color = ColageColors.Primary)
+                                style = if (canResend) ColageFonts.BodyBold.copy(color = LocalThemeColor.current)
                                        else ColageFonts.Body.copy(color = ColageColors.TextTertiary)
                             )
                         }
@@ -255,7 +255,7 @@ fun LoginScreen(
                 )
             } else if (isLoading) {
                 CircularProgressIndicator(
-                    color = ColageColors.Primary,
+                    color = LocalThemeColor.current,
                     modifier = Modifier
                         .align(Alignment.CenterHorizontally)
                         .padding(bottom = 40.dp)

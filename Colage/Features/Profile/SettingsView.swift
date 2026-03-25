@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct SettingsView: View {
+    @Environment(.themeColor) private var themeColor
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var authService: AuthService
     @EnvironmentObject var universityService: UniversityService
@@ -34,10 +35,10 @@ struct SettingsView: View {
                         } label: {
                             HStack {
                                 Image(systemName: "graduationcap.fill")
-                                    .foregroundStyle(ColageColors.primary)
+                                    .foregroundStyle(themeColor)
                                     .frame(width: 24)
                                 Text("Join Alumni Server")
-                                    .foregroundStyle(ColageColors.primary)
+                                    .foregroundStyle(themeColor)
                                 Spacer()
                                 Image(systemName: "chevron.right")
                                     .font(.caption)
@@ -52,7 +53,7 @@ struct SettingsView: View {
                     Toggle(isOn: $appState.isVisible) {
                         Label("Visible on Map", systemImage: "eye.fill")
                     }
-                    .tint(ColageColors.primary)
+                    .tint(themeColor)
                 }
 
                 // Appearance
@@ -71,7 +72,7 @@ struct SettingsView: View {
                                     Spacer()
                                     if universityService.currentTheme?.id == theme.id {
                                         Image(systemName: "checkmark")
-                                            .foregroundStyle(ColageColors.primary)
+                                            .foregroundStyle(themeColor)
                                     }
                                 }
                             }
@@ -126,7 +127,7 @@ struct SettingsView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Done") { dismiss() }
-                        .foregroundStyle(ColageColors.primary)
+                        .foregroundStyle(themeColor)
                 }
             }
             .alert("Log Out", isPresented: $showLogoutConfirm) {
@@ -190,7 +191,7 @@ struct SettingsRow: View {
     var body: some View {
         HStack {
             Image(systemName: icon)
-                .foregroundStyle(ColageColors.primary)
+                .foregroundStyle(themeColor)
                 .frame(width: 24)
             Text(title)
                 .foregroundStyle(ColageColors.textPrimary)

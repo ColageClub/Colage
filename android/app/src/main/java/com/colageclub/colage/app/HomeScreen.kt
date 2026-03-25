@@ -240,7 +240,7 @@ fun DiscoveryModePicker(
                 ),
                 modifier = Modifier
                     .clip(RoundedCornerShape(8.dp))
-                    .background(if (isSelected) ColageColors.Primary.copy(alpha = 0.2f) else Color.Transparent)
+                    .background(if (isSelected) LocalThemeColor.current.copy(alpha = 0.2f) else Color.Transparent)
                     .clickable { onModeSelected(mode) }
                     .padding(horizontal = 16.dp, vertical = 8.dp)
             )
@@ -270,11 +270,11 @@ fun FloorPicker(
             Text(
                 text = label,
                 style = ColageFonts.MonoSmall.copy(
-                    color = if (isSelected) ColageColors.Primary else ColageColors.TextTertiary
+                    color = if (isSelected) LocalThemeColor.current else ColageColors.TextTertiary
                 ),
                 modifier = Modifier
                     .clip(RoundedCornerShape(6.dp))
-                    .background(if (isSelected) ColageColors.Primary.copy(alpha = 0.15f) else Color.Transparent)
+                    .background(if (isSelected) LocalThemeColor.current.copy(alpha = 0.15f) else Color.Transparent)
                     .clickable { onFloorSelected(floor) }
                     .padding(horizontal = 10.dp, vertical = 6.dp)
             )

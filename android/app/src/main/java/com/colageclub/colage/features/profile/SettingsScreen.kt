@@ -48,7 +48,7 @@ fun SettingsScreen(
                 title = { Text("Settings", style = ColageFonts.Title3.copy(color = ColageColors.TextPrimary)) },
                 actions = {
                     TextButton(onClick = onDismiss) {
-                        Text("Done", style = ColageFonts.Body.copy(color = ColageColors.Primary))
+                        Text("Done", style = ColageFonts.Body.copy(color = LocalThemeColor.current))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
@@ -84,9 +84,9 @@ fun SettingsScreen(
                             .padding(horizontal = 16.dp, vertical = 12.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(Icons.Default.School, null, tint = ColageColors.Primary, modifier = Modifier.size(20.dp))
+                        Icon(Icons.Default.School, null, tint = LocalThemeColor.current, modifier = Modifier.size(20.dp))
                         Spacer(Modifier.width(12.dp))
-                        Text("Join Alumni Server", style = ColageFonts.Body.copy(color = ColageColors.Primary), modifier = Modifier.weight(1f))
+                        Text("Join Alumni Server", style = ColageFonts.Body.copy(color = LocalThemeColor.current), modifier = Modifier.weight(1f))
                         Icon(Icons.Default.ChevronRight, null, tint = ColageColors.TextTertiary, modifier = Modifier.size(16.dp))
                     }
                 }
@@ -106,13 +106,13 @@ fun SettingsScreen(
                         .padding(horizontal = 16.dp, vertical = 12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(Icons.Default.Visibility, null, tint = ColageColors.Primary, modifier = Modifier.size(20.dp))
+                    Icon(Icons.Default.Visibility, null, tint = LocalThemeColor.current, modifier = Modifier.size(20.dp))
                     Spacer(Modifier.width(12.dp))
                     Text("Visible on Map", style = ColageFonts.Body.copy(color = ColageColors.TextPrimary), modifier = Modifier.weight(1f))
                     Switch(
                         checked = isVisible,
                         onCheckedChange = { appViewModel.toggleVisibility() },
-                        colors = SwitchDefaults.colors(checkedTrackColor = ColageColors.Primary)
+                        colors = SwitchDefaults.colors(checkedTrackColor = LocalThemeColor.current)
                     )
                 }
             }
@@ -137,7 +137,7 @@ fun SettingsScreen(
                             Spacer(Modifier.width(12.dp))
                             Text(theme.name, style = ColageFonts.Body.copy(color = ColageColors.TextPrimary), modifier = Modifier.weight(1f))
                             if (currentTheme.id == theme.id) {
-                                Icon(Icons.Default.Check, null, tint = ColageColors.Primary, modifier = Modifier.size(20.dp))
+                                Icon(Icons.Default.Check, null, tint = LocalThemeColor.current, modifier = Modifier.size(20.dp))
                             }
                         }
                     }
@@ -298,7 +298,7 @@ private fun SettingsRow(icon: ImageVector, title: String, value: String? = null)
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(icon, null, tint = ColageColors.Primary, modifier = Modifier.size(20.dp))
+        Icon(icon, null, tint = LocalThemeColor.current, modifier = Modifier.size(20.dp))
         Spacer(Modifier.width(12.dp))
         Text(title, style = ColageFonts.Body.copy(color = ColageColors.TextPrimary), modifier = Modifier.weight(1f))
         value?.let {
@@ -316,7 +316,7 @@ private fun SettingsRowLink(icon: ImageVector, title: String, onClick: () -> Uni
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(icon, null, tint = ColageColors.Primary, modifier = Modifier.size(20.dp))
+        Icon(icon, null, tint = LocalThemeColor.current, modifier = Modifier.size(20.dp))
         Spacer(Modifier.width(12.dp))
         Text(title, style = ColageFonts.Body.copy(color = ColageColors.TextPrimary), modifier = Modifier.weight(1f))
         Icon(Icons.Default.ChevronRight, null, tint = ColageColors.TextTertiary, modifier = Modifier.size(16.dp))

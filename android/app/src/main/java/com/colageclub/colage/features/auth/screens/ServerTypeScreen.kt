@@ -93,8 +93,8 @@ fun ServerTypeScreen(
                     .height(56.dp),
                 shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = ColageColors.Primary,
-                    disabledContainerColor = ColageColors.Primary.copy(alpha = 0.3f)
+                    containerColor = LocalThemeColor.current,
+                    disabledContainerColor = LocalThemeColor.current.copy(alpha = 0.3f)
                 )
             ) {
                 Text(
@@ -121,7 +121,7 @@ private fun ServerTypeCard(
             .clip(RoundedCornerShape(16.dp))
             .background(ColageColors.Surface)
             .then(
-                if (isSelected) Modifier.border(2.dp, ColageColors.Primary, RoundedCornerShape(16.dp))
+                if (isSelected) Modifier.border(2.dp, LocalThemeColor.current, RoundedCornerShape(16.dp))
                 else Modifier
             )
             .clickable(onClick = onTap)
@@ -132,13 +132,13 @@ private fun ServerTypeCard(
             modifier = Modifier
                 .size(56.dp)
                 .clip(CircleShape)
-                .background(if (isSelected) ColageColors.Primary.copy(alpha = 0.2f) else ColageColors.Surface),
+                .background(if (isSelected) LocalThemeColor.current.copy(alpha = 0.2f) else ColageColors.Surface),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 icon,
                 contentDescription = null,
-                tint = if (isSelected) ColageColors.Primary else ColageColors.TextSecondary,
+                tint = if (isSelected) LocalThemeColor.current else ColageColors.TextSecondary,
                 modifier = Modifier.size(28.dp)
             )
         }
@@ -156,7 +156,7 @@ private fun ServerTypeCard(
         Icon(
             if (isSelected) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
             contentDescription = null,
-            tint = if (isSelected) ColageColors.Primary else ColageColors.TextTertiary,
+            tint = if (isSelected) LocalThemeColor.current else ColageColors.TextTertiary,
             modifier = Modifier.size(24.dp)
         )
     }

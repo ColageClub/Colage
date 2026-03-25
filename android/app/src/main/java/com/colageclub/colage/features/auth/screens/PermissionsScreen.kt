@@ -175,7 +175,7 @@ private fun PermissionCard(
     onClick: () -> Unit
 ) {
     val containerColor = if (isActive) ColageColors.SurfaceElevated else ColageColors.Surface
-    val borderColor = if (isActive) ColageColors.Primary.copy(alpha = 0.3f) else ColageColors.Border
+    val borderColor = if (isActive) LocalThemeColor.current.copy(alpha = 0.3f) else ColageColors.Border
 
     TextButton(
         onClick = { if (!isGranted) onClick() },
@@ -196,14 +196,14 @@ private fun PermissionCard(
                     .size(48.dp)
                     .clip(RoundedCornerShape(12.dp))
                     .background(
-                        (if (isGranted) ColageColors.Online else ColageColors.Primary).copy(alpha = 0.12f)
+                        (if (isGranted) ColageColors.Online else LocalThemeColor.current).copy(alpha = 0.12f)
                     ),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    tint = if (isGranted) ColageColors.Online else ColageColors.Primary,
+                    tint = if (isGranted) ColageColors.Online else LocalThemeColor.current,
                     modifier = Modifier.size(22.dp)
                 )
             }

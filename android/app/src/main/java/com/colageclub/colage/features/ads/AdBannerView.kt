@@ -57,7 +57,7 @@ fun AdBannerView() {
             Box(
                 modifier = Modifier
                     .size(44.dp)
-                    .background(ColageColors.Primary.copy(alpha = 0.15f), RoundedCornerShape(12.dp)),
+                    .background(LocalThemeColor.current.copy(alpha = 0.15f), RoundedCornerShape(12.dp)),
                 contentAlignment = Alignment.Center
             ) {
                 Text(ad.logoEmoji, fontSize = 22.sp)
@@ -122,7 +122,7 @@ fun AdDetailSheet(ad: AdData, onDismiss: () -> Unit) {
                     .height(180.dp)
                     .background(
                         Brush.verticalGradient(
-                            colors = listOf(ColageColors.Primary.copy(alpha = 0.15f), ColageColors.Background)
+                            colors = listOf(LocalThemeColor.current.copy(alpha = 0.15f), ColageColors.Background)
                         )
                     ),
                 contentAlignment = Alignment.BottomCenter
@@ -131,8 +131,8 @@ fun AdDetailSheet(ad: AdData, onDismiss: () -> Unit) {
                     modifier = Modifier
                         .size(72.dp)
                         .offset(y = 36.dp)
-                        .background(ColageColors.Primary.copy(alpha = 0.15f), RoundedCornerShape(20.dp))
-                        .border(2.dp, ColageColors.Primary.copy(alpha = 0.3f), RoundedCornerShape(20.dp)),
+                        .background(LocalThemeColor.current.copy(alpha = 0.15f), RoundedCornerShape(20.dp))
+                        .border(2.dp, LocalThemeColor.current.copy(alpha = 0.3f), RoundedCornerShape(20.dp)),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(ad.logoEmoji, fontSize = 36.sp)
@@ -197,11 +197,11 @@ fun AdDetailSheet(ad: AdData, onDismiss: () -> Unit) {
                     onClick = { /* Screenshot */ },
                     modifier = Modifier.fillMaxWidth().height(50.dp),
                     shape = RoundedCornerShape(14.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = ColageColors.Primary.copy(alpha = 0.1f))
+                    colors = ButtonDefaults.buttonColors(containerColor = LocalThemeColor.current.copy(alpha = 0.1f))
                 ) {
-                    Icon(Icons.Default.CameraAlt, null, tint = ColageColors.Primary, modifier = Modifier.size(18.dp))
+                    Icon(Icons.Default.CameraAlt, null, tint = LocalThemeColor.current, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
-                    Text("Save Screenshot", style = ColageFonts.BodyBold.copy(color = ColageColors.Primary))
+                    Text("Save Screenshot", style = ColageFonts.BodyBold.copy(color = LocalThemeColor.current))
                 }
 
                 Spacer(Modifier.height(40.dp))

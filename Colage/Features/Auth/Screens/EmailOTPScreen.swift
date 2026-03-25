@@ -2,6 +2,7 @@ import SwiftUI
 
 struct EmailOTPScreen: View {
     let onVerified: () -> Void
+    @Environment(.themeColor) private var themeColor
     @EnvironmentObject var authService: AuthService
     @State private var code = ""
     @State private var isLoading = false
@@ -26,7 +27,7 @@ struct EmailOTPScreen: View {
                         .foregroundStyle(ColageColors.textSecondary)
                     Text(authService.enteredEmail)
                         .font(ColageFonts.bodyBold)
-                        .foregroundStyle(ColageColors.primary)
+                        .foregroundStyle(themeColor)
                 }
                 .padding(.top, 48)
 
@@ -50,7 +51,7 @@ struct EmailOTPScreen: View {
                     if canResend {
                         Text("Resend code")
                             .font(ColageFonts.bodyBold)
-                            .foregroundStyle(ColageColors.primary)
+                            .foregroundStyle(themeColor)
                     } else {
                         Text("Resend in \(resendCountdown)s")
                             .font(ColageFonts.body)
@@ -64,7 +65,7 @@ struct EmailOTPScreen: View {
 
                 if isLoading {
                     ProgressView()
-                        .tint(ColageColors.primary)
+                        .tint(themeColor)
                         .padding(.bottom, 40)
                 }
             }

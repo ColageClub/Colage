@@ -2,6 +2,7 @@ import SwiftUI
 
 struct PhoneOTPScreen: View {
     let onVerified: () -> Void
+    @Environment(.themeColor) private var themeColor
     @EnvironmentObject var authService: AuthService
     @State private var code = ""
     @State private var isLoading = false
@@ -45,7 +46,7 @@ struct PhoneOTPScreen: View {
                 } label: {
                     Text(canResend ? "Resend code" : "Resend in \(resendCountdown)s")
                         .font(canResend ? ColageFonts.bodyBold : ColageFonts.body)
-                        .foregroundStyle(canResend ? ColageColors.primary : ColageColors.textTertiary)
+                        .foregroundStyle(canResend ? themeColor : ColageColors.textTertiary)
                 }
                 .disabled(!canResend)
                 .padding(.top, 24)
@@ -54,7 +55,7 @@ struct PhoneOTPScreen: View {
 
                 if isLoading {
                     ProgressView()
-                        .tint(ColageColors.primary)
+                        .tint(themeColor)
                         .padding(.bottom, 40)
                 }
             }

@@ -4,6 +4,7 @@ import AVFoundation
 
 struct PermissionsScreen: View {
     let onContinue: () -> Void
+    @Environment(.themeColor) private var themeColor
     @EnvironmentObject var locationService: LocationService
     @State private var locationGranted = false
     @State private var cameraGranted = false
@@ -134,10 +135,10 @@ struct PermissionCard: View {
             HStack(spacing: 16) {
                 Image(systemName: icon)
                     .font(.system(size: 22))
-                    .foregroundStyle(isGranted ? ColageColors.online : ColageColors.primary)
+                    .foregroundStyle(isGranted ? ColageColors.online : themeColor)
                     .frame(width: 48, height: 48)
                     .background(
-                        (isGranted ? ColageColors.online : ColageColors.primary).opacity(0.12)
+                        (isGranted ? ColageColors.online : themeColor).opacity(0.12)
                     )
                     .clipShape(RoundedRectangle(cornerRadius: 12))
 
@@ -165,7 +166,7 @@ struct PermissionCard: View {
             .clipShape(RoundedRectangle(cornerRadius: 16))
             .overlay(
                 RoundedRectangle(cornerRadius: 16)
-                    .strokeBorder(isActive ? ColageColors.primary.opacity(0.3) : Color.clear, lineWidth: 1)
+                    .strokeBorder(isActive ? themeColor.opacity(0.3) : Color.clear, lineWidth: 1)
             )
         }
         .disabled(isGranted)

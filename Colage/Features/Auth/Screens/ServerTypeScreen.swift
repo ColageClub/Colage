@@ -3,6 +3,7 @@ import SwiftUI
 /// Onboarding screen where the user picks Student or Alumni
 struct ServerTypeScreen: View {
     let onContinue: () -> Void
+    @Environment(.themeColor) private var themeColor
     @EnvironmentObject var onboardingData: OnboardingData
 
     @State private var selected: ServerType? = nil
@@ -87,12 +88,12 @@ private struct ServerTypeCard: View {
             HStack(spacing: 16) {
                 ZStack {
                     Circle()
-                        .fill(isSelected ? ColageColors.primary.opacity(0.2) : ColageColors.surface)
+                        .fill(isSelected ? themeColor.opacity(0.2) : ColageColors.surface)
                         .frame(width: 56, height: 56)
 
                     Image(systemName: icon)
                         .font(.system(size: 24))
-                        .foregroundStyle(isSelected ? ColageColors.primary : ColageColors.textSecondary)
+                        .foregroundStyle(isSelected ? themeColor : ColageColors.textSecondary)
                 }
 
                 VStack(alignment: .leading, spacing: 4) {
@@ -110,7 +111,7 @@ private struct ServerTypeCard: View {
 
                 Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
                     .font(.system(size: 24))
-                    .foregroundStyle(isSelected ? ColageColors.primary : ColageColors.textTertiary)
+                    .foregroundStyle(isSelected ? themeColor : ColageColors.textTertiary)
             }
             .padding(16)
             .background(
@@ -118,7 +119,7 @@ private struct ServerTypeCard: View {
                     .fill(ColageColors.surface)
                     .overlay(
                         RoundedRectangle(cornerRadius: 16)
-                            .stroke(isSelected ? ColageColors.primary : Color.clear, lineWidth: 2)
+                            .stroke(isSelected ? themeColor : Color.clear, lineWidth: 2)
                     )
             )
         }

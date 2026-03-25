@@ -21,6 +21,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.colageclub.colage.core.design.ColageColors
+import com.colageclub.colage.core.design.LocalThemeColor
 import com.colageclub.colage.core.design.ColageFonts
 import com.colageclub.colage.core.design.ColagePrimaryButton
 
@@ -51,13 +52,13 @@ fun WelcomeScreen(
                     modifier = Modifier
                         .size(120.dp)
                         .clip(CircleShape)
-                        .background(ColageColors.Primary.copy(alpha = 0.15f)),
+                        .background(LocalThemeColor.current.copy(alpha = 0.15f)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Default.LocationOn,
                         contentDescription = null,
-                        tint = ColageColors.Primary,
+                        tint = LocalThemeColor.current,
                         modifier = Modifier.size(60.dp)
                     )
                 }
@@ -120,7 +121,7 @@ fun WelcomeScreen(
                             withStyle(SpanStyle(color = ColageColors.TextSecondary)) {
                                 append("Already have an account? ")
                             }
-                            withStyle(SpanStyle(color = ColageColors.Primary, fontWeight = FontWeight.SemiBold)) {
+                            withStyle(SpanStyle(color = LocalThemeColor.current, fontWeight = FontWeight.SemiBold)) {
                                 append("Log In")
                             }
                         },
@@ -153,13 +154,13 @@ private fun FeatureRow(
             modifier = Modifier
                 .size(44.dp)
                 .clip(RoundedCornerShape(12.dp))
-                .background(ColageColors.Primary.copy(alpha = 0.12f)),
+                .background(LocalThemeColor.current.copy(alpha = 0.12f)),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = ColageColors.Primary,
+                tint = LocalThemeColor.current,
                 modifier = Modifier.size(22.dp)
             )
         }

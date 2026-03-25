@@ -2,6 +2,7 @@ import SwiftUI
 
 struct SocialLinksScreen: View {
     let onContinue: () -> Void
+    @Environment(.themeColor) private var themeColor
     @EnvironmentObject var onboardingData: OnboardingData
     @State private var links: [SocialPlatform: String] = [:]
     @State private var expandedPlatform: SocialPlatform?
@@ -93,9 +94,9 @@ struct SocialLinkRow: View {
                 HStack(spacing: 14) {
                     Image(systemName: platform.iconName)
                         .font(.system(size: 20))
-                        .foregroundStyle(ColageColors.primary)
+                        .foregroundStyle(themeColor)
                         .frame(width: 40, height: 40)
-                        .background(ColageColors.primary.opacity(0.12))
+                        .background(themeColor.opacity(0.12))
                         .clipShape(RoundedRectangle(cornerRadius: 10))
 
                     Text(platform.displayName)

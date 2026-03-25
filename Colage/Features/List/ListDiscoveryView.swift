@@ -2,6 +2,7 @@ import SwiftUI
 
 /// List discovery mode — 2-column grid sorted by distance with distance slider
 struct ListDiscoveryView: View {
+    @Environment(.themeColor) private var themeColor
     @ObservedObject var students: NearbyStudentsViewModel
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var universityService: UniversityService
@@ -26,14 +27,14 @@ struct ListDiscoveryView: View {
                         Spacer()
                         Text(distanceLabel)
                             .font(ColageFonts.monoSmall)
-                            .foregroundStyle(universityService.currentTheme?.primary ?? ColageColors.primary)
+                            .foregroundStyle(themeColor)
                     }
 
                     Slider(
                         value: $students.maxDistance,
                         in: 0...1
                     )
-                    .tint(universityService.currentTheme?.primary ?? ColageColors.primary)
+                    .tint(themeColor)
                 }
                 .padding(.horizontal, 20)
                 .padding(.top, 80)
@@ -83,7 +84,7 @@ struct ListDiscoveryView: View {
                             ForEach(students.filteredStudents) { student in
                                 StudentCard(
                                     student: student,
-                                    themeColor: universityService.currentTheme?.primary ?? ColageColors.primary
+                                    themeColor: themeColor
                                 )
                                 .onTapGesture {
                                     selectedStudent = student
@@ -183,11 +184,11 @@ struct FloorFilterChip: View {
                 .foregroundStyle(isSelected ? ColageColors.textPrimary : ColageColors.textTertiary)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 6)
-                .background(isSelected ? ColageColors.primary.opacity(0.2) : ColageColors.surface)
+                .background(isSelected ? themeColor.opacity(0.2) : ColageColors.surface)
                 .clipShape(Capsule())
                 .overlay(
                     Capsule()
-                        .strokeBorder(isSelected ? ColageColors.primary.opacity(0.4) : ColageColors.border, lineWidth: 1)
+                        .strokeBorder(isSelected ? themeColor.opacity(0.4) : ColageColors.border, lineWidth: 1)
                 )
         }
     }

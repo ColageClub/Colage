@@ -2,6 +2,7 @@ import SwiftUI
 
 /// Horizontal ad banner shown at the bottom of the map view
 struct AdBannerView: View {
+    @Environment(.themeColor) private var themeColor
     @State private var currentAd: AdData? = nil
     @State private var showAdDetail = false
     @State private var adIndex = 0
@@ -88,7 +89,7 @@ struct AdBannerView: View {
             // Logo
             ZStack {
                 RoundedRectangle(cornerRadius: 12)
-                    .fill(ColageColors.primary.opacity(0.15))
+                    .fill(themeColor.opacity(0.15))
                     .frame(width: 44, height: 44)
 
                 Text(ad.logoEmoji)
@@ -161,7 +162,7 @@ struct AdDetailSheet: View {
                 // Header with logo background
                 ZStack {
                     LinearGradient(
-                        colors: [ColageColors.primary.opacity(0.15), ColageColors.background],
+                        colors: [themeColor.opacity(0.15), ColageColors.background],
                         startPoint: .top,
                         endPoint: .bottom
                     )
@@ -175,11 +176,11 @@ struct AdDetailSheet: View {
                         Spacer()
                         ZStack {
                             RoundedRectangle(cornerRadius: 20)
-                                .fill(ColageColors.primary.opacity(0.15))
+                                .fill(themeColor.opacity(0.15))
                                 .frame(width: 72, height: 72)
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 20)
-                                        .strokeBorder(ColageColors.primary.opacity(0.3), lineWidth: 2)
+                                        .strokeBorder(themeColor.opacity(0.3), lineWidth: 2)
                                 )
 
                             Text(ad.logoEmoji)
@@ -246,7 +247,7 @@ struct AdDetailSheet: View {
                             .foregroundStyle(.white)
                             .frame(maxWidth: .infinity)
                             .frame(height: 50)
-                            .background(ColageColors.primary)
+                            .background(themeColor)
                             .clipShape(RoundedRectangle(cornerRadius: 14))
                         }
 
@@ -259,10 +260,10 @@ struct AdDetailSheet: View {
                                 Text("Save Screenshot")
                             }
                             .font(ColageFonts.bodyBold)
-                            .foregroundStyle(ColageColors.primary)
+                            .foregroundStyle(themeColor)
                             .frame(maxWidth: .infinity)
                             .frame(height: 50)
-                            .background(ColageColors.primary.opacity(0.1))
+                            .background(themeColor.opacity(0.1))
                             .clipShape(RoundedRectangle(cornerRadius: 14))
                         }
                     }

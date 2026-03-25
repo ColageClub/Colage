@@ -54,7 +54,7 @@ fun ColagePrimaryButton(
         enabled = !isDisabled && !isLoading,
         shape = RoundedCornerShape(16.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = ColageColors.Primary,
+            containerColor = LocalThemeColor.current,
             disabledContainerColor = ColageColors.SurfaceElevated
         ),
         contentPadding = PaddingValues(horizontal = 24.dp)
@@ -97,7 +97,7 @@ fun ColageTextField(
             .background(ColageColors.Surface, RoundedCornerShape(16.dp))
             .border(1.dp, ColageColors.Border, RoundedCornerShape(16.dp)),
         textStyle = ColageFonts.Body.copy(color = ColageColors.TextPrimary),
-        cursorBrush = SolidColor(ColageColors.Primary),
+        cursorBrush = SolidColor(LocalThemeColor.current),
         keyboardOptions = KeyboardOptions(
             keyboardType = keyboardType,
             capitalization = capitalization,
@@ -156,7 +156,7 @@ fun OTPCodeField(
                         .background(ColageColors.Surface, RoundedCornerShape(12.dp))
                         .border(
                             width = if (isFilled) 2.dp else 1.dp,
-                            color = if (isFilled) ColageColors.Primary else ColageColors.Border,
+                            color = if (isFilled) LocalThemeColor.current else ColageColors.Border,
                             shape = RoundedCornerShape(12.dp)
                         )
                         .clickable { focusRequester.requestFocus() },
@@ -195,7 +195,7 @@ fun OTPCodeField(
                 color = ColageColors.TextPrimary,
                 textAlign = TextAlign.Center
             ),
-            cursorBrush = SolidColor(ColageColors.Primary),
+            cursorBrush = SolidColor(LocalThemeColor.current),
             singleLine = true,
             decorationBox = { innerTextField ->
                 Box(
@@ -221,7 +221,7 @@ fun AvatarView(
     imageUrl: String?,
     size: Dp,
     modifier: Modifier = Modifier,
-    borderColor: Color = ColageColors.Primary,
+    borderColor: Color = LocalThemeColor.current,
     showBorder: Boolean = true,
     initials: String? = null
 ) {
@@ -258,7 +258,7 @@ fun AvatarView(
                         style = ColageFonts.Body.copy(
                             fontWeight = FontWeight.SemiBold,
                             fontSize = (size.value * 0.35).sp,
-                            color = ColageColors.Primary
+                            color = LocalThemeColor.current
                         )
                     )
                 } else {
@@ -293,7 +293,7 @@ fun OnboardingProgress(
                     .weight(1f)
                     .height(3.dp)
                     .background(
-                        color = if (step <= currentStep) ColageColors.Primary else ColageColors.Border,
+                        color = if (step <= currentStep) LocalThemeColor.current else ColageColors.Border,
                         shape = RoundedCornerShape(2.dp)
                     )
             )

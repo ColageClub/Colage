@@ -16,7 +16,7 @@ struct ARDiscoveryView: View {
             // Simulator fallback — mock AR view
             SimulatedARView(
                 students: students.arFilteredStudents,
-                themeColor: universityService.currentTheme?.primary ?? ColageColors.primary,
+                themeColor: themeColor,
                 onStudentTapped: { student in
                     selectedStudent = student
                 }
@@ -25,7 +25,7 @@ struct ARDiscoveryView: View {
             // Real device — ARKit session
             LiveARView(
                 students: students.arFilteredStudents,
-                themeColor: universityService.currentTheme?.primary ?? ColageColors.primary,
+                themeColor: themeColor,
                 onStudentTapped: { student in
                     selectedStudent = student
                 }
@@ -45,14 +45,14 @@ struct ARDiscoveryView: View {
                         Spacer()
                         Text(students.arDistanceFeet.formattedDistance)
                             .font(ColageFonts.monoSmall)
-                            .foregroundStyle(universityService.currentTheme?.primary ?? ColageColors.primary)
+                            .foregroundStyle(themeColor)
                     }
 
                     Slider(
                         value: $students.arMaxDistance,
                         in: 0...1
                     )
-                    .tint(universityService.currentTheme?.primary ?? ColageColors.primary)
+                    .tint(themeColor)
                 }
                 .padding(.horizontal, 20)
                 .padding(.vertical, 12)

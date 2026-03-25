@@ -25,7 +25,7 @@ import kotlin.math.abs
 @Composable
 fun MiniProfileSheet(
     student: NearbyStudent,
-    themeColor: androidx.compose.ui.graphics.Color = ColageColors.Primary,
+    themeColor: androidx.compose.ui.graphics.Color = LocalThemeColor.current,
     onDismiss: () -> Unit = {}
 ) {
     val scrollState = rememberScrollState()

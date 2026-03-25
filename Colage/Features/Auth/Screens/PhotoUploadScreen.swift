@@ -3,6 +3,7 @@ import PhotosUI
 
 struct PhotoUploadScreen: View {
     let onContinue: () -> Void
+    @Environment(.themeColor) private var themeColor
     @EnvironmentObject var onboardingData: OnboardingData
     @State private var selectedItem: PhotosPickerItem?
     @State private var profileImage: Image?
@@ -40,7 +41,7 @@ struct PhotoUploadScreen: View {
                             .clipShape(Circle())
                             .overlay(
                                 Circle()
-                                    .strokeBorder(ColageColors.primary, lineWidth: 3)
+                                    .strokeBorder(themeColor, lineWidth: 3)
                             )
                     } else {
                         Circle()
@@ -69,7 +70,7 @@ struct PhotoUploadScreen: View {
                                 Spacer()
                                 Image(systemName: "pencil.circle.fill")
                                     .font(.system(size: 32))
-                                    .foregroundStyle(ColageColors.primary)
+                                    .foregroundStyle(themeColor)
                                     .background(Circle().fill(ColageColors.background).frame(width: 28, height: 28))
                             }
                         }
@@ -84,10 +85,10 @@ struct PhotoUploadScreen: View {
                     PhotosPicker(selection: $selectedItem, matching: .images) {
                         Label("Library", systemImage: "photo.on.rectangle")
                             .font(ColageFonts.bodyBold)
-                            .foregroundStyle(ColageColors.primary)
+                            .foregroundStyle(themeColor)
                             .frame(maxWidth: .infinity)
                             .frame(height: 48)
-                            .background(ColageColors.primary.opacity(0.12))
+                            .background(themeColor.opacity(0.12))
                             .clipShape(RoundedRectangle(cornerRadius: 12))
                     }
 
@@ -96,10 +97,10 @@ struct PhotoUploadScreen: View {
                     } label: {
                         Label("Camera", systemImage: "camera")
                             .font(ColageFonts.bodyBold)
-                            .foregroundStyle(ColageColors.primary)
+                            .foregroundStyle(themeColor)
                             .frame(maxWidth: .infinity)
                             .frame(height: 48)
-                            .background(ColageColors.primary.opacity(0.12))
+                            .background(themeColor.opacity(0.12))
                             .clipShape(RoundedRectangle(cornerRadius: 12))
                     }
                 }

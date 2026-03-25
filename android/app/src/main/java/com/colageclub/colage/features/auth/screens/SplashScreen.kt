@@ -13,6 +13,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.colageclub.colage.core.design.ColageColors
+import com.colageclub.colage.core.design.LocalThemeColor
 import com.colageclub.colage.core.design.ColageFonts
 
 @Composable
@@ -31,7 +32,7 @@ fun SplashScreen() {
                 modifier = Modifier
                     .size(80.dp)
                     .clip(CircleShape)
-                    .background(ColageColors.Primary.copy(alpha = 0.15f)),
+                    .background(LocalThemeColor.current.copy(alpha = 0.15f)),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
@@ -39,12 +40,12 @@ fun SplashScreen() {
                     style = ColageFonts.Title.copy(
                         fontWeight = FontWeight.Bold,
                         fontSize = 40.sp,
-                        color = ColageColors.Primary
+                        color = LocalThemeColor.current
                     )
                 )
             }
             CircularProgressIndicator(
-                color = ColageColors.Primary,
+                color = LocalThemeColor.current,
                 strokeWidth = 2.dp,
                 modifier = Modifier.size(24.dp)
             )

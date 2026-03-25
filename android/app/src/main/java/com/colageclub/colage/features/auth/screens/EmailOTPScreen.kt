@@ -60,7 +60,7 @@ fun EmailOTPScreen(
                 )
                 Text(
                     text = onboardingData.email,
-                    style = ColageFonts.BodyBold.copy(color = ColageColors.Primary)
+                    style = ColageFonts.BodyBold.copy(color = LocalThemeColor.current)
                 )
             }
 
@@ -100,7 +100,7 @@ fun EmailOTPScreen(
             ) {
                 Text(
                     text = if (canResend) "Resend code" else "Resend in ${resendCountdown}s",
-                    style = if (canResend) ColageFonts.BodyBold.copy(color = ColageColors.Primary)
+                    style = if (canResend) ColageFonts.BodyBold.copy(color = LocalThemeColor.current)
                            else ColageFonts.Body.copy(color = ColageColors.TextTertiary)
                 )
             }
@@ -109,7 +109,7 @@ fun EmailOTPScreen(
 
             if (isLoading) {
                 CircularProgressIndicator(
-                    color = ColageColors.Primary,
+                    color = LocalThemeColor.current,
                     modifier = Modifier
                         .padding(bottom = 40.dp)
                         .size(28.dp)

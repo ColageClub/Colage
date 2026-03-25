@@ -4,6 +4,7 @@ import SwiftUI
 struct FullProfileView: View {
     let student: NearbyStudent
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.themeColor) private var themeColor
 
     var body: some View {
         ZStack {
@@ -31,10 +32,10 @@ struct FullProfileView: View {
                                 Text(student.profile.universityDomain.replacingOccurrences(of: ".edu", with: "").uppercased())
                                     .font(ColageFonts.captionBold)
                             }
-                            .foregroundStyle(ColageColors.primary)
+                            .foregroundStyle(themeColor)
                             .padding(.horizontal, 10)
                             .padding(.vertical, 5)
-                            .background(ColageColors.primary.opacity(0.12))
+                            .background(themeColor.opacity(0.12))
                             .clipShape(Capsule())
 
                             // Distance
@@ -86,9 +87,9 @@ struct FullProfileView: View {
                                     HStack(spacing: 14) {
                                         Image(systemName: link.platform.iconName)
                                             .font(.system(size: 18))
-                                            .foregroundStyle(ColageColors.primary)
+                                            .foregroundStyle(themeColor)
                                             .frame(width: 40, height: 40)
-                                            .background(ColageColors.primary.opacity(0.12))
+                                            .background(themeColor.opacity(0.12))
                                             .clipShape(RoundedRectangle(cornerRadius: 10))
 
                                         VStack(alignment: .leading, spacing: 2) {

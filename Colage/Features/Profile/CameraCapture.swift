@@ -3,6 +3,7 @@ import UIKit
 
 /// Camera capture view for profile photos
 struct CameraCaptureView: UIViewControllerRepresentable {
+    @Environment(.themeColor) private var themeColor
     @Binding var capturedImage: UIImage?
     @Environment(\.dismiss) private var dismiss
 
@@ -110,7 +111,7 @@ struct CircularCropView: View {
                         dismiss()
                     }
                     .font(ColageFonts.bodyBold)
-                    .foregroundStyle(ColageColors.primary)
+                    .foregroundStyle(themeColor)
                 }
                 .padding(.bottom, 50)
             }

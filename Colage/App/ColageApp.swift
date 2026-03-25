@@ -14,6 +14,8 @@ struct ColageApp: App {
                 .environmentObject(authService)
                 .environmentObject(locationService)
                 .environmentObject(universityService)
+                .environment(\.themeColor, universityService.currentTheme?.primary ?? ColageColors.primary)
+                .environment(\.themeAccent, universityService.currentTheme?.accent ?? ColageColors.secondary)
                 .preferredColorScheme(.dark)
         }
     }

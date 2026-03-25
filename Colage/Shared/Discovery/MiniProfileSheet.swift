@@ -3,11 +3,12 @@ import SwiftUI
 /// Mini profile sheet — appears as a 35% bottom sheet, expandable to full
 struct MiniProfileSheet: View {
     let student: NearbyStudent
+    @Environment(.themeColor) private var themeColor
     @EnvironmentObject var universityService: UniversityService
     @State private var isFullExpanded = false
 
     private var themeColor: Color {
-        universityService.currentTheme?.primary ?? ColageColors.primary
+        themeColor
     }
 
     var body: some View {

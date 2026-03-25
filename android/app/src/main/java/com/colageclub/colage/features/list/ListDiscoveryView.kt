@@ -28,7 +28,7 @@ import kotlin.math.abs
 fun ListDiscoveryView(
     viewModel: NearbyStudentsViewModel,
     currentFloor: Int,
-    themeColor: Color = ColageColors.Primary
+    themeColor: Color = LocalThemeColor.current
 ) {
     val maxDistance by viewModel.maxDistance.collectAsState()
     val filterFloor by viewModel.filterFloor.collectAsState()
@@ -177,12 +177,12 @@ fun FloorChip(label: String, isSelected: Boolean, onClick: () -> Unit) {
         ),
         modifier = Modifier
             .background(
-                if (isSelected) ColageColors.Primary.copy(alpha = 0.2f) else ColageColors.Surface,
+                if (isSelected) LocalThemeColor.current.copy(alpha = 0.2f) else ColageColors.Surface,
                 RoundedCornerShape(50)
             )
             .border(
                 1.dp,
-                if (isSelected) ColageColors.Primary.copy(alpha = 0.4f) else ColageColors.Border,
+                if (isSelected) LocalThemeColor.current.copy(alpha = 0.4f) else ColageColors.Border,
                 RoundedCornerShape(50)
             )
             .clickable(onClick = onClick)

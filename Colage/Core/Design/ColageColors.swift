@@ -1,5 +1,27 @@
 import SwiftUI
 
+// MARK: - Theme Environment Key
+/// Provides the active university theme color throughout the view hierarchy.
+/// Every view should use `@Environment(\.themeColor)` instead of `ColageColors.primary`.
+private struct ThemeColorKey: EnvironmentKey {
+    static let defaultValue: Color = Color(hex: "A51C30") // Crimson fallback
+}
+
+private struct ThemeAccentKey: EnvironmentKey {
+    static let defaultValue: Color = Color(hex: "00CEC9") // Teal fallback
+}
+
+extension EnvironmentValues {
+    var themeColor: Color {
+        get { self[ThemeColorKey.self] }
+        set { self[ThemeColorKey.self] = newValue }
+    }
+    var themeAccent: Color {
+        get { self[ThemeAccentKey.self] }
+        set { self[ThemeAccentKey.self] = newValue }
+    }
+}
+
 /// Colage color system
 enum ColageColors {
     // MARK: - Base

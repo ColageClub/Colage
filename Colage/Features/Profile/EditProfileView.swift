@@ -3,6 +3,7 @@ import PhotosUI
 
 /// Edit profile screen — accessible from own profile
 struct EditProfileView: View {
+    @Environment(.themeColor) private var themeColor
     @EnvironmentObject var authService: AuthService
     @Environment(\.dismiss) private var dismiss
     @State private var displayName: String
@@ -56,12 +57,12 @@ struct EditProfileView: View {
                             PhotosPicker(selection: $selectedItem, matching: .images) {
                                 Text("Change Photo")
                                     .font(ColageFonts.captionBold)
-                                    .foregroundStyle(ColageColors.primary)
+                                    .foregroundStyle(themeColor)
                             }
 
                             Button("Take Photo") { showCamera = true }
                                 .font(ColageFonts.captionBold)
-                                .foregroundStyle(ColageColors.primary)
+                                .foregroundStyle(themeColor)
                         }
 
                         // Fields
@@ -117,7 +118,7 @@ struct EditProfileView: View {
                                 HStack(spacing: 12) {
                                     Image(systemName: platform.iconName)
                                         .font(.system(size: 16))
-                                        .foregroundStyle(ColageColors.primary)
+                                        .foregroundStyle(themeColor)
                                         .frame(width: 32)
 
                                     TextField(platform.displayName, text: Binding(

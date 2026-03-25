@@ -82,7 +82,7 @@ fun PhotoUploadScreen(
                         modifier = Modifier
                             .fillMaxSize()
                             .clip(CircleShape)
-                            .border(3.dp, ColageColors.Primary, CircleShape)
+                            .border(3.dp, LocalThemeColor.current, CircleShape)
                     )
                     // Edit button overlay
                     Box(
@@ -90,7 +90,7 @@ fun PhotoUploadScreen(
                             .align(Alignment.BottomEnd)
                             .size(36.dp)
                             .clip(CircleShape)
-                            .background(ColageColors.Primary),
+                            .background(LocalThemeColor.current),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
@@ -146,8 +146,8 @@ fun PhotoUploadScreen(
                         .height(48.dp),
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = ColageColors.Primary,
-                        containerColor = ColageColors.Primary.copy(alpha = 0.12f)
+                        contentColor = LocalThemeColor.current,
+                        containerColor = LocalThemeColor.current.copy(alpha = 0.12f)
                     ),
                     border = null
                 ) {
@@ -167,8 +167,8 @@ fun PhotoUploadScreen(
                         .height(48.dp),
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = ColageColors.Primary,
-                        containerColor = ColageColors.Primary.copy(alpha = 0.12f)
+                        contentColor = LocalThemeColor.current,
+                        containerColor = LocalThemeColor.current.copy(alpha = 0.12f)
                     ),
                     border = null
                 ) {

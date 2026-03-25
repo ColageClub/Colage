@@ -162,13 +162,13 @@ private fun SocialLinkRow(
                     modifier = Modifier
                         .size(40.dp)
                         .clip(RoundedCornerShape(10.dp))
-                        .background(ColageColors.Primary.copy(alpha = 0.12f)),
+                        .background(LocalThemeColor.current.copy(alpha = 0.12f)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = platformIcon(platform),
                         contentDescription = null,
-                        tint = ColageColors.Primary,
+                        tint = LocalThemeColor.current,
                         modifier = Modifier.size(20.dp)
                     )
                 }

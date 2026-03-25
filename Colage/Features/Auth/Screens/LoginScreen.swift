@@ -2,6 +2,7 @@ import SwiftUI
 
 /// Login screen — email + OTP verification for existing accounts
 struct LoginScreen: View {
+    @Environment(.themeColor) private var themeColor
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var authService: AuthService
     @EnvironmentObject var universityService: UniversityService
@@ -34,7 +35,7 @@ struct LoginScreen: View {
                     VStack(spacing: 12) {
                         Image(systemName: step == .email ? "person.crop.circle" : "lock.shield")
                             .font(.system(size: 44))
-                            .foregroundStyle(ColageColors.primary)
+                            .foregroundStyle(themeColor)
                             .padding(.bottom, 8)
 
                         Text(step == .email ? "Welcome back" : "Enter your code")
@@ -50,7 +51,7 @@ struct LoginScreen: View {
                         if step == .otp {
                             Text(email)
                                 .font(ColageFonts.bodyBold)
-                                .foregroundStyle(ColageColors.primary)
+                                .foregroundStyle(themeColor)
                         }
                     }
                     .padding(.top, 48)
@@ -86,7 +87,7 @@ struct LoginScreen: View {
                         .padding(.bottom, 40)
                     } else if isLoading {
                         ProgressView()
-                            .tint(ColageColors.primary)
+                            .tint(themeColor)
                             .padding(.bottom, 40)
                     }
                 }
@@ -163,7 +164,7 @@ struct LoginScreen: View {
                 if canResend {
                     Text("Resend code")
                         .font(ColageFonts.bodyBold)
-                        .foregroundStyle(ColageColors.primary)
+                        .foregroundStyle(themeColor)
                 } else {
                     Text("Resend in \(resendCountdown)s")
                         .font(ColageFonts.body)

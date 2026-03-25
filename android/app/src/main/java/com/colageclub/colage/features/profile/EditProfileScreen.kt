@@ -93,7 +93,7 @@ fun EditProfileScreen(
                         PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
                     )
                 }) {
-                    Text("Change Photo", style = ColageFonts.CaptionBold.copy(color = ColageColors.Primary))
+                    Text("Change Photo", style = ColageFonts.CaptionBold.copy(color = LocalThemeColor.current))
                 }
 
                 Spacer(Modifier.height(24.dp))
@@ -138,11 +138,11 @@ fun EditProfileScreen(
                             minLines = 3,
                             maxLines = 5,
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = ColageColors.Primary,
+                                focusedBorderColor = LocalThemeColor.current,
                                 unfocusedBorderColor = ColageColors.Border,
                                 focusedContainerColor = ColageColors.Surface,
                                 unfocusedContainerColor = ColageColors.Surface,
-                                cursorColor = ColageColors.Primary
+                                cursorColor = LocalThemeColor.current
                             ),
                             shape = RoundedCornerShape(16.dp)
                         )
@@ -180,7 +180,7 @@ fun EditProfileScreen(
                             Icon(
                                 platform.icon(),
                                 null,
-                                tint = ColageColors.Primary,
+                                tint = LocalThemeColor.current,
                                 modifier = Modifier.size(16.dp)
                             )
                             OutlinedTextField(
@@ -195,7 +195,7 @@ fun EditProfileScreen(
                                     unfocusedBorderColor = Color.Transparent,
                                     focusedContainerColor = Color.Transparent,
                                     unfocusedContainerColor = Color.Transparent,
-                                    cursorColor = ColageColors.Primary
+                                    cursorColor = LocalThemeColor.current
                                 )
                             )
                         }

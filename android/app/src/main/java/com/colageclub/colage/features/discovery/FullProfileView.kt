@@ -65,7 +65,7 @@ fun FullProfileView(
                 // University badge
                 Row(
                     modifier = Modifier
-                        .background(ColageColors.Primary.copy(alpha = 0.12f), RoundedCornerShape(50))
+                        .background(LocalThemeColor.current.copy(alpha = 0.12f), RoundedCornerShape(50))
                         .padding(horizontal = 10.dp, vertical = 5.dp),
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
                     verticalAlignment = Alignment.CenterVertically
@@ -73,12 +73,12 @@ fun FullProfileView(
                     Icon(
                         Icons.Default.School,
                         contentDescription = null,
-                        tint = ColageColors.Primary,
+                        tint = LocalThemeColor.current,
                         modifier = Modifier.size(12.dp)
                     )
                     Text(
                         text = student.profile.universityDomain.removeSuffix(".edu").uppercase(),
-                        style = ColageFonts.CaptionBold.copy(color = ColageColors.Primary)
+                        style = ColageFonts.CaptionBold.copy(color = LocalThemeColor.current)
                     )
                 }
 
@@ -155,13 +155,13 @@ fun FullProfileView(
                             Box(
                                 modifier = Modifier
                                     .size(40.dp)
-                                    .background(ColageColors.Primary.copy(alpha = 0.12f), RoundedCornerShape(10.dp)),
+                                    .background(LocalThemeColor.current.copy(alpha = 0.12f), RoundedCornerShape(10.dp)),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
                                     link.platform.icon(),
                                     contentDescription = null,
-                                    tint = ColageColors.Primary,
+                                    tint = LocalThemeColor.current,
                                     modifier = Modifier.size(18.dp)
                                 )
                             }
