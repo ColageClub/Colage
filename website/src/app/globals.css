@@ -58,3 +58,9 @@ body {
 ::-webkit-scrollbar { width: 8px; }
 ::-webkit-scrollbar-track { background: #F9F6F2; }
 ::-webkit-scrollbar-thumb { background: #A51C30; border-radius: 4px; }
+
+/* Ads page responsive */
+.ads-map-grid { flex-wrap: wrap; }
+@media (max-width: 680px) {
+  .ads-map-grid { flex-direction: column !important; align-items: center !important; }
+}
