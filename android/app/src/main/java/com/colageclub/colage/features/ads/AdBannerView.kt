@@ -60,53 +60,53 @@ fun AdBannerView() {
                     .offset(x = (-10).dp)
                     .alpha(0.04f)
             )
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 14.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            // Emoji logo
-            Box(
+            Row(
                 modifier = Modifier
-                    .size(44.dp)
-                    .background(LocalThemeColor.current.copy(alpha = 0.15f), RoundedCornerShape(12.dp)),
-                contentAlignment = Alignment.Center
+                    .fillMaxWidth()
+                    .padding(horizontal = 14.dp, vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Text(ad.logoEmoji, fontSize = 22.sp)
-            }
-
-            // Info
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    ad.businessName,
-                    style = ColageFonts.BodyBold.copy(color = ColageColors.TextPrimary),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Text(
-                    ad.deal,
-                    style = ColageFonts.Caption.copy(color = ColageColors.Online),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-
-            // Distance + Ad badge
-            Column(horizontalAlignment = Alignment.End) {
-                Text(ad.distance, style = ColageFonts.MonoSmall.copy(color = ColageColors.TextTertiary))
-                Text(
-                    "Ad",
-                    fontSize = 8.sp,
-                    color = ColageColors.TextTertiary,
+                // Emoji logo
+                Box(
                     modifier = Modifier
-                        .background(ColageColors.TextTertiary.copy(alpha = 0.15f), RoundedCornerShape(50))
-                        .padding(horizontal = 6.dp, vertical = 2.dp)
-                )
+                        .size(44.dp)
+                        .background(LocalThemeColor.current.copy(alpha = 0.15f), RoundedCornerShape(12.dp)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(ad.logoEmoji, fontSize = 22.sp)
+                }
+
+                // Info
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        ad.businessName,
+                        style = ColageFonts.BodyBold.copy(color = ColageColors.TextPrimary),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Text(
+                        ad.deal,
+                        style = ColageFonts.Caption.copy(color = ColageColors.Online),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+
+                // Distance + Ad badge
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(ad.distance, style = ColageFonts.MonoSmall.copy(color = ColageColors.TextTertiary))
+                    Text(
+                        "Ad",
+                        fontSize = 8.sp,
+                        color = ColageColors.TextTertiary,
+                        modifier = Modifier
+                            .background(ColageColors.TextTertiary.copy(alpha = 0.15f), RoundedCornerShape(50))
+                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                    )
+                }
             }
         }
-        } // Close Box wrapper
 
         if (showDetail) {
             AdDetailSheet(ad = ad, onDismiss = { showDetail = false })

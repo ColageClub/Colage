@@ -4,9 +4,6 @@ import com.colageclub.colage.BuildConfig
 import com.colageclub.colage.core.networking.ApiClient
 import com.colageclub.colage.data.models.AdData
 import com.colageclub.colage.data.models.MockAds
-import com.google.gson.Gson
-import com.google.gson.annotations.SerializedName
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -25,7 +22,6 @@ class AdService @Inject constructor(
 
     private var ads = mutableListOf<AdData>()
     private var currentIndex = 0
-    private val gson = Gson()
 
     /** Fetch an ad from the server for the given school */
     suspend fun fetchAd(school: String, studentId: String) {
@@ -37,10 +33,12 @@ class AdService @Inject constructor(
 
         _isLoading.value = true
         try {
-            val response = apiClient.get<AdServeResponse>(
-                "api/ads/serve?school=$school&student_id=$studentId"
+            val response = apiClient.request(
+                method = "GET",
+                path = "/api/ads/serve?school=$school&student_id=$studentId",
+                responseClass = AdServeResponse::class.java
             )
-            response?.ad?.let { ad ->
+            response.ad?.let { ad ->
                 _currentAd.value = ad
                 if (ads.none { it.id == ad.id }) ads.add(ad)
             }
@@ -57,9 +55,11 @@ class AdService @Inject constructor(
     suspend fun trackTap(adId: String, studentId: String) {
         if (BuildConfig.DEV_MODE) return
         try {
-            apiClient.post<Unit>(
-                "api/ads/serve",
-                mapOf("adId" to adId, "studentId" to studentId, "action" to "tap")
+            apiClient.request(
+                method = "POST",
+                path = "/api/ads/serve",
+                body = mapOf("adId" to adId, "studentId" to studentId, "action" to "tap"),
+                responseClass = Map::class.java
             )
         } catch (_: Exception) {}
     }
@@ -72,6 +72,6 @@ class AdService @Inject constructor(
     }
 
     data class AdServeResponse(
-        @SerializedName("ad") val ad: AdData?
+        val ad: AdData?
     )
 }
