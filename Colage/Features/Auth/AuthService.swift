@@ -39,7 +39,8 @@ class AuthService: ObservableObject {
 
         do {
             struct EmailRequest: Encodable { let email: String }
-            let _: [String: String] = try await api.request(
+            struct EmailResponse: Decodable { let message: String; let existing: Bool? }
+            let _: EmailResponse = try await api.request(
                 method: "POST",
                 path: "/auth/email/verify",
                 body: EmailRequest(email: email.lowercased())
