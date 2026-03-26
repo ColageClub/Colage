@@ -28,12 +28,12 @@ fun MapDiscoveryView(
     students: List<NearbyStudent>,
     themeColor: Color = LocalThemeColor.current,
     isVisible: Boolean = true,
+    currentUserId: String? = null,
     onStudentTapped: (NearbyStudent) -> Unit = {}
 ) {
     var selectedStudent by remember { mutableStateOf<NearbyStudent?>(null) }
-    // Grey when invisible, theme color when visible
-    val puckColor = if (isVisible) themeColor else ColageColors.Offline
-    val themeArgb = puckColor.toArgb()
+    val themeArgb = themeColor.toArgb()
+    val puckArgb = if (isVisible) themeArgb else ColageColors.Offline.toArgb()
 
     Box(modifier = Modifier.fillMaxSize()) {
         AndroidView(
@@ -61,9 +61,11 @@ fun MapDiscoveryView(
 
                 val studentMap = mutableMapOf<String, NearbyStudent>()
                 students.forEach { student ->
+                    val isSelf = currentUserId != null && student.profile.userId == currentUserId
+                    val dotColor = if (isSelf) puckArgb else themeArgb
                     val bitmap = createAvatarBitmap(
                         initials = student.profile.displayName.initials(),
-                        borderColor = themeArgb,
+                        borderColor = dotColor,
                         size = 28
                     )
                     val options = PointAnnotationOptions()

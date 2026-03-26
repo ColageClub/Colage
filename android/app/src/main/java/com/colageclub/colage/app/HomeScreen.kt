@@ -76,7 +76,8 @@ fun HomeScreen(appViewModel: AppViewModel) {
                         MapDiscoveryView(
                             students = mapStudents,
                             themeColor = themeColor,
-                            isVisible = isVisible
+                            isVisible = isVisible,
+                            currentUserId = currentProfile?.userId
                         )
                     }
                     DiscoveryMode.LIST -> ListDiscoveryView(
