@@ -12,6 +12,7 @@ struct EditProfileView: View {
     @State private var socialLinks: [SocialPlatform: String]
     @State private var selectedItem: PhotosPickerItem?
     @State private var profileImage: Image?
+    @State private var profileUIImage: UIImage?
     @State private var showCamera = false
     @State private var capturedImage: UIImage?
     @State private var isSaving = false
@@ -177,12 +178,14 @@ struct EditProfileView: View {
                 Task {
                     if let data = try? await newItem?.loadTransferable(type: Data.self),
                        let uiImage = UIImage(data: data) {
+                        profileUIImage = uiImage
                         profileImage = Image(uiImage: uiImage)
                     }
                 }
             }
             .onChange(of: capturedImage) { _, newImage in
                 if let newImage {
+                    profileUIImage = newImage
                     profileImage = Image(uiImage: newImage)
                 }
             }
@@ -200,7 +203,8 @@ struct EditProfileView: View {
             name: displayName,
             bio: bio.isEmpty ? nil : bio,
             major: major.isEmpty ? nil : major,
-            socialLinks: links
+            socialLinks: links,
+            photo: profileUIImage
         )
 
         isSaving = false
