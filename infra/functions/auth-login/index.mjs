@@ -3,17 +3,27 @@ import {
   AdminInitiateAuthCommand,
   AdminSetUserPasswordCommand,
 } from '@aws-sdk/client-cognito-identity-provider';
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import { DynamoDBDocumentClient, UpdateCommand } from '@aws-sdk/lib-dynamodb';
 
 const cognito = new CognitoIdentityProviderClient({});
+const dynamoClient = new DynamoDBClient({});
+const docClient = DynamoDBDocumentClient.from(dynamoClient);
+
 const USER_POOL_ID = process.env.USER_POOL_ID;
 const CLIENT_ID = process.env.USER_POOL_CLIENT_ID;
+const USERS_TABLE = process.env.USERS_TABLE_NAME || 'colage-users-dev';
 
 export const handler = async (event) => {
   try {
-    const { email } = JSON.parse(event.body);
+    const { email, deviceId } = JSON.parse(event.body);
 
     if (!email || !email.includes('@')) {
       return response(400, { error: 'Email required' });
+    }
+
+    if (!deviceId) {
+      return response(400, { error: 'Device ID required' });
     }
 
     const normalizedEmail = email.toLowerCase();
@@ -43,6 +53,23 @@ export const handler = async (event) => {
 
     if (!auth.AuthenticationResult) {
       return response(401, { error: 'Authentication failed' });
+    }
+
+    // Store device ID for single-device enforcement
+    try {
+      await docClient.send(new UpdateCommand({
+        TableName: USERS_TABLE,
+        Key: { email: normalizedEmail },
+        UpdateExpression: 'SET deviceId = :deviceId, updatedAt = :timestamp',
+        ExpressionAttributeValues: {
+          ':deviceId': deviceId,
+          ':timestamp': new Date().toISOString(),
+        },
+        ReturnValues: 'NONE',
+      }));
+    } catch (dbError) {
+      console.warn('Failed to store device ID:', dbError);
+      // Continue even if device ID storage fails
     }
 
     return response(200, {

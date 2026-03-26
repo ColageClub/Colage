@@ -37,12 +37,6 @@ class AuthService: ObservableObject {
         isLoading = true
         defer { isLoading = false }
 
-        if AppState.devMode {
-            // Dev mode: instant success
-            try? await Task.sleep(for: .seconds(1))
-            return true
-        }
-
         do {
             struct EmailRequest: Encodable { let email: String }
             let _: [String: String] = try await api.request(
@@ -61,17 +55,6 @@ class AuthService: ObservableObject {
     func confirmEmailOTP(code: String) async -> Bool {
         isLoading = true
         defer { isLoading = false }
-
-        if AppState.devMode {
-            // Dev mode: any 6-digit code works
-            try? await Task.sleep(for: .seconds(0.5))
-            if code.count == 6 {
-                emailVerified = true
-                return true
-            }
-            errorMessage = "Invalid code"
-            return false
-        }
 
         do {
             struct ConfirmRequest: Encodable { let email: String; let code: String }
@@ -99,11 +82,6 @@ class AuthService: ObservableObject {
         isLoading = true
         defer { isLoading = false }
 
-        if AppState.devMode {
-            try? await Task.sleep(for: .seconds(1))
-            return true
-        }
-
         do {
             struct PhoneRequest: Encodable { let phone: String; let email: String }
             let _: [String: String] = try await api.request(
@@ -122,16 +100,6 @@ class AuthService: ObservableObject {
     func confirmPhoneOTP(code: String) async -> Bool {
         isLoading = true
         defer { isLoading = false }
-
-        if AppState.devMode {
-            try? await Task.sleep(for: .seconds(0.5))
-            if code.count == 6 {
-                phoneVerified = true
-                return true
-            }
-            errorMessage = "Invalid code"
-            return false
-        }
 
         do {
             struct PhoneConfirm: Encodable { let phone: String; let code: String }
@@ -153,7 +121,7 @@ class AuthService: ObservableObject {
     /// The server type selected during onboarding (set before profile creation)
     var selectedServerType: ServerType = .student
 
-    func createDevProfile(name: String, bio: String?, major: String?, socialLinks: [SocialLink]) {
+    func createProfile(name: String, bio: String?, major: String?, socialLinks: [SocialLink]) {
         let domain = extractDomain(from: enteredEmail) ?? "umich.edu"
         let profile = UserProfile(
             userId: UUID().uuidString,
@@ -176,71 +144,61 @@ class AuthService: ObservableObject {
             UserDefaults.standard.set(data, forKey: "dev_profile")
         }
 
-        // Also create on server (fire-and-forget)
-        if !AppState.devMode {
-            Task {
-                struct CreateProfileRequest: Encodable {
-                    let email: String
-                    let displayName: String
-                    let bio: String?
-                    let major: String?
-                    let socialLinks: [SocialLink]
-                    let universityDomain: String
-                }
-                struct CreateProfileResponse: Decodable {
-                    let profile: ServerProfile
-                    struct ServerProfile: Decodable { let userId: String }
-                }
-                do {
-                    let result: CreateProfileResponse = try await api.request(
-                        method: "POST",
-                        path: "/users",
-                        body: CreateProfileRequest(
-                            email: enteredEmail.lowercased(),
-                            displayName: name,
-                            bio: bio,
-                            major: major,
-                            socialLinks: socialLinks,
-                            universityDomain: domain
-                        )
-                    )
-                    // Update local profile with server-assigned userId
-                    var updated = profile
-                    updated = UserProfile(
-                        userId: result.profile.userId,
-                        universityDomain: domain,
+        // Create on server
+        Task {
+            struct CreateProfileRequest: Encodable {
+                let email: String
+                let displayName: String
+                let bio: String?
+                let major: String?
+                let socialLinks: [SocialLink]
+                let universityDomain: String
+            }
+            struct CreateProfileResponse: Decodable {
+                let profile: ServerProfile
+                struct ServerProfile: Decodable { let userId: String }
+            }
+            do {
+                let result: CreateProfileResponse = try await api.request(
+                    method: "POST",
+                    path: "/users",
+                    body: CreateProfileRequest(
+                        email: enteredEmail.lowercased(),
                         displayName: name,
-                        profilePhotoURL: nil,
                         bio: bio,
                         major: major,
                         socialLinks: socialLinks,
-                        isVisible: true,
-                        serverType: self.selectedServerType,
-                        createdAt: Date(),
-                        updatedAt: Date()
+                        universityDomain: domain
                     )
-                    await MainActor.run {
-                        UserProfile.current = updated
-                        if let data = try? JSONEncoder().encode(updated) {
-                            UserDefaults.standard.set(data, forKey: "dev_profile")
-                        }
+                )
+                // Update local profile with server-assigned userId
+                var updated = profile
+                updated = UserProfile(
+                    userId: result.profile.userId,
+                    universityDomain: domain,
+                    displayName: name,
+                    profilePhotoURL: nil,
+                    bio: bio,
+                    major: major,
+                    socialLinks: socialLinks,
+                    isVisible: true,
+                    serverType: self.selectedServerType,
+                    createdAt: Date(),
+                    updatedAt: Date()
+                )
+                await MainActor.run {
+                    UserProfile.current = updated
+                    if let data = try? JSONEncoder().encode(updated) {
+                        UserDefaults.standard.set(data, forKey: "dev_profile")
                     }
-                } catch {
-                    print("Failed to create server profile: \(error)")
                 }
+            } catch {
+                print("Failed to create server profile: \(error)")
             }
         }
     }
 
-    /// Load dev profile from storage
-    func loadDevProfile() -> UserProfile? {
-        guard let data = UserDefaults.standard.data(forKey: "dev_profile"),
-              let profile = try? JSONDecoder().decode(UserProfile.self, from: data) else {
-            return nil
-        }
-        UserProfile.current = profile
-        return profile
-    }
+
 
     // MARK: - Login (existing accounts)
 
@@ -250,49 +208,14 @@ class AuthService: ObservableObject {
         isLoading = true
         defer { isLoading = false }
 
-        if AppState.devMode {
-            // Dev mode: check if a profile exists for this email
-            try? await Task.sleep(for: .seconds(0.5))
-            // In dev, any .edu email "exists"
-            return true
-        }
-
-        // TODO: POST /auth/login — triggers Cognito to send OTP
-        // Should return 404 if user doesn't exist
-        return false
+        // Use the email verify endpoint to send OTP for existing users
+        return await sendEmailOTP(email: email)
     }
 
     /// Confirm login OTP and restore session
     func confirmLoginOTP(email: String, code: String) async -> Bool {
         isLoading = true
         defer { isLoading = false }
-
-        if AppState.devMode {
-            try? await Task.sleep(for: .seconds(0.5))
-            if code.count == 6 {
-                emailVerified = true
-                phoneVerified = true
-
-                // Restore or create dev profile
-                if let existing = loadDevProfile() {
-                    UserProfile.current = existing
-                } else {
-                    // No stored profile — create a basic one
-                    let domain = extractDomain(from: email) ?? "umich.edu"
-                    createDevProfile(
-                        name: email.components(separatedBy: "@").first?.capitalized ?? "Student",
-                        bio: nil,
-                        major: nil,
-                        socialLinks: []
-                    )
-                }
-
-                UserDefaults.standard.set(true, forKey: "dev_onboarding_complete")
-                return true
-            }
-            errorMessage = "Invalid code"
-            return false
-        }
 
         do {
             struct ConfirmRequest: Encodable { let email: String; let code: String }
@@ -328,11 +251,17 @@ class AuthService: ObservableObject {
     /// Authenticate with Cognito and store tokens in Keychain
     func fetchAndStoreTokens() async {
         do {
-            struct LoginRequest: Encodable { let email: String }
+            struct LoginRequest: Encodable { 
+                let email: String 
+                let deviceId: String
+            }
             let tokens: TokenResponse = try await api.request(
                 method: "POST",
                 path: "/auth/login",
-                body: LoginRequest(email: enteredEmail.lowercased())
+                body: LoginRequest(
+                    email: enteredEmail.lowercased(),
+                    deviceId: APIClient.deviceId()
+                )
             )
             KeychainWrapper.set(key: "access_token", value: tokens.accessToken)
             KeychainWrapper.set(key: "id_token", value: tokens.idToken)

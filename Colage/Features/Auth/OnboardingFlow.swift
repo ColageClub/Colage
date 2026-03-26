@@ -38,11 +38,11 @@ struct OnboardingFlow: View {
         case .emailOTP:
             EmailOTPScreen(onVerified: { path.append(OnboardingStep.serverType) })
         case .serverType:
-            ServerTypeScreen(onContinue: { path.append(OnboardingStep.phone) })
+            ServerTypeScreen(onContinue: { path.append(OnboardingStep.photo) })
         case .phone:
-            PhoneEntryScreen(onContinue: { path.append(OnboardingStep.phoneOTP) })
+            EmptyView() // No longer used
         case .phoneOTP:
-            PhoneOTPScreen(onVerified: { path.append(OnboardingStep.photo) })
+            EmptyView() // No longer used
         case .photo:
             PhotoUploadScreen(onContinue: { path.append(OnboardingStep.info) })
         case .info:
@@ -60,7 +60,7 @@ struct OnboardingFlow: View {
                     return SocialLink(platform: platform, handle: handle)
                 }
                 authService.selectedServerType = onboardingData.serverType
-                authService.createDevProfile(
+                authService.createProfile(
                     name: onboardingData.displayName,
                     bio: onboardingData.bio.isEmpty ? nil : onboardingData.bio,
                     major: onboardingData.major.isEmpty ? nil : onboardingData.major,

@@ -136,15 +136,7 @@ struct LoginScreen: View {
                 .transition(.opacity.combined(with: .move(edge: .top)))
             }
 
-            if AppState.devMode {
-                HStack(spacing: 6) {
-                    Image(systemName: "hammer.fill")
-                    Text("Dev mode — any 6-digit code will work")
-                }
-                .font(ColageFonts.caption)
-                .foregroundStyle(ColageColors.warning)
-                .padding(.top, 8)
-            }
+
         }
         .animation(.easeInOut(duration: 0.2), value: isValidEmail)
     }
@@ -193,21 +185,8 @@ struct LoginScreen: View {
             await MainActor.run {
                 isLoading = false
                 if success {
-                    if AppState.devMode {
-                        // Dev mode: skip OTP, log in directly
-                        Task {
-                            let loginSuccess = await authService.confirmLoginOTP(email: email, code: "000000")
-                            await MainActor.run {
-                                if loginSuccess {
-                                    dismiss()
-                                    appState.authState = .authenticated
-                                }
-                            }
-                        }
-                    } else {
-                        step = .otp
-                        startCountdown()
-                    }
+                    step = .otp
+                    startCountdown()
                 } else {
                     errorMessage = authService.errorMessage ?? "Failed to send code"
                 }

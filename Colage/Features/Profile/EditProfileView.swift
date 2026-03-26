@@ -196,7 +196,7 @@ struct EditProfileView: View {
             return SocialLink(platform: platform, handle: handle)
         }
 
-        authService.createDevProfile(
+        authService.createProfile(
             name: displayName,
             bio: bio.isEmpty ? nil : bio,
             major: major.isEmpty ? nil : major,

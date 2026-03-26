@@ -30,28 +30,16 @@ class AppState: ObservableObject {
     }()
 
     func checkExistingSession() {
-        if AppState.devMode {
-            // In dev mode, check if we have a stored dev profile
-            if UserDefaults.standard.bool(forKey: "dev_onboarding_complete") {
-                if let data = UserDefaults.standard.data(forKey: "dev_profile"),
-                   let profile = try? JSONDecoder().decode(UserProfile.self, from: data) {
-                    UserProfile.current = profile
-                }
-                authState = .authenticated
-            } else {
-                authState = .onboarding
-            }
+        // Check for stored profile and Keychain tokens
+        if let data = UserDefaults.standard.data(forKey: "dev_profile"),
+           let profile = try? JSONDecoder().decode(UserProfile.self, from: data),
+           KeychainWrapper.get(key: "access_token") != nil {
+            UserProfile.current = profile
+            authState = .authenticated
+        } else if KeychainWrapper.get(key: "access_token") != nil {
+            authState = .authenticated
         } else {
-            // Production: check for stored profile (Cognito tokens stored via Keychain)
-            if let data = UserDefaults.standard.data(forKey: "dev_profile"),
-               let profile = try? JSONDecoder().decode(UserProfile.self, from: data) {
-                UserProfile.current = profile
-                authState = .authenticated
-            } else if KeychainWrapper.get(key: "access_token") != nil {
-                authState = .authenticated
-            } else {
-                authState = .onboarding
-            }
+            authState = .onboarding
         }
     }
 }

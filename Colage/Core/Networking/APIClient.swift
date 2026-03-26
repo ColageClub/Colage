@@ -8,7 +8,7 @@ class APIClient {
     private let session: URLSession
 
     private init() {
-        self.baseURL = "https://api.colageclub.com"
+        self.baseURL = "https://wn7mxcdxca.execute-api.us-east-2.amazonaws.com/dev"
         self.session = URLSession.shared
     }
 
@@ -18,6 +18,7 @@ class APIClient {
         case decodingError
         case serverError(Int, String?)
         case networkError(Error)
+        case deviceMismatch
 
         var errorDescription: String? {
             switch self {
@@ -26,6 +27,7 @@ class APIClient {
             case .decodingError: return "Failed to decode response"
             case .serverError(let code, let msg): return "Server error \(code): \(msg ?? "Unknown")"
             case .networkError(let err): return err.localizedDescription
+            case .deviceMismatch: return "This account is signed in on another device"
             }
         }
     }
@@ -35,6 +37,17 @@ class APIClient {
 
     private struct TokenRefreshRequest: Encodable { let refreshToken: String }
     private struct TokenRefreshResponse: Decodable { let accessToken: String; let idToken: String; let expiresIn: Int }
+    
+    /// Get or generate a stable device UUID
+    static func deviceId() -> String {
+        if let existing = KeychainWrapper.get(key: "device_id") {
+            return existing
+        } else {
+            let newId = UUID().uuidString
+            KeychainWrapper.set(key: "device_id", value: newId)
+            return newId
+        }
+    }
 
     func request<T: Decodable>(
         method: String = "GET",
@@ -53,6 +66,8 @@ class APIClient {
         let isPublic = publicPaths.contains(where: { path.hasPrefix($0) })
         if !isPublic, let token = KeychainWrapper.get(key: "access_token") {
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+            // Add device ID header for authenticated requests
+            request.setValue(APIClient.deviceId(), forHTTPHeaderField: "X-Device-Id")
         }
 
         if let body = body {
@@ -91,6 +106,14 @@ class APIClient {
 
         guard (200...299).contains(finalResponse.statusCode) else {
             let message = String(data: data, encoding: .utf8)
+            
+            // Check for device mismatch
+            if finalResponse.statusCode == 401 && message?.contains("device_mismatch") == true {
+                // Clear tokens and throw device mismatch error
+                KeychainWrapper.clearAll()
+                throw APIError.deviceMismatch
+            }
+            
             throw APIError.serverError(finalResponse.statusCode, message)
         }
 
