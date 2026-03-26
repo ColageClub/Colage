@@ -26,6 +26,10 @@ import com.colageclub.colage.core.design.LocalThemeColor
 import com.colageclub.colage.data.models.NearbyStudent
 import com.colageclub.colage.features.discovery.MiniProfileSheet
 import com.mapbox.geojson.Point
+import com.mapbox.maps.plugin.attribution.attribution
+import com.mapbox.maps.plugin.compass.compass
+import com.mapbox.maps.plugin.logo.logo
+import com.mapbox.maps.plugin.scalebar.scalebar
 import com.mapbox.maps.MapView
 import com.mapbox.maps.Style
 import com.mapbox.maps.dsl.cameraOptions
