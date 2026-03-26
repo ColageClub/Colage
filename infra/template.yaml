@@ -199,6 +199,23 @@ Resources:
         AttributeName: ttl
         Enabled: true
 
+  # DynamoDB - OTP Codes
+  # ============================================================
+  OTPTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub colage-otp-${Stage}
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: email
+          AttributeType: S
+      KeySchema:
+        - AttributeName: email
+          KeyType: HASH
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+
   # ============================================================
   # S3 - Profile Photos
   # ============================================================
@@ -266,6 +283,18 @@ Resources:
                 - cognito-idp:SignUp
                 - cognito-idp:AdminGetUser
               Resource: !GetAtt CognitoUserPool.Arn
+            - Effect: Allow
+              Action:
+                - dynamodb:PutItem
+              Resource: !GetAtt OTPTable.Arn
+            - Effect: Allow
+              Action:
+                - ses:SendEmail
+              Resource: '*'
+      Environment:
+        Variables:
+          OTP_TABLE_NAME: !Ref OTPTable
+          FROM_EMAIL: 'Colage <admin@colageclub.com>'
       Events:
         Api:
           Type: HttpApi
@@ -287,8 +316,16 @@ Resources:
           Statement:
             - Effect: Allow
               Action:
-                - cognito-idp:ConfirmSignUp
+                - cognito-idp:AdminConfirmSignUp
               Resource: !GetAtt CognitoUserPool.Arn
+            - Effect: Allow
+              Action:
+                - dynamodb:GetItem
+                - dynamodb:DeleteItem
+              Resource: !GetAtt OTPTable.Arn
+      Environment:
+        Variables:
+          OTP_TABLE_NAME: !Ref OTPTable
       Events:
         Api:
           Type: HttpApi
