@@ -23,7 +23,7 @@ struct HomeView: View {
                 case .map:
                     MapDiscoveryView(
                         students: nearbyStudents,
-                        allMapStudents: nearbyStudents.mapStudentsWithSelf(location: locationService)
+                        allMapStudents: nearbyStudents.mapStudents
                     )
                 case .list:
                     ListDiscoveryView(students: nearbyStudents)

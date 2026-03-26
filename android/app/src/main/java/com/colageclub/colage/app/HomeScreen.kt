@@ -70,26 +70,9 @@ fun HomeScreen(appViewModel: AppViewModel) {
                 ) { mode ->
                 when (mode) {
                     DiscoveryMode.MAP -> {
-                        // Add self to map markers using real GPS
-                        val mapStudents = nearbyVM.mapStudents().toMutableList()
-                        val currentLocation = appViewModel.locationService.currentLocation.collectAsState().value
-                        currentProfile?.let { profile ->
-                            val selfLat = currentLocation?.latitude ?: 42.2780
-                            val selfLng = currentLocation?.longitude ?: -83.7382
-                            val selfStudent = com.colageclub.colage.data.models.NearbyStudent(
-                                profile = profile,
-                                location = com.colageclub.colage.data.models.StudentLocation(
-                                    userId = profile.userId,
-                                    latitude = selfLat,
-                                    longitude = selfLng,
-                                    floor = currentFloor
-                                ),
-                                distance = 0.0
-                            )
-                            mapStudents.add(0, selfStudent)
-                        }
+                        // Other students only — self shown via Mapbox location puck
                         MapDiscoveryView(
-                            students = mapStudents,
+                            students = nearbyVM.mapStudents(),
                             themeColor = themeColor,
                             isVisible = isVisible,
                             currentUserId = currentProfile?.userId
