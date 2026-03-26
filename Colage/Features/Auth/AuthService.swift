@@ -259,6 +259,79 @@ class AuthService: ObservableObject {
 
 
 
+    // MARK: - Update Profile
+
+    /// Update an existing profile (from Edit Profile screen)
+    func updateProfile(name: String, bio: String?, major: String?, socialLinks: [SocialLink], photo: UIImage? = nil) async {
+        guard let userId = UserProfile.current?.userId else {
+            print("No current user to update")
+            return
+        }
+
+        // Upload photo first if provided
+        var photoURL = UserProfile.current?.profilePhotoURL
+        if let photo = photo {
+            if let newURL = await uploadProfilePhoto(photo, userId: userId) {
+                photoURL = newURL
+            }
+        }
+
+        // Update on server
+        struct UpdateRequest: Encodable {
+            let displayName: String
+            let bio: String?
+            let major: String?
+            let socialLinks: [SocialLink]
+            let profilePhotoURL: String?
+        }
+
+        do {
+            struct UpdateResponse: Decodable {
+                let profile: ProfileData
+                struct ProfileData: Decodable {
+                    let userId: String
+                    let displayName: String?
+                    let profilePhotoURL: String?
+                }
+            }
+            let _: UpdateResponse = try await api.request(
+                method: "PUT",
+                path: "/users/\(userId)",
+                body: UpdateRequest(
+                    displayName: name,
+                    bio: bio,
+                    major: major,
+                    socialLinks: socialLinks,
+                    profilePhotoURL: photoURL
+                )
+            )
+        } catch {
+            print("Failed to update profile on server: \(error)")
+        }
+
+        // Update local profile
+        let domain = UserProfile.current?.universityDomain ?? "unknown"
+        let updated = UserProfile(
+            userId: userId,
+            universityDomain: domain,
+            displayName: name,
+            profilePhotoURL: photoURL,
+            bio: bio,
+            major: major,
+            socialLinks: socialLinks,
+            isVisible: UserProfile.current?.isVisible ?? true,
+            serverType: UserProfile.current?.serverType ?? .student,
+            createdAt: UserProfile.current?.createdAt ?? Date(),
+            updatedAt: Date()
+        )
+        await MainActor.run {
+            UserProfile.current = updated
+            if let data = try? JSONEncoder().encode(updated) {
+                UserDefaults.standard.set(data, forKey: "dev_profile")
+            }
+        }
+    }
+
     // MARK: - Login (existing accounts)
 
     /// Send login OTP to existing user's email

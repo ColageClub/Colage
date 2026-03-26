@@ -199,16 +199,19 @@ struct EditProfileView: View {
             return SocialLink(platform: platform, handle: handle)
         }
 
-        authService.createProfile(
-            name: displayName,
-            bio: bio.isEmpty ? nil : bio,
-            major: major.isEmpty ? nil : major,
-            socialLinks: links,
-            photo: profileUIImage
-        )
-
-        isSaving = false
-        dismiss()
+        Task {
+            await authService.updateProfile(
+                name: displayName,
+                bio: bio.isEmpty ? nil : bio,
+                major: major.isEmpty ? nil : major,
+                socialLinks: links,
+                photo: profileUIImage
+            )
+            await MainActor.run {
+                isSaving = false
+                dismiss()
+            }
+        }
     }
 }
 
