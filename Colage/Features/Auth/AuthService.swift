@@ -65,10 +65,8 @@ class AuthService: ObservableObject {
                 path: "/auth/email/confirm",
                 body: ConfirmRequest(email: enteredEmail.lowercased(), code: code)
             )
-            if result.verified {
-                // Get auth tokens after confirmation
-                await fetchAndStoreTokens()
-            }
+            // Don't fetch tokens here — wait until onboarding is complete
+            // Tokens are fetched in completeOnboarding()
             await MainActor.run { emailVerified = result.verified }
             return result.verified
         } catch {

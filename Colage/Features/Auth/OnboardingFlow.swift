@@ -66,7 +66,13 @@ struct OnboardingFlow: View {
                     major: onboardingData.major.isEmpty ? nil : onboardingData.major,
                     socialLinks: links
                 )
-                appState.authState = .authenticated
+                // Fetch tokens now that onboarding is complete, then authenticate
+                Task {
+                    await authService.fetchAndStoreTokens()
+                    await MainActor.run {
+                        appState.authState = .authenticated
+                    }
+                }
             })
         }
     }
