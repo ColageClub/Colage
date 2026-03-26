@@ -2,6 +2,7 @@ import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, PutCommand, GetCommand, QueryCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb';
 import { ApiGatewayManagementApiClient, PostToConnectionCommand } from '@aws-sdk/client-apigatewaymanagementapi';
 import { isValidCoordinate } from './shared/validate.mjs';
+import { encode as geohashEncode } from './shared/geohash.mjs';
 
 const ddb = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 const CONNECTIONS_TABLE = process.env.CONNECTIONS_TABLE || 'colage-connections-dev';
@@ -43,16 +44,22 @@ export const handler = async (event) => {
 
     const domain = conn.Item?.universityDomain || 'unknown';
 
+    // Compute geohash for spatial indexing (precision 7 = ~150m cells)
+    const latitude = parseFloat(data.latitude);
+    const longitude = parseFloat(data.longitude);
+    const geohash = geohashEncode(latitude, longitude, 7);
+
     // Store location with 5-min TTL
     await ddb.send(new PutCommand({
       TableName: LOCATIONS_TABLE,
       Item: {
         universityDomain: domain,
         userId: data.userId,
-        latitude: parseFloat(data.latitude),
-        longitude: parseFloat(data.longitude),
+        latitude,
+        longitude,
         altitude,
         floor,
+        geohash,
         timestamp: new Date().toISOString(),
         ttl: Math.floor(Date.now() / 1000) + 300,
       },

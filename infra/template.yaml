@@ -135,11 +135,22 @@ Resources:
           AttributeType: S
         - AttributeName: userId
           AttributeType: S
+        - AttributeName: geohash
+          AttributeType: S
       KeySchema:
         - AttributeName: universityDomain
           KeyType: HASH
         - AttributeName: userId
           KeyType: RANGE
+      GlobalSecondaryIndexes:
+        - IndexName: geohash-index
+          KeySchema:
+            - AttributeName: universityDomain
+              KeyType: HASH
+            - AttributeName: geohash
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
       TimeToLiveSpecification:
         AttributeName: ttl
         Enabled: true
