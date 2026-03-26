@@ -65,6 +65,11 @@ class LocationService: NSObject, ObservableObject, CLLocationManagerDelegate {
         startAltimeter()
         isTracking = true
 
+        // Recalibrate ground after 3s so barometer has time to settle
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) { [weak self] in
+            self?.recalibrateGround()
+        }
+
         // Heartbeat: fallback broadcast every 30s for floor changes / keep-alive
         // This is NOT the primary broadcast — movement triggers are
         heartbeatTimer = Timer.scheduledTimer(withTimeInterval: heartbeatInterval, repeats: true) { [weak self] _ in
@@ -149,6 +154,12 @@ class LocationService: NSObject, ObservableObject, CLLocationManagerDelegate {
     private func computeFloor(relativeAltitude: Double) -> Int {
         guard let ground = groundAltitude else { return 1 }
         let delta = relativeAltitude - ground
+
+        // Dead zone: ignore altitude changes less than ~half a floor (1.5m)
+        // This prevents barometric noise from changing floors
+        if abs(delta) < 1.5 {
+            return 1
+        }
 
         if delta < -2.0 {
             return max(Int(Foundation.floor(delta / metersPerFloor)), -2)
