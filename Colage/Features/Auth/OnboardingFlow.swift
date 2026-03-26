@@ -64,7 +64,8 @@ struct OnboardingFlow: View {
                     name: onboardingData.displayName,
                     bio: onboardingData.bio.isEmpty ? nil : onboardingData.bio,
                     major: onboardingData.major.isEmpty ? nil : onboardingData.major,
-                    socialLinks: links
+                    socialLinks: links,
+                    photo: onboardingData.profilePhoto
                 )
                 // Fetch tokens now that onboarding is complete, then authenticate
                 Task {

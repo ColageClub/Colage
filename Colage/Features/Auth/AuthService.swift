@@ -120,7 +120,7 @@ class AuthService: ObservableObject {
     /// The server type selected during onboarding (set before profile creation)
     var selectedServerType: ServerType = .student
 
-    func createProfile(name: String, bio: String?, major: String?, socialLinks: [SocialLink]) {
+    func createProfile(name: String, bio: String?, major: String?, socialLinks: [SocialLink], photo: UIImage? = nil) {
         let domain = extractDomain(from: enteredEmail) ?? "umich.edu"
         let profile = UserProfile(
             userId: UUID().uuidString,
@@ -143,7 +143,7 @@ class AuthService: ObservableObject {
             UserDefaults.standard.set(data, forKey: "dev_profile")
         }
 
-        // Create on server
+        // Create on server + upload photo
         Task {
             struct CreateProfileRequest: Encodable {
                 let email: String
@@ -170,13 +170,20 @@ class AuthService: ObservableObject {
                         universityDomain: domain
                     )
                 )
-                // Update local profile with server-assigned userId
-                var updated = profile
-                updated = UserProfile(
-                    userId: result.profile.userId,
+                let serverUserId = result.profile.userId
+
+                // Upload photo if provided
+                var photoURL: String? = nil
+                if let photo = photo {
+                    photoURL = await uploadProfilePhoto(photo, userId: serverUserId)
+                }
+
+                // Update local profile with server-assigned userId + photo URL
+                let updated = UserProfile(
+                    userId: serverUserId,
                     universityDomain: domain,
                     displayName: name,
-                    profilePhotoURL: nil,
+                    profilePhotoURL: photoURL,
                     bio: bio,
                     major: major,
                     socialLinks: socialLinks,
@@ -191,9 +198,62 @@ class AuthService: ObservableObject {
                         UserDefaults.standard.set(data, forKey: "dev_profile")
                     }
                 }
+
+                // Update photo URL on server if we uploaded
+                if let photoURL = photoURL {
+                    struct UpdateProfileRequest: Encodable { let profilePhotoURL: String }
+                    let _: [String: String] = try await api.request(
+                        method: "PUT",
+                        path: "/users/\(serverUserId)",
+                        body: UpdateProfileRequest(profilePhotoURL: photoURL)
+                    )
+                }
             } catch {
                 print("Failed to create server profile: \(error)")
             }
+        }
+    }
+
+    // MARK: - Photo Upload
+
+    /// Upload a profile photo to S3 via presigned URL, returns the CDN URL
+    private func uploadProfilePhoto(_ image: UIImage, userId: String) async -> String? {
+        // Compress to JPEG
+        guard let imageData = image.jpegData(compressionQuality: 0.8) else {
+            print("Failed to compress image")
+            return nil
+        }
+
+        do {
+            // Get presigned upload URL
+            struct UploadURLRequest: Encodable { let userId: String; let contentType: String }
+            struct UploadURLResponse: Decodable { let uploadUrl: String; let key: String; let publicUrl: String }
+
+            let uploadInfo: UploadURLResponse = try await api.request(
+                method: "POST",
+                path: "/photos/upload-url",
+                body: UploadURLRequest(userId: userId, contentType: "image/jpeg")
+            )
+
+            // Upload to S3 via presigned URL
+            guard let uploadURL = URL(string: uploadInfo.uploadUrl) else { return nil }
+            var request = URLRequest(url: uploadURL)
+            request.httpMethod = "PUT"
+            request.setValue("image/jpeg", forHTTPHeaderField: "Content-Type")
+            request.httpBody = imageData
+
+            let (_, response) = try await URLSession.shared.data(for: request)
+            guard let httpResponse = response as? HTTPURLResponse,
+                  (200...299).contains(httpResponse.statusCode) else {
+                print("Photo upload failed with status: \((response as? HTTPURLResponse)?.statusCode ?? 0)")
+                return nil
+            }
+
+            print("Photo uploaded successfully: \(uploadInfo.publicUrl)")
+            return uploadInfo.publicUrl
+        } catch {
+            print("Photo upload error: \(error)")
+            return nil
         }
     }
 
