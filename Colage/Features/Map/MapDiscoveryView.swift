@@ -10,6 +10,7 @@ struct MapDiscoveryView: View {
     @EnvironmentObject var locationService: LocationService
     @State private var selectedStudent: NearbyStudent?
     @State private var hasInitializedCamera = false
+    @State private var recenterTrigger: UUID?
     @State private var viewport: Viewport = .camera(
         center: CLLocationCoordinate2D(latitude: 42.2780, longitude: -83.7382),
         zoom: 15.5,
@@ -24,6 +25,8 @@ struct MapDiscoveryView: View {
                 students: allMapStudents,
                 universityTheme: universityService.currentTheme,
                 isVisible: appState.isVisible,
+                recenterCoordinate: locationService.currentLocation,
+                recenterTrigger: recenterTrigger,
                 onStudentTapped: { student in
                     selectedStudent = student
                 }
@@ -66,16 +69,7 @@ struct MapDiscoveryView: View {
     }
 
     private func recenterOnUser() {
-        if let coord = locationService.currentLocation {
-            withAnimation(.easeInOut(duration: 0.5)) {
-                viewport = .camera(
-                    center: coord,
-                    zoom: 15.5,
-                    bearing: 0,
-                    pitch: 0
-                )
-            }
-        }
+        recenterTrigger = UUID()
     }
 }
 
@@ -85,6 +79,8 @@ struct MapboxMapView: UIViewRepresentable {
     let students: [NearbyStudent]
     let universityTheme: UniversityTheme?
     let isVisible: Bool
+    var recenterCoordinate: CLLocationCoordinate2D?
+    var recenterTrigger: UUID?
     var onStudentTapped: ((NearbyStudent) -> Void)?
 
     func makeCoordinator() -> Coordinator {
@@ -121,6 +117,14 @@ struct MapboxMapView: UIViewRepresentable {
     func updateUIView(_ mapView: MapView, context: Context) {
         context.coordinator.updateStudentAnnotations(students: students, mapView: mapView)
 
+        // Recenter camera when trigger changes
+        if let trigger = recenterTrigger, trigger != context.coordinator.lastRecenterTrigger,
+           let coord = recenterCoordinate {
+            context.coordinator.lastRecenterTrigger = trigger
+            let camera = CameraOptions(center: coord, zoom: 15.5, bearing: 0, pitch: 0)
+            mapView.camera.fly(to: camera, duration: 0.5)
+        }
+
         // Update puck color when visibility changes
         let puckColor = isVisible
             ? UIColor(universityTheme?.primary ?? ColageColors.primary)
@@ -131,10 +135,11 @@ struct MapboxMapView: UIViewRepresentable {
     }
 
     class Coordinator: NSObject {
-        let parent: MapboxMapView
+        var parent: MapboxMapView
         var mapView: MapView?
         private var annotationManager: PointAnnotationManager?
         private var studentMap: [String: NearbyStudent] = [:]
+        var lastRecenterTrigger: UUID?
 
         init(parent: MapboxMapView) {
             self.parent = parent
