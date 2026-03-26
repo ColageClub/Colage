@@ -10,5 +10,7 @@
     <string>Colage uses your location to show you on the campus map even when the app is in the background.</string>
     <key>NSCameraUsageDescription</key>
     <string>Colage uses your camera for AR discovery mode and profile photos.</string>
+    <key>NSMotionUsageDescription</key>
+    <string>Colage uses motion data to detect which floor you're on.</string>
 </dict>
 </plist>

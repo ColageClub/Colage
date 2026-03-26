@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 77;
+	objectVersion = 63;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -74,7 +74,7 @@
 		12444BC41E78DFEE0D066B44 /* ColageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColageTests.swift; sourceTree = "<group>"; };
 		1254BCAFD8797D4E407EE276 /* ARDiscoveryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ARDiscoveryView.swift; sourceTree = "<group>"; };
 		151B405ED0102B29AE644BEB /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
-		20D08C2040707578D2E35788 /* Colage.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Colage.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		20D08C2040707578D2E35788 /* Colage.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Colage.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		253B8E527D0F2170EE215D3B /* AuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthService.swift; sourceTree = "<group>"; };
 		2795CDE7219F7E3922A63416 /* EmailOTPScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmailOTPScreen.swift; sourceTree = "<group>"; };
 		2B313100A466F65FE16EEFB9 /* ListDiscoveryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListDiscoveryView.swift; sourceTree = "<group>"; };
@@ -102,7 +102,7 @@
 		8F85A917E07A9D4A95D7698A /* MapboxConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapboxConfig.swift; sourceTree = "<group>"; };
 		946A16331FAD66C6ADA00B2F /* ColageApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColageApp.swift; sourceTree = "<group>"; };
 		954B5E875240638553CDD4DC /* LoginScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginScreen.swift; sourceTree = "<group>"; };
-		9FF644B4D137D3E71D7374CC /* ColageTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = ColageTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		9FF644B4D137D3E71D7374CC /* ColageTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ColageTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		AB4D1652B0286CE84C9AE9E0 /* MapThemeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapThemeManager.swift; sourceTree = "<group>"; };
 		AD991A6ECE627141F59FB3C1 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		B4A99EE8505F250FC812BC17 /* PhoneEntryScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneEntryScreen.swift; sourceTree = "<group>"; };
@@ -356,13 +356,6 @@
 			path = Design;
 			sourceTree = "<group>";
 		};
-		"TEMP_443503BF-C075-4204-9825-F5B5AE804C44" /* Resources */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			path = Resources;
-			sourceTree = "<group>";
-		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -434,7 +427,6 @@
 			packageReferences = (
 				D5DE7A2C2F4355DDF83CB267 /* XCRemoteSwiftPackageReference "mapbox-maps-ios" */,
 			);
-			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -532,6 +524,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 3ZPM7SXR7S;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Colage/App/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Colage uses your camera for AR discovery mode and profile photos.";
@@ -641,6 +634,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 3ZPM7SXR7S;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Colage/App/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Colage uses your camera for AR discovery mode and profile photos.";
