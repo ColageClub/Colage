@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
 
     const session = { businessId: biz.id, email: biz.email, businessName: biz.name };
     const cookieStore = await cookies();
-    cookieStore.set("colage_session", JSON.stringify(session), {
+    cookieStore.set("colage_biz_session", JSON.stringify(session), {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
 
     const session = { businessId: biz.id, email: biz.email, businessName: biz.name };
     const cookieStore = await cookies();
-    cookieStore.set("colage_session", JSON.stringify(session), {
+    cookieStore.set("colage_biz_session", JSON.stringify(session), {
       httpOnly: true,
       path: "/",
       maxAge: 60 * 60 * 24 * 30,
@@ -89,7 +89,7 @@ export async function POST(req: NextRequest) {
 
     const session = { businessId: biz.id, email: biz.email, businessName: biz.name };
     const cookieStore = await cookies();
-    cookieStore.set("colage_session", JSON.stringify(session), {
+    cookieStore.set("colage_biz_session", JSON.stringify(session), {
       httpOnly: true,
       path: "/",
       maxAge: 60 * 60 * 24 * 30,
@@ -101,7 +101,7 @@ export async function POST(req: NextRequest) {
   // ─── Logout ────────────────────────────────────────────
   if (action === "logout") {
     const cookieStore = await cookies();
-    cookieStore.delete("colage_session");
+    cookieStore.delete("colage_biz_session");
     return NextResponse.json({ success: true });
   }
 

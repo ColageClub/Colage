@@ -35,10 +35,33 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
 
-  // TODO: Geocode address with Mapbox when token is available
-  // For now, store address as-is and set lat/lng to 0,0
+  // Geocode business address to lat/lng via Mapbox
   let lat = 0;
   let lng = 0;
+
+  if (address) {
+    const mapboxToken = process.env.MAPBOX_ACCESS_TOKEN;
+    if (mapboxToken) {
+      try {
+        const encoded = encodeURIComponent(address);
+        const geoRes = await fetch(
+          `https://api.mapbox.com/geocoding/v5/mapbox.places/${encoded}.json?access_token=${mapboxToken}&limit=1`
+        );
+        if (geoRes.ok) {
+          const geoData = await geoRes.json();
+          if (geoData.features && geoData.features.length > 0) {
+            const [lngResult, latResult] = geoData.features[0].center;
+            lat = latResult;
+            lng = lngResult;
+          }
+        }
+      } catch (err) {
+        console.warn("[Ads] Geocoding failed, using 0,0:", err);
+      }
+    } else {
+      console.warn("[Ads] MAPBOX_ACCESS_TOKEN not set, skipping geocoding");
+    }
+  }
 
   const ad = await AdModel.createAd({
     id: `ad-${Date.now()}`,

@@ -3,6 +3,16 @@ import { getAdsBySchoolAndStatus, updateAd } from "@/lib/models/ad";
 import { checkFrequencyCap, recordImpression } from "@/lib/models/impression";
 import { getDailySpend, incrementDailySpend } from "@/lib/models/daily-spend";
 
+// CPM pricing tiers based on advertiser demand per school
+// More advertisers = higher CPM (supply/demand)
+function getCPM(activeAdCount: number): number {
+  if (activeAdCount <= 10) return 2;
+  if (activeAdCount <= 30) return 3;
+  if (activeAdCount <= 60) return 4;
+  if (activeAdCount <= 100) return 5;
+  return 6;
+}
+
 // GET /api/ads/serve?school=umich.edu&student_id=xxx — serve a weighted ad to students
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -17,6 +27,10 @@ export async function GET(req: NextRequest) {
   if (activeAds.length === 0) {
     return NextResponse.json({ ad: null });
   }
+
+  // Calculate cost per impression based on demand at this school
+  const cpm = getCPM(activeAds.length);
+  const costPerImpression = cpm / 1000;
 
   // Filter by remaining daily budget and frequency caps
   const eligibleAds: Array<{ ad: typeof activeAds[0]; remainingBudget: number }> = [];
@@ -55,10 +69,13 @@ export async function GET(req: NextRequest) {
 
   const ad = selected.ad;
 
-  // Track impression
+  // Track impression and charge
   await recordImpression(ad.id, studentId);
-  await incrementDailySpend(ad.id);
-  await updateAd(ad.id, { impressions: ad.impressions + 1 });
+  await incrementDailySpend(ad.id, costPerImpression);
+  await updateAd(ad.id, {
+    impressions: ad.impressions + 1,
+    totalSpend: ad.totalSpend + costPerImpression,
+  });
 
   // Return only what the client needs
   return NextResponse.json({
@@ -92,8 +109,15 @@ export async function POST(req: NextRequest) {
   }
 
   if (action === "impression" && studentId) {
-    await recordImpression(adId, studentId);
-    await incrementDailySpend(adId);
+    // Look up school demand to calculate CPM for this impression
+    const { getAd } = await import("@/lib/models/ad");
+    const adRecord = await getAd(adId);
+    if (adRecord) {
+      const schoolAds = await getAdsBySchoolAndStatus(adRecord.school, "active");
+      const cpi = getCPM(schoolAds.length) / 1000;
+      await recordImpression(adId, studentId);
+      await incrementDailySpend(adId, cpi);
+    }
   }
 
   return NextResponse.json({ success: true });
