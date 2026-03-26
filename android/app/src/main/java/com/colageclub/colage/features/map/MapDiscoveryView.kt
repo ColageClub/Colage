@@ -9,6 +9,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
+import kotlinx.coroutines.launch
+import coil.imageLoader
+import coil.request.ImageRequest
+import coil.request.SuccessResult
 import com.colageclub.colage.core.design.ColageColors
 import com.colageclub.colage.core.design.LocalThemeColor
 import com.colageclub.colage.data.models.NearbyStudent
@@ -34,11 +38,18 @@ fun MapDiscoveryView(
     var selectedStudent by remember { mutableStateOf<NearbyStudent?>(null) }
     val themeArgb = themeColor.toArgb()
     val puckArgb = if (isVisible) themeArgb else ColageColors.Offline.toArgb()
+    val context = LocalContext.current
+    // Cache downloaded avatar bitmaps by userId
+    val avatarCache = remember { mutableMapOf<String, Bitmap>() }
+    val pendingDownloads = remember { mutableSetOf<String>() }
+    // Trigger recomposition when a photo finishes downloading
+    var photoRevision by remember { mutableIntStateOf(0) }
+    val coroutineScope = rememberCoroutineScope()
 
     Box(modifier = Modifier.fillMaxSize()) {
         AndroidView(
-            factory = { context ->
-                MapView(context).apply {
+            factory = { ctx ->
+                MapView(ctx).apply {
                     mapboxMap.loadStyle(Style.DARK)
                     mapboxMap.setCamera(
                         cameraOptions {
@@ -47,13 +58,14 @@ fun MapDiscoveryView(
                         }
                     )
                     location.enabled = true
-                    // Set puck bearing tint to theme/grey
                     location.pulsingEnabled = isVisible
                     location.puckBearingEnabled = true
                 }
             },
             update = { mapView ->
-                // Update puck visibility color
+                // Force recomposition dependency on photoRevision
+                photoRevision.let { _ -> }
+
                 mapView.location.pulsingEnabled = isVisible
                 val annotationApi = mapView.annotations
                 val manager = annotationApi.createPointAnnotationManager()
@@ -63,11 +75,31 @@ fun MapDiscoveryView(
                 students.forEach { student ->
                     val isSelf = currentUserId != null && student.profile.userId == currentUserId
                     val dotColor = if (isSelf) puckArgb else themeArgb
-                    val bitmap = createAvatarBitmap(
-                        initials = student.profile.displayName.initials(),
-                        borderColor = dotColor,
-                        size = 28
-                    )
+                    val userId = student.profile.userId
+
+                    // Use cached photo bitmap, or initials placeholder
+                    val bitmap = avatarCache[userId] ?: run {
+                        // Start async photo download if we haven't already
+                        val photoUrl = student.profile.profilePhotoURL
+                        if (photoUrl != null && userId !in pendingDownloads) {
+                            pendingDownloads.add(userId)
+                            coroutineScope.launch {
+                                val downloaded = downloadAvatarBitmap(context, photoUrl, dotColor, 28)
+                                if (downloaded != null) {
+                                    avatarCache[userId] = downloaded
+                                    photoRevision++ // trigger map update
+                                }
+                                pendingDownloads.remove(userId)
+                            }
+                        }
+                        // Return initials placeholder for now
+                        createAvatarBitmap(
+                            initials = student.profile.displayName.initials(),
+                            borderColor = dotColor,
+                            size = 28
+                        )
+                    }
+
                     val options = PointAnnotationOptions()
                         .withPoint(Point.fromLngLat(student.location.longitude, student.location.latitude))
                         .withIconImage(bitmap)
@@ -111,9 +143,62 @@ fun MapDiscoveryView(
     }
 }
 
-/** Create a circular avatar bitmap with initials and a colored border */
+/** Download a profile photo and return a circular bitmap with colored border */
+private suspend fun downloadAvatarBitmap(
+    context: android.content.Context,
+    url: String,
+    borderColor: Int,
+    size: Int
+): Bitmap? {
+    return try {
+        val request = ImageRequest.Builder(context)
+            .data(url)
+            .size(size * 3) // High-res
+            .build()
+        val result = context.imageLoader.execute(request)
+        if (result is SuccessResult) {
+            val photo = (result.drawable as? android.graphics.drawable.BitmapDrawable)?.bitmap
+                ?: return null
+            createCircularPhotoBitmap(photo, borderColor, size)
+        } else null
+    } catch (_: Exception) {
+        null
+    }
+}
+
+/** Crop a photo into a circle with a colored border — matches iOS createCircularImage */
+private fun createCircularPhotoBitmap(photo: Bitmap, borderColor: Int, size: Int): Bitmap {
+    val sizePx = (size * 2.5f).toInt()
+    val bitmap = Bitmap.createBitmap(sizePx, sizePx, Bitmap.Config.ARGB_8888)
+    val canvas = Canvas(bitmap)
+    val borderWidth = sizePx * 0.06f
+
+    // Border circle
+    val borderPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = borderColor
+        style = Paint.Style.FILL
+    }
+    canvas.drawCircle(sizePx / 2f, sizePx / 2f, sizePx / 2f, borderPaint)
+
+    // Clip to inner circle and draw photo
+    val innerRadius = sizePx / 2f - borderWidth
+    val path = android.graphics.Path().apply {
+        addCircle(sizePx / 2f, sizePx / 2f, innerRadius, android.graphics.Path.Direction.CW)
+    }
+    canvas.save()
+    canvas.clipPath(path)
+
+    // Scale photo to fill the inner circle
+    val scaled = Bitmap.createScaledBitmap(photo, (innerRadius * 2).toInt(), (innerRadius * 2).toInt(), true)
+    canvas.drawBitmap(scaled, borderWidth, borderWidth, null)
+    canvas.restore()
+
+    return bitmap
+}
+
+/** Create a circular avatar bitmap with initials and a colored border (placeholder) */
 private fun createAvatarBitmap(initials: String, borderColor: Int, size: Int): Bitmap {
-    val sizePx = (size * 2.5f).toInt() // Higher res for retina
+    val sizePx = (size * 2.5f).toInt()
     val bitmap = Bitmap.createBitmap(sizePx, sizePx, Bitmap.Config.ARGB_8888)
     val canvas = Canvas(bitmap)
     val borderWidth = sizePx * 0.06f

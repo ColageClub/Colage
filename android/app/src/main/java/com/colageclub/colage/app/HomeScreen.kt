@@ -100,21 +100,18 @@ fun HomeScreen(appViewModel: AppViewModel) {
                             .padding(horizontal = 16.dp, vertical = 8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // Visibility toggle
+                        // Visibility toggle — matches iOS: no green tint, just icon color change
                         IconButton(
                             onClick = { appViewModel.toggleVisibility() },
                             modifier = Modifier
                                 .size(36.dp)
                                 .clip(CircleShape)
-                                .background(
-                                    if (isVisible) ColageColors.Online.copy(alpha = 0.15f)
-                                    else ColageColors.Surface
-                                )
+                                .background(ColageColors.Surface.copy(alpha = 0.8f))
                         ) {
                             Icon(
                                 if (isVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
                                 contentDescription = "Toggle visibility",
-                                tint = if (isVisible) ColageColors.Online else ColageColors.TextTertiary,
+                                tint = if (isVisible) ColageColors.TextPrimary else ColageColors.TextTertiary,
                                 modifier = Modifier.size(18.dp)
                             )
                         }
@@ -229,20 +226,20 @@ fun DiscoveryModePicker(
 ) {
     Row(
         modifier = Modifier
-            .background(ColageColors.Surface, RoundedCornerShape(12.dp))
+            .background(ColageColors.Surface.copy(alpha = 0.6f), RoundedCornerShape(14.dp))
             .padding(4.dp),
-        horizontalArrangement = Arrangement.spacedBy(2.dp)
+        horizontalArrangement = Arrangement.spacedBy(0.dp)
     ) {
         DiscoveryMode.entries.forEach { mode ->
             val isSelected = activeMode == mode
             Text(
                 text = mode.label,
                 style = ColageFonts.CaptionBold.copy(
-                    color = if (isSelected) ColageColors.TextPrimary else ColageColors.TextTertiary
+                    color = if (isSelected) ColageColors.TextPrimary else ColageColors.TextSecondary
                 ),
                 modifier = Modifier
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(if (isSelected) LocalThemeColor.current.copy(alpha = 0.2f) else Color.Transparent)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(if (isSelected) LocalThemeColor.current else Color.Transparent)
                     .clickable { onModeSelected(mode) }
                     .padding(horizontal = 16.dp, vertical = 8.dp)
             )
@@ -271,8 +268,8 @@ fun FloorPicker(
             }
             Text(
                 text = label,
-                style = ColageFonts.MonoSmall.copy(
-                    color = if (isSelected) LocalThemeColor.current else ColageColors.TextTertiary
+                style = ColageFonts.CaptionBold.copy(
+                    color = if (isSelected) LocalThemeColor.current else ColageColors.TextSecondary
                 ),
                 modifier = Modifier
                     .clip(RoundedCornerShape(6.dp))

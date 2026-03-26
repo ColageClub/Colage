@@ -1,6 +1,7 @@
 package com.colageclub.colage.app
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -9,6 +10,10 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.colageclub.colage.core.design.LocalThemeColor
+import com.colageclub.colage.core.design.LocalThemeAccent
+import com.colageclub.colage.core.university.primaryComposeColor
+import com.colageclub.colage.core.university.accentComposeColor
 import com.colageclub.colage.features.auth.AuthViewModel
 import com.colageclub.colage.features.auth.screens.*
 import com.colageclub.colage.features.auth.screens.ServerTypeScreen
@@ -34,6 +39,7 @@ sealed class Screen(val route: String) {
 fun ColageApp() {
     val appViewModel: AppViewModel = hiltViewModel()
     val authState by appViewModel.authState.collectAsState()
+    val currentTheme by appViewModel.currentTheme.collectAsState()
 
     LaunchedEffect(Unit) {
         appViewModel.checkExistingSession()
@@ -41,15 +47,21 @@ fun ColageApp() {
 
     val navController = rememberNavController()
 
-    when (authState) {
-        AuthState.LOADING -> SplashScreen()
-        AuthState.ONBOARDING -> OnboardingNavHost(
-            navController = navController,
-            appViewModel = appViewModel
-        )
-        AuthState.AUTHENTICATED -> HomeScreen(
-            appViewModel = appViewModel
-        )
+    // Provide university theme color to entire composable tree
+    CompositionLocalProvider(
+        LocalThemeColor provides currentTheme.primaryComposeColor(),
+        LocalThemeAccent provides currentTheme.accentComposeColor()
+    ) {
+        when (authState) {
+            AuthState.LOADING -> SplashScreen()
+            AuthState.ONBOARDING -> OnboardingNavHost(
+                navController = navController,
+                appViewModel = appViewModel
+            )
+            AuthState.AUTHENTICATED -> HomeScreen(
+                appViewModel = appViewModel
+            )
+        }
     }
 }
 
