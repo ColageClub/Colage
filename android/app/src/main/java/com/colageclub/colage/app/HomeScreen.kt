@@ -109,7 +109,7 @@ fun HomeScreen(appViewModel: AppViewModel) {
                 } // Close AnimatedContent
 
                 // Top overlay bar
-                Column(modifier = Modifier.fillMaxWidth()) {
+                Column(modifier = Modifier.fillMaxWidth().statusBarsPadding()) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
