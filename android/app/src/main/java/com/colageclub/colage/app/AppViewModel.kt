@@ -31,7 +31,8 @@ class AppViewModel @Inject constructor(
     private val secureStorage: SecureStorage,
     private val prefs: SharedPreferences,
     val universityService: UniversityService,
-    private val webSocketManager: WebSocketManager
+    private val webSocketManager: WebSocketManager,
+    val locationService: com.colageclub.colage.core.location.LocationService
 ) : ViewModel() {
 
     private val gson = Gson()

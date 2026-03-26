@@ -13,6 +13,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -42,13 +43,26 @@ fun AdBannerView() {
     }
 
     currentAd?.let { ad ->
-        Row(
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(18.dp))
-                .background(ColageColors.Surface.copy(alpha = 0.85f))
+                .background(ColageColors.Surface.copy(alpha = 0.9f))
                 .border(0.5.dp, ColageColors.Border.copy(alpha = 0.5f), RoundedCornerShape(18.dp))
                 .clickable { showDetail = true }
+        ) {
+            // Subtle emoji watermark — matches iOS
+            Text(
+                ad.logoEmoji,
+                fontSize = 60.sp,
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+                    .offset(x = (-10).dp)
+                    .alpha(0.04f)
+            )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
                 .padding(horizontal = 14.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -92,6 +106,7 @@ fun AdBannerView() {
                 )
             }
         }
+        } // Close Box wrapper
 
         if (showDetail) {
             AdDetailSheet(ad = ad, onDismiss = { showDetail = false })
