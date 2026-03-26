@@ -21,6 +21,7 @@ struct MapDiscoveryView: View {
                 viewport: $viewport,
                 students: allMapStudents,
                 universityTheme: universityService.currentTheme,
+                isVisible: appState.isVisible,
                 onStudentTapped: { student in
                     selectedStudent = student
                 }
@@ -41,6 +42,7 @@ struct MapboxMapView: UIViewRepresentable {
     @Binding var viewport: Viewport
     let students: [NearbyStudent]
     let universityTheme: UniversityTheme?
+    let isVisible: Bool
     var onStudentTapped: ((NearbyStudent) -> Void)?
 
     func makeCoordinator() -> Coordinator {
@@ -53,10 +55,13 @@ struct MapboxMapView: UIViewRepresentable {
         )
         let mapView = MapView(frame: .zero, mapInitOptions: mapInitOptions)
 
-        // Configure map
-        mapView.location.options.puckType = .puck2D(
-            Puck2DConfiguration.makeDefault(showBearing: true)
-        )
+        // Configure map — puck color reflects visibility
+        let puckColor = context.coordinator.parent.isVisible
+            ? UIColor(context.coordinator.parent.universityTheme?.primary ?? ColageColors.primary)
+            : UIColor(ColageColors.offline)
+        var puckConfig = Puck2DConfiguration.makeDefault(showBearing: true)
+        puckConfig.topImage = createPuckImage(color: puckColor)
+        mapView.location.options.puckType = .puck2D(puckConfig)
 
         // Store reference for updates
         context.coordinator.mapView = mapView
@@ -67,6 +72,14 @@ struct MapboxMapView: UIViewRepresentable {
 
     func updateUIView(_ mapView: MapView, context: Context) {
         context.coordinator.updateStudentAnnotations(students: students, mapView: mapView)
+
+        // Update puck color when visibility changes
+        let puckColor = isVisible
+            ? UIColor(universityTheme?.primary ?? ColageColors.primary)
+            : UIColor(ColageColors.offline)
+        var puckConfig = Puck2DConfiguration.makeDefault(showBearing: true)
+        puckConfig.topImage = createPuckImage(color: puckColor)
+        mapView.location.options.puckType = .puck2D(puckConfig)
     }
 
     class Coordinator: NSObject {
@@ -211,6 +224,26 @@ struct MapboxMapView: UIViewRepresentable {
                 image.draw(in: innerRect)
             }
         }
+    }
+}
+
+// MARK: - Puck Image Generator
+
+/// Creates a simple circular puck image with the given color
+private func createPuckImage(color: UIColor, size: CGFloat = 22) -> UIImage {
+    let renderer = UIGraphicsImageRenderer(size: CGSize(width: size, height: size))
+    return renderer.image { ctx in
+        // Outer glow
+        color.withAlphaComponent(0.3).setFill()
+        ctx.cgContext.fillEllipse(in: CGRect(x: 0, y: 0, width: size, height: size))
+        // Inner solid circle
+        color.setFill()
+        let inset: CGFloat = 4
+        ctx.cgContext.fillEllipse(in: CGRect(x: inset, y: inset, width: size - inset * 2, height: size - inset * 2))
+        // White center dot
+        UIColor.white.setFill()
+        let centerInset: CGFloat = 7
+        ctx.cgContext.fillEllipse(in: CGRect(x: centerInset, y: centerInset, width: size - centerInset * 2, height: size - centerInset * 2))
     }
 }
 

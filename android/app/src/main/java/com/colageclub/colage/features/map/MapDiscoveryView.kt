@@ -27,10 +27,13 @@ import kotlinx.coroutines.*
 fun MapDiscoveryView(
     students: List<NearbyStudent>,
     themeColor: Color = LocalThemeColor.current,
+    isVisible: Boolean = true,
     onStudentTapped: (NearbyStudent) -> Unit = {}
 ) {
     var selectedStudent by remember { mutableStateOf<NearbyStudent?>(null) }
-    val themeArgb = themeColor.toArgb()
+    // Grey when invisible, theme color when visible
+    val puckColor = if (isVisible) themeColor else ColageColors.Offline
+    val themeArgb = puckColor.toArgb()
 
     Box(modifier = Modifier.fillMaxSize()) {
         AndroidView(
@@ -44,9 +47,14 @@ fun MapDiscoveryView(
                         }
                     )
                     location.enabled = true
+                    // Set puck bearing tint to theme/grey
+                    location.pulsingEnabled = isVisible
+                    location.puckBearingEnabled = true
                 }
             },
             update = { mapView ->
+                // Update puck visibility color
+                mapView.location.pulsingEnabled = isVisible
                 val annotationApi = mapView.annotations
                 val manager = annotationApi.createPointAnnotationManager()
                 manager.deleteAll()
