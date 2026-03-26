@@ -1,5 +1,7 @@
 package com.colageclub.colage.app
 
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -14,7 +16,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
+import com.colageclub.colage.core.design.Haptics
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.colageclub.colage.core.design.*
 import com.colageclub.colage.core.university.primaryComposeColor
@@ -55,8 +59,16 @@ fun HomeScreen(appViewModel: AppViewModel) {
     }
 
     Box(modifier = Modifier.fillMaxSize().background(ColageColors.Background)) {
-                // Discovery views
-                when (discoveryMode) {
+                // Discovery views with animated transitions
+                AnimatedContent(
+                    targetState = discoveryMode,
+                    transitionSpec = {
+                        fadeIn(animationSpec = tween(200)) togetherWith
+                            fadeOut(animationSpec = tween(200))
+                    },
+                    label = "discovery_mode"
+                ) { mode ->
+                when (mode) {
                     DiscoveryMode.MAP -> {
                         // Add self to map markers using real GPS
                         val mapStudents = nearbyVM.mapStudents().toMutableList()
@@ -94,6 +106,7 @@ fun HomeScreen(appViewModel: AppViewModel) {
                         themeColor = themeColor
                     )
                 }
+                } // Close AnimatedContent
 
                 // Top overlay bar
                 Column(modifier = Modifier.fillMaxWidth()) {
@@ -104,8 +117,12 @@ fun HomeScreen(appViewModel: AppViewModel) {
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         // Visibility toggle — matches iOS: no green tint, just icon color change
+                        val view = LocalView.current
                         IconButton(
-                            onClick = { appViewModel.toggleVisibility() },
+                            onClick = {
+                                Haptics.light(view)
+                                appViewModel.toggleVisibility()
+                            },
                             modifier = Modifier
                                 .size(36.dp)
                                 .clip(CircleShape)
@@ -227,6 +244,7 @@ fun DiscoveryModePicker(
     activeMode: DiscoveryMode,
     onModeSelected: (DiscoveryMode) -> Unit
 ) {
+    val view = LocalView.current
     Row(
         modifier = Modifier
             .background(ColageColors.Surface.copy(alpha = 0.6f), RoundedCornerShape(14.dp))
@@ -243,7 +261,10 @@ fun DiscoveryModePicker(
                 modifier = Modifier
                     .clip(RoundedCornerShape(10.dp))
                     .background(if (isSelected) LocalThemeColor.current else Color.Transparent)
-                    .clickable { onModeSelected(mode) }
+                    .clickable {
+                        Haptics.light(view)
+                        onModeSelected(mode)
+                    }
                     .padding(horizontal = 16.dp, vertical = 8.dp)
             )
         }
@@ -255,6 +276,7 @@ fun FloorPicker(
     selectedFloor: Int,
     onFloorSelected: (Int) -> Unit
 ) {
+    val view = LocalView.current
     val floors = listOf(6, 5, 4, 3, 2, 1, -1, -2)
 
     Column(
@@ -277,7 +299,10 @@ fun FloorPicker(
                 modifier = Modifier
                     .clip(RoundedCornerShape(6.dp))
                     .background(if (isSelected) LocalThemeColor.current.copy(alpha = 0.15f) else Color.Transparent)
-                    .clickable { onFloorSelected(floor) }
+                    .clickable {
+                        Haptics.light(view)
+                        onFloorSelected(floor)
+                    }
                     .padding(horizontal = 10.dp, vertical = 6.dp)
             )
         }

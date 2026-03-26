@@ -7,7 +7,9 @@ struct MapDiscoveryView: View {
     var allMapStudents: [NearbyStudent]
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var universityService: UniversityService
+    @EnvironmentObject var locationService: LocationService
     @State private var selectedStudent: NearbyStudent?
+    @State private var hasInitializedCamera = false
     @State private var viewport: Viewport = .camera(
         center: CLLocationCoordinate2D(latitude: 42.2780, longitude: -83.7382),
         zoom: 15.5,
@@ -27,12 +29,52 @@ struct MapDiscoveryView: View {
                 }
             )
             .ignoresSafeArea()
+
+            // Recenter button
+            VStack {
+                Spacer()
+                HStack {
+                    Spacer()
+                    Button {
+                        recenterOnUser()
+                    } label: {
+                        Image(systemName: "location.fill")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundStyle(ColageColors.textPrimary)
+                            .frame(width: 44, height: 44)
+                            .background(ColageColors.surface.opacity(0.9))
+                            .clipShape(Circle())
+                            .shadow(color: .black.opacity(0.3), radius: 4, y: 2)
+                    }
+                    .padding(.trailing, 16)
+                    .padding(.bottom, 120) // Above ad banner
+                }
+            }
+        }
+        .onAppear {
+            if !hasInitializedCamera {
+                recenterOnUser()
+                hasInitializedCamera = true
+            }
         }
         .sheet(item: $selectedStudent) { student in
             MiniProfileSheet(student: student)
                 .presentationDetents([.fraction(0.35), .large])
                 .presentationDragIndicator(.visible)
                 .presentationBackgroundInteraction(.enabled)
+        }
+    }
+
+    private func recenterOnUser() {
+        if let coord = locationService.currentLocation {
+            withAnimation(.easeInOut(duration: 0.5)) {
+                viewport = .camera(
+                    center: coord,
+                    zoom: 15.5,
+                    bearing: 0,
+                    pitch: 0
+                )
+            }
         }
     }
 }
@@ -94,6 +136,8 @@ struct MapboxMapView: UIViewRepresentable {
 
         private var imageCache: [String: UIImage] = [:]
         private var pendingDownloads: Set<String> = []
+        /// Track last known positions for smooth animation
+        private var lastPositions: [String: CLLocationCoordinate2D] = [:]
 
         func setupAnnotations(mapView: MapView) {
             let manager = mapView.annotations.makePointAnnotationManager()
@@ -127,11 +171,25 @@ struct MapboxMapView: UIViewRepresentable {
                     downloadAvatar(for: student, mapView: mapView)
                 }
 
-                var annotation = PointAnnotation(
-                    coordinate: CLLocationCoordinate2D(
-                        latitude: student.location.latitude,
-                        longitude: student.location.longitude
+                // Smooth position: interpolate from last known position
+                let targetCoord = CLLocationCoordinate2D(
+                    latitude: student.location.latitude,
+                    longitude: student.location.longitude
+                )
+                let displayCoord: CLLocationCoordinate2D
+                if let lastPos = lastPositions[student.profile.userId] {
+                    // Lerp 70% toward target for smooth movement
+                    displayCoord = CLLocationCoordinate2D(
+                        latitude: lastPos.latitude + (targetCoord.latitude - lastPos.latitude) * 0.7,
+                        longitude: lastPos.longitude + (targetCoord.longitude - lastPos.longitude) * 0.7
                     )
+                } else {
+                    displayCoord = targetCoord
+                }
+                lastPositions[student.profile.userId] = displayCoord
+
+                var annotation = PointAnnotation(
+                    coordinate: displayCoord
                 )
 
                 // Name label below photo

@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.colageclub.colage.core.design.*
+import com.colageclub.colage.core.design.EmptyStateView
 import com.colageclub.colage.data.models.NearbyStudent
 import com.colageclub.colage.features.discovery.MiniProfileSheet
 import com.colageclub.colage.features.discovery.NearbyStudentsViewModel
@@ -80,17 +81,11 @@ fun ListDiscoveryView(
         Spacer(Modifier.height(12.dp))
 
         if (students.isEmpty()) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Icon(Icons.Default.PersonOff, null, tint = ColageColors.TextTertiary, modifier = Modifier.size(40.dp))
-                    Spacer(Modifier.height(12.dp))
-                    Text("No students within range", style = ColageFonts.Body.copy(color = ColageColors.TextSecondary))
-                    Text("Try increasing the distance", style = ColageFonts.Caption.copy(color = ColageColors.TextTertiary))
-                }
-            }
+            EmptyStateView(
+                title = "No one nearby yet",
+                subtitle = "Try increasing the distance slider or switching floors",
+                emoji = "👀"
+            )
         } else {
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2),

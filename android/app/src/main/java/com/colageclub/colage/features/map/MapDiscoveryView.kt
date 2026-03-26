@@ -1,10 +1,16 @@
 package com.colageclub.colage.features.map
 
 import android.graphics.*
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
@@ -39,6 +45,7 @@ fun MapDiscoveryView(
     val themeArgb = themeColor.toArgb()
     val puckArgb = if (isVisible) themeArgb else ColageColors.Offline.toArgb()
     val context = LocalContext.current
+    var mapViewRef by remember { mutableStateOf<MapView?>(null) }
     // Cache downloaded avatar bitmaps by userId
     val avatarCache = remember { mutableMapOf<String, Bitmap>() }
     val pendingDownloads = remember { mutableSetOf<String>() }
@@ -60,6 +67,7 @@ fun MapDiscoveryView(
                     location.enabled = true
                     location.pulsingEnabled = isVisible
                     location.puckBearingEnabled = true
+                    mapViewRef = this
                 }
             },
             update = { mapView ->
@@ -124,6 +132,35 @@ fun MapDiscoveryView(
             },
             modifier = Modifier.fillMaxSize()
         )
+
+        // Recenter button (like Google Maps location FAB)
+        IconButton(
+            onClick = {
+                // Recenter on first student (self) or default
+                val self = students.firstOrNull { it.distance == 0.0 }
+                val lat = self?.location?.latitude ?: 42.2780
+                val lng = self?.location?.longitude ?: -83.7382
+                mapViewRef?.mapboxMap?.setCamera(
+                    cameraOptions {
+                        center(Point.fromLngLat(lng, lat))
+                        zoom(15.5)
+                    }
+                )
+            },
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(end = 16.dp, bottom = 120.dp)
+                .size(44.dp)
+                .clip(CircleShape)
+                .background(ColageColors.Surface.copy(alpha = 0.9f))
+        ) {
+            Icon(
+                Icons.Default.MyLocation,
+                contentDescription = "Recenter",
+                tint = ColageColors.TextPrimary,
+                modifier = Modifier.size(20.dp)
+            )
+        }
     }
 
     selectedStudent?.let { student ->

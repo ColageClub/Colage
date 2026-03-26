@@ -492,6 +492,9 @@ Resources:
       FunctionName: !Sub colage-get-upload-url-${Stage}
       Handler: index.handler
       CodeUri: ./functions/get-upload-url/
+      Environment:
+        Variables:
+          PHOTOS_CDN_DOMAIN: d1z8cujc2j64zs.cloudfront.net
       Policies:
         - S3CrudPolicy:
             BucketName: !Ref ProfilePhotosBucket

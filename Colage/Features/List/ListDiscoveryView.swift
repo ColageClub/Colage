@@ -65,19 +65,12 @@ struct ListDiscoveryView: View {
 
                 // Student grid
                 if students.filteredStudents.isEmpty {
-                    Spacer()
-                    VStack(spacing: 12) {
-                        Image(systemName: "person.slash")
-                            .font(.system(size: 40))
-                            .foregroundStyle(ColageColors.textTertiary)
-                        Text("No students within range")
-                            .font(ColageFonts.body)
-                            .foregroundStyle(ColageColors.textSecondary)
-                        Text("Try increasing the distance")
-                            .font(ColageFonts.caption)
-                            .foregroundStyle(ColageColors.textTertiary)
-                    }
-                    Spacer()
+                    EmptyStateView(
+                        icon: "person.2.slash",
+                        title: "No one nearby yet",
+                        subtitle: "Try increasing the distance slider or switching floors",
+                        emoji: "👀"
+                    )
                 } else {
                     ScrollView {
                         LazyVGrid(columns: columns, spacing: 12) {
