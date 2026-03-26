@@ -89,6 +89,7 @@ struct SettingsView: View {
                     Link(destination: URL(string: "https://colage.app/terms")!) {
                         SettingsRow(icon: "doc.text.fill", title: "Terms of Service")
                     }
+                    SettingsRow(icon: "map.fill", title: "Map Data", value: "© Mapbox, OpenStreetMap")
                 }
 
                 // Danger zone

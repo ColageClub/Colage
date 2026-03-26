@@ -153,6 +153,7 @@ fun SettingsScreen(
                 SettingsRowLink(Icons.Default.Description, "Terms of Service") {
                     context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://colageclub.com/terms")))
                 }
+                SettingsRow(Icons.Default.Map, "Map Data", "© Mapbox, OpenStreetMap")
             }
 
             // Danger zone

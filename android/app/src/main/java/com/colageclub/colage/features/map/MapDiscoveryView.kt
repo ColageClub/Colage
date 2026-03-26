@@ -66,6 +66,12 @@ fun MapDiscoveryView(
                             zoom(15.5)
                         }
                     )
+                    // Hide all Mapbox ornaments — attribution in Settings screen
+                    logo.enabled = false
+                    attribution.enabled = false
+                    scalebar.enabled = false
+                    compass.enabled = false
+
                     location.enabled = true
                     location.pulsingEnabled = isVisible
                     location.puckBearingEnabled = true
