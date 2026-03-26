@@ -36,10 +36,59 @@ class AppState: ObservableObject {
            KeychainWrapper.get(key: "access_token") != nil {
             UserProfile.current = profile
             authState = .authenticated
+            // Sync profile from server in background (picks up photo URL, etc.)
+            refreshProfileFromServer(userId: profile.userId)
         } else if KeychainWrapper.get(key: "access_token") != nil {
             authState = .authenticated
         } else {
             authState = .onboarding
+        }
+    }
+
+    /// Fetch latest profile from server and update local copy
+    private func refreshProfileFromServer(userId: String) {
+        Task {
+            do {
+                struct ServerProfile: Decodable {
+                    let profile: ProfileData
+                    struct ProfileData: Decodable {
+                        let userId: String
+                        let displayName: String?
+                        let profilePhotoURL: String?
+                        let bio: String?
+                        let major: String?
+                        let universityDomain: String?
+                        let isVisible: Bool?
+                        let socialLinks: [SocialLink]?
+                    }
+                }
+                let result: ServerProfile = try await APIClient.shared.request(
+                    method: "GET",
+                    path: "/users/\(userId)"
+                )
+                let p = result.profile
+                let updated = UserProfile(
+                    userId: p.userId,
+                    universityDomain: p.universityDomain ?? UserProfile.current?.universityDomain ?? "",
+                    displayName: p.displayName ?? UserProfile.current?.displayName ?? "",
+                    profilePhotoURL: p.profilePhotoURL,
+                    bio: p.bio,
+                    major: p.major,
+                    socialLinks: p.socialLinks ?? UserProfile.current?.socialLinks ?? [],
+                    isVisible: p.isVisible ?? true,
+                    serverType: UserProfile.current?.serverType ?? .student,
+                    createdAt: UserProfile.current?.createdAt ?? Date(),
+                    updatedAt: Date()
+                )
+                await MainActor.run {
+                    UserProfile.current = updated
+                    if let data = try? JSONEncoder().encode(updated) {
+                        UserDefaults.standard.set(data, forKey: "dev_profile")
+                    }
+                }
+            } catch {
+                print("Profile refresh failed: \(error)")
+            }
         }
     }
 }
