@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Horizontal ad banner shown at the bottom of the map view
 struct AdBannerView: View {
-    @Environment(.themeColor) private var themeColor
+    @Environment(\.themeColor) private var themeColor
     @State private var currentAd: AdData? = nil
     @State private var showAdDetail = false
     @State private var adIndex = 0
@@ -153,6 +153,7 @@ struct AdBannerView: View {
 // MARK: - Ad Detail Sheet
 
 struct AdDetailSheet: View {
+    @Environment(\.themeColor) private var themeColor
     let ad: AdData
     @Environment(\.dismiss) private var dismiss
 
@@ -282,6 +283,7 @@ struct AdDetailSheet: View {
 // MARK: - Info Badge
 
 struct InfoBadge: View {
+    @Environment(\.themeColor) private var themeColor
     let icon: String
     let text: String
 

@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct WelcomeScreen: View {
+    @Environment(\.themeColor) private var themeColor
     let onContinue: () -> Void
     let onLogin: () -> Void
 
@@ -82,6 +83,7 @@ struct WelcomeScreen: View {
 }
 
 struct FeatureRow: View {
+    @Environment(\.themeColor) private var themeColor
     let icon: String
     let title: String
     let subtitle: String

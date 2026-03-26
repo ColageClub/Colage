@@ -3,7 +3,7 @@ import SwiftUI
 /// Onboarding screen where the user picks Student or Alumni
 struct ServerTypeScreen: View {
     let onContinue: () -> Void
-    @Environment(.themeColor) private var themeColor
+    @Environment(\.themeColor) private var themeColor
     @EnvironmentObject var onboardingData: OnboardingData
 
     @State private var selected: ServerType? = nil
@@ -76,6 +76,7 @@ struct ServerTypeScreen: View {
 // MARK: - Server Type Card
 
 private struct ServerTypeCard: View {
+    @Environment(\.themeColor) private var themeColor
     let type: ServerType
     let icon: String
     let title: String

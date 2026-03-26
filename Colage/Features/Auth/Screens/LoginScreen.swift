@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Login screen — email + OTP verification for existing accounts
 struct LoginScreen: View {
-    @Environment(.themeColor) private var themeColor
+    @Environment(\.themeColor) private var themeColor
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var authService: AuthService
     @EnvironmentObject var universityService: UniversityService

@@ -5,6 +5,7 @@ import RealityKit
 /// AR discovery mode — floating name bubbles in camera view
 /// Falls back to a simulated view in the simulator
 struct ARDiscoveryView: View {
+    @Environment(\.themeColor) private var themeColor
     @ObservedObject var students: NearbyStudentsViewModel
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var universityService: UniversityService

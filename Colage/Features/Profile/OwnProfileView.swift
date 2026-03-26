@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Own profile view — shown when tapping your avatar
 struct OwnProfileView: View {
-    @Environment(.themeColor) private var themeColor
+    @Environment(\.themeColor) private var themeColor
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var authService: AuthService
     @EnvironmentObject var universityService: UniversityService
@@ -11,9 +11,6 @@ struct OwnProfileView: View {
     @State private var showSettings = false
 
     private var profile: UserProfile? { UserProfile.current }
-    private var themeColor: Color {
-        themeColor
-    }
 
     var body: some View {
         NavigationStack {

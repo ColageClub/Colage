@@ -2,7 +2,7 @@ import SwiftUI
 
 struct EmailOTPScreen: View {
     let onVerified: () -> Void
-    @Environment(.themeColor) private var themeColor
+    @Environment(\.themeColor) private var themeColor
     @EnvironmentObject var authService: AuthService
     @State private var code = ""
     @State private var isLoading = false

@@ -3,7 +3,7 @@ import PhotosUI
 
 struct PhotoUploadScreen: View {
     let onContinue: () -> Void
-    @Environment(.themeColor) private var themeColor
+    @Environment(\.themeColor) private var themeColor
     @EnvironmentObject var onboardingData: OnboardingData
     @State private var selectedItem: PhotosPickerItem?
     @State private var profileImage: Image?

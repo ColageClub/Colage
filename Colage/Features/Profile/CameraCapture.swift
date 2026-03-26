@@ -3,7 +3,7 @@ import UIKit
 
 /// Camera capture view for profile photos
 struct CameraCaptureView: UIViewControllerRepresentable {
-    @Environment(.themeColor) private var themeColor
+    @Environment(\.themeColor) private var themeColor
     @Binding var capturedImage: UIImage?
     @Environment(\.dismiss) private var dismiss
 
@@ -55,6 +55,7 @@ struct CameraCaptureView: UIViewControllerRepresentable {
 
 /// Circular crop overlay for profile photos
 struct CircularCropView: View {
+    @Environment(\.themeColor) private var themeColor
     let image: UIImage
     @Binding var croppedImage: UIImage?
     @Environment(\.dismiss) private var dismiss

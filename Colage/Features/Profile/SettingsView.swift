@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct SettingsView: View {
-    @Environment(.themeColor) private var themeColor
+    @Environment(\.themeColor) private var themeColor
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var authService: AuthService
     @EnvironmentObject var universityService: UniversityService
@@ -184,6 +184,7 @@ struct SettingsView: View {
 }
 
 struct SettingsRow: View {
+    @Environment(\.themeColor) private var themeColor
     let icon: String
     let title: String
     var value: String? = nil

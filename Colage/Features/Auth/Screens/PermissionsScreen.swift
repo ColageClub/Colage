@@ -4,7 +4,7 @@ import AVFoundation
 
 struct PermissionsScreen: View {
     let onContinue: () -> Void
-    @Environment(.themeColor) private var themeColor
+    @Environment(\.themeColor) private var themeColor
     @EnvironmentObject var locationService: LocationService
     @State private var locationGranted = false
     @State private var cameraGranted = false
@@ -123,6 +123,7 @@ struct PermissionsScreen: View {
 }
 
 struct PermissionCard: View {
+    @Environment(\.themeColor) private var themeColor
     let icon: String
     let title: String
     let description: String

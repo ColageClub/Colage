@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Root view — switches between onboarding and main app
 struct RootView: View {
-    @Environment(.themeColor) private var themeColor
+    @Environment(\.themeColor) private var themeColor
     @EnvironmentObject var appState: AppState
 
     var body: some View {
@@ -25,6 +25,7 @@ struct RootView: View {
 
 /// Simple launch screen with logo
 struct LaunchScreen: View {
+    @Environment(\.themeColor) private var themeColor
     @State private var animateIn = false
     @State private var pulse = false
 

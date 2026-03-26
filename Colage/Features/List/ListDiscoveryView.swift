@@ -2,7 +2,7 @@ import SwiftUI
 
 /// List discovery mode — 2-column grid sorted by distance with distance slider
 struct ListDiscoveryView: View {
-    @Environment(.themeColor) private var themeColor
+    @Environment(\.themeColor) private var themeColor
     @ObservedObject var students: NearbyStudentsViewModel
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var universityService: UniversityService
@@ -173,6 +173,7 @@ struct StudentCard: View {
 // MARK: - Floor Filter Chip
 
 struct FloorFilterChip: View {
+    @Environment(\.themeColor) private var themeColor
     let label: String
     let isSelected: Bool
     let action: () -> Void

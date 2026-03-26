@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Main home screen — contains the mode picker + Map/List/AR views
 struct HomeView: View {
-    @Environment(.themeColor) private var themeColor
+    @Environment(\.themeColor) private var themeColor
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var locationService: LocationService
     @EnvironmentObject var universityService: UniversityService

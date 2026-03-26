@@ -2,7 +2,7 @@ import SwiftUI
 
 struct SocialLinksScreen: View {
     let onContinue: () -> Void
-    @Environment(.themeColor) private var themeColor
+    @Environment(\.themeColor) private var themeColor
     @EnvironmentObject var onboardingData: OnboardingData
     @State private var links: [SocialPlatform: String] = [:]
     @State private var expandedPlatform: SocialPlatform?
@@ -83,6 +83,7 @@ struct SocialLinksScreen: View {
 }
 
 struct SocialLinkRow: View {
+    @Environment(\.themeColor) private var themeColor
     let platform: SocialPlatform
     @Binding var handle: String
     let isExpanded: Bool

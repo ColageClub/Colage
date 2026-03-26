@@ -2,7 +2,7 @@ import SwiftUI
 
 // MARK: - Primary Button
 struct ColagePrimaryButton: View {
-    @Environment(.themeColor) private var themeColor
+    @Environment(\.themeColor) private var themeColor
     let title: String
     let action: () -> Void
     var isLoading: Bool = false
@@ -33,7 +33,7 @@ struct ColagePrimaryButton: View {
 
 // MARK: - Text Field
 struct ColageTextField: View {
-    @Environment(.themeColor) private var themeColor
+    @Environment(\.themeColor) private var themeColor
     let placeholder: String
     @Binding var text: String
     var keyboardType: UIKeyboardType = .default
@@ -58,7 +58,7 @@ struct ColageTextField: View {
 
 // MARK: - OTP Code Field
 struct OTPCodeField: View {
-    @Environment(.themeColor) private var themeColor
+    @Environment(\.themeColor) private var themeColor
     @Binding var code: String
     let length: Int
     var onComplete: ((String) -> Void)? = nil
@@ -111,10 +111,10 @@ struct OTPCodeField: View {
 
 // MARK: - Circular Avatar
 struct AvatarView: View {
-    @Environment(.themeColor) private var themeColor
+    @Environment(\.themeColor) private var themeColor
     let imageURL: String?
     let size: CGFloat
-    var borderColor: Color = themeColor
+    var borderColor: Color?
     var showBorder: Bool = true
 
     var body: some View {
@@ -136,7 +136,7 @@ struct AvatarView: View {
         .clipShape(Circle())
         .overlay(
             Circle()
-                .strokeBorder(showBorder ? borderColor : .clear, lineWidth: 2)
+                .strokeBorder(showBorder ? (borderColor ?? themeColor) : .clear, lineWidth: 2)
         )
     }
 
@@ -160,7 +160,7 @@ struct AvatarView: View {
 
 // MARK: - Visibility Toggle Button
 struct VisibilityToggle: View {
-    @Environment(.themeColor) private var themeColor
+    @Environment(\.themeColor) private var themeColor
     @Binding var isVisible: Bool
 
     var body: some View {
@@ -179,7 +179,7 @@ struct VisibilityToggle: View {
 
 // MARK: - Floor Picker
 struct FloorPicker: View {
-    @Environment(.themeColor) private var themeColor
+    @Environment(\.themeColor) private var themeColor
     @Binding var selectedFloor: Int
     let floors: [Int]
 
@@ -221,7 +221,7 @@ struct FloorPicker: View {
 
 // MARK: - Segmented Mode Picker
 struct DiscoveryModePicker: View {
-    @Environment(.themeColor) private var themeColor
+    @Environment(\.themeColor) private var themeColor
     @Binding var activeMode: AppState.DiscoveryMode
 
     var body: some View {
@@ -280,7 +280,7 @@ extension String {
 
 // MARK: - Progress Steps Indicator
 struct OnboardingProgress: View {
-    @Environment(.themeColor) private var themeColor
+    @Environment(\.themeColor) private var themeColor
     let currentStep: Int
     let totalSteps: Int
 

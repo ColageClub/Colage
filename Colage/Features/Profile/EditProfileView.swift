@@ -3,7 +3,7 @@ import PhotosUI
 
 /// Edit profile screen — accessible from own profile
 struct EditProfileView: View {
-    @Environment(.themeColor) private var themeColor
+    @Environment(\.themeColor) private var themeColor
     @EnvironmentObject var authService: AuthService
     @Environment(\.dismiss) private var dismiss
     @State private var displayName: String
