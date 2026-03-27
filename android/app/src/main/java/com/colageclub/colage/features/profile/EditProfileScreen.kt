@@ -227,9 +227,14 @@ fun EditProfileScreen(
                             socialLinks = links,
                             updatedAt = System.currentTimeMillis()
                         )
-                        appViewModel.updateProfile(updated)
-                        isSaving = false
-                        onDismiss()
+                        appViewModel.updateProfileOnServer(
+                            updatedProfile = updated,
+                            newPhotoUri = selectedPhotoUri,
+                            onComplete = {
+                                isSaving = false
+                                onDismiss()
+                            }
+                        )
                     },
                     isLoading = isSaving,
                     isDisabled = displayName.isBlank()

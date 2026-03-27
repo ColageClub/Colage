@@ -109,7 +109,6 @@ class AuthViewModel @Inject constructor(
                 val result = apiClient.postEmailConfirm(email.lowercase(), code)
                 _isLoading.value = false
                 if (result.verified) {
-                    fetchAndStoreTokens()
                     _emailVerified.value = true
                 }
                 onResult(result.verified)
@@ -194,7 +193,10 @@ class AuthViewModel @Inject constructor(
 
         val profile = data.buildProfile(domain)
         saveProfileLocally(profile)
-        prefs.edit().putBoolean("onboarding_complete", true).apply()
+        prefs.edit()
+            .putBoolean("onboarding_complete", true)
+            .putString("user_email", data.email.lowercase())
+            .apply()
 
         if (!devMode) {
             viewModelScope.launch {
@@ -250,8 +252,15 @@ class AuthViewModel @Inject constructor(
                 onResult(true)
                 return@launch
             }
-            // POST /auth/login
-            onResult(false)
+            try {
+                apiClient.postEmailVerify(email.lowercase())
+                _isLoading.value = false
+                onResult(true)
+            } catch (e: Exception) {
+                _isLoading.value = false
+                _errorMessage.value = e.message
+                onResult(false)
+            }
         }
     }
 
@@ -302,10 +311,15 @@ class AuthViewModel @Inject constructor(
 
     // MARK: - Token Management
 
+    suspend fun completeOnboarding() {
+        fetchAndStoreTokens()
+    }
+
     private suspend fun fetchAndStoreTokens() {
         try {
             val email = _onboardingData.value.email
-            val tokens = apiClient.postLogin(email.lowercase())
+            val deviceId = secureStorage.getOrCreateDeviceId()
+            val tokens = apiClient.postLogin(email.lowercase(), deviceId)
             secureStorage.set(SecureStorage.KEY_ACCESS_TOKEN, tokens.accessToken)
             secureStorage.set(SecureStorage.KEY_ID_TOKEN, tokens.idToken)
             tokens.refreshToken?.let {

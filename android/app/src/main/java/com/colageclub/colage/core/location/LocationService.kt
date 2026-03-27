@@ -188,6 +188,8 @@ class LocationService @Inject constructor(
     private fun computeFloor(altitude: Double): Int {
         val ground = groundAltitude ?: return 1
         val delta = altitude - ground
+        // Dead zone: ignore small altitude changes (matches iOS)
+        if (Math.abs(delta) < 1.5) return 1
         return if (delta < -2.0) {
             maxOf((delta / metersPerFloor).toInt(), -2)
         } else {

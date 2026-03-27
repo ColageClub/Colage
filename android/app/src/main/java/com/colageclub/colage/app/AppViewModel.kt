@@ -4,14 +4,16 @@ import android.content.SharedPreferences
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.colageclub.colage.BuildConfig
+import android.content.Context
+import android.net.Uri
+import com.colageclub.colage.core.networking.ApiClient
 import com.colageclub.colage.core.networking.WebSocketManager
 import com.colageclub.colage.core.storage.SecureStorage
 import com.colageclub.colage.core.university.UniversityService
-import com.colageclub.colage.data.models.University
-import com.colageclub.colage.data.models.UniversityTheme
-import com.colageclub.colage.data.models.UserProfile
+import com.colageclub.colage.data.models.*
 import com.google.gson.Gson
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -28,11 +30,13 @@ enum class DiscoveryMode(val label: String) {
 
 @HiltViewModel
 class AppViewModel @Inject constructor(
+    @ApplicationContext private val appContext: Context,
     private val secureStorage: SecureStorage,
     private val prefs: SharedPreferences,
     val universityService: UniversityService,
     private val webSocketManager: WebSocketManager,
-    val locationService: com.colageclub.colage.core.location.LocationService
+    val locationService: com.colageclub.colage.core.location.LocationService,
+    private val apiClient: ApiClient
 ) : ViewModel() {
 
     private val gson = Gson()
@@ -113,6 +117,8 @@ class AppViewModel @Inject constructor(
         viewModelScope.launch {
             universityService.resolveUniversity(domain)
         }
+        // Sync profile from server (matches iOS refreshProfileFromServer)
+        refreshProfileFromServer()
     }
 
     fun logout() {
@@ -151,5 +157,86 @@ class AppViewModel @Inject constructor(
 
     fun selectTheme(theme: UniversityTheme) {
         universityService.selectTheme(theme)
+    }
+
+    fun updateProfileOnServer(
+        updatedProfile: UserProfile,
+        newPhotoUri: Uri? = null,
+        onComplete: () -> Unit = {}
+    ) {
+        // Update locally immediately
+        updateProfile(updatedProfile)
+
+        if (devMode) {
+            onComplete()
+            return
+        }
+
+        viewModelScope.launch {
+            try {
+                var photoUrl = updatedProfile.profilePhotoURL
+
+                // Upload photo if changed
+                if (newPhotoUri != null) {
+                    val contentType = "image/jpeg"
+                    val uploadUrlResp = apiClient.getPhotoUploadUrl(updatedProfile.userId, contentType)
+
+                    val inputStream = appContext.contentResolver.openInputStream(newPhotoUri)
+                    val bytes = inputStream?.readBytes()
+                    inputStream?.close()
+
+                    if (bytes != null) {
+                        apiClient.uploadToS3(uploadUrlResp.uploadUrl, bytes, contentType)
+                        photoUrl = uploadUrlResp.publicUrl
+                    }
+                }
+
+                // Update profile on server
+                apiClient.updateProfile(
+                    updatedProfile.userId,
+                    UpdateProfileRequest(
+                        displayName = updatedProfile.displayName,
+                        bio = updatedProfile.bio,
+                        major = updatedProfile.major,
+                        profilePhotoURL = photoUrl,
+                        socialLinks = updatedProfile.socialLinks
+                    )
+                )
+
+                // Update local with server photo URL
+                if (photoUrl != updatedProfile.profilePhotoURL) {
+                    updateProfile(updatedProfile.copy(profilePhotoURL = photoUrl))
+                }
+            } catch (_: Exception) {
+                // Fire-and-forget
+            }
+            onComplete()
+        }
+    }
+
+    fun refreshProfileFromServer() {
+        val profile = _currentProfile.value ?: return
+        if (devMode) return
+
+        viewModelScope.launch {
+            try {
+                val email = prefs.getString("user_email", null)
+                    ?: return@launch
+                val wrapper = apiClient.getProfile(email)
+                val resp = wrapper.profile
+                val updated = profile.copy(
+                    userId = resp.userId,
+                    displayName = resp.displayName ?: profile.displayName,
+                    profilePhotoURL = resp.profilePhotoURL ?: profile.profilePhotoURL,
+                    bio = resp.bio ?: profile.bio,
+                    major = resp.major ?: profile.major,
+                    socialLinks = resp.socialLinks ?: profile.socialLinks,
+                    universityDomain = resp.universityDomain ?: profile.universityDomain
+                )
+                updateProfile(updated)
+            } catch (_: Exception) {
+                // Silently fail
+            }
+        }
     }
 }

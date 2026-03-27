@@ -75,7 +75,8 @@ fun HomeScreen(appViewModel: AppViewModel) {
                             students = nearbyVM.mapStudents(),
                             themeColor = themeColor,
                             isVisible = isVisible,
-                            currentUserId = currentProfile?.userId
+                            currentUserId = currentProfile?.userId,
+                            currentLocationFlow = appViewModel.locationService.currentLocation
                         )
                     }
                     DiscoveryMode.LIST -> ListDiscoveryView(

@@ -19,7 +19,7 @@ class ApiException(val code: Int, message: String) : Exception(message)
 class ApiClient @Inject constructor(
     private val secureStorage: SecureStorage
 ) {
-    private val baseUrl = "https://api.colageclub.com"
+    private val baseUrl = "https://wn7mxcdxca.execute-api.us-east-2.amazonaws.com/dev"
     private val gson = Gson()
     private val mediaType = "application/json; charset=utf-8".toMediaType()
 
@@ -122,8 +122,8 @@ class ApiClient @Inject constructor(
     suspend fun postPhoneConfirm(phone: String, code: String): PhoneConfirmResponse =
         request("POST", "/auth/phone/confirm", PhoneConfirmRequest(phone, code), PhoneConfirmResponse::class.java)
 
-    suspend fun postLogin(email: String): TokenResponse =
-        request("POST", "/auth/login", LoginRequest(email), TokenResponse::class.java)
+    suspend fun postLogin(email: String, deviceId: String): TokenResponse =
+        request("POST", "/auth/login", LoginRequest(email, deviceId), TokenResponse::class.java)
 
     suspend fun postRefreshToken(refreshToken: String): TokenResponse =
         request("POST", "/auth/refresh", RefreshTokenRequest(refreshToken), TokenResponse::class.java)
@@ -133,4 +133,26 @@ class ApiClient @Inject constructor(
 
     suspend fun getUniversity(domain: String): UniversityResponse =
         request("GET", "/universities/$domain", null, UniversityResponse::class.java)
+
+    suspend fun getPhotoUploadUrl(userId: String, contentType: String): PhotoUploadUrlResponse =
+        request("POST", "/photos/upload-url", PhotoUploadUrlRequest(userId, contentType), PhotoUploadUrlResponse::class.java)
+
+    suspend fun updateProfile(userId: String, req: UpdateProfileRequest): Map<*, *> =
+        request("PUT", "/users/$userId", req, Map::class.java)
+
+    suspend fun getProfile(email: String): ProfileResponseWrapper =
+        request("GET", "/auth/me?email=${email}", null, ProfileResponseWrapper::class.java)
+
+    suspend fun uploadToS3(uploadUrl: String, imageBytes: ByteArray, contentType: String) = withContext(Dispatchers.IO) {
+        val body = imageBytes.toRequestBody(contentType.toMediaType())
+        val request = Request.Builder()
+            .url(uploadUrl)
+            .put(body)
+            .header("Content-Type", contentType)
+            .build()
+        val response = httpClient.newCall(request).execute()
+        if (!response.isSuccessful) {
+            throw ApiException(response.code, "S3 upload failed")
+        }
+    }
 }

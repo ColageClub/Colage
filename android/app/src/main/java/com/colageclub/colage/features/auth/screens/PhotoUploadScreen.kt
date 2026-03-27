@@ -21,9 +21,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.core.content.FileProvider
 import coil.compose.AsyncImage
 import com.colageclub.colage.core.design.*
 import com.colageclub.colage.features.auth.AuthViewModel
+import java.io.File
 
 @Composable
 fun PhotoUploadScreen(
@@ -32,6 +34,7 @@ fun PhotoUploadScreen(
 ) {
     val onboardingData by authViewModel.onboardingData.collectAsState()
     var selectedUri by remember { mutableStateOf<Uri?>(onboardingData.profilePhotoUri) }
+    val context = LocalContext.current
 
     val photoPicker = rememberLauncherForActivityResult(
         ActivityResultContracts.PickVisualMedia()
@@ -39,6 +42,20 @@ fun PhotoUploadScreen(
         uri?.let {
             selectedUri = it
             authViewModel.updateOnboardingPhoto(it)
+        }
+    }
+
+    // Camera intent
+    val cameraPhotoUri = remember {
+        val photoFile = File(context.cacheDir, "camera_photo_${System.currentTimeMillis()}.jpg")
+        FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", photoFile)
+    }
+    val cameraLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.TakePicture()
+    ) { success ->
+        if (success) {
+            selectedUri = cameraPhotoUri
+            authViewModel.updateOnboardingPhoto(cameraPhotoUri)
         }
     }
 
@@ -158,9 +175,7 @@ fun PhotoUploadScreen(
 
                 OutlinedButton(
                     onClick = {
-                        photoPicker.launch(
-                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                        )
+                        cameraLauncher.launch(cameraPhotoUri)
                     },
                     modifier = Modifier
                         .weight(1f)

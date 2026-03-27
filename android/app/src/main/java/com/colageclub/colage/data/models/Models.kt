@@ -156,7 +156,7 @@ data class EmailConfirmResponse(val verified: Boolean, val universityDomain: Str
 data class PhoneVerifyRequest(val phone: String, val email: String)
 data class PhoneConfirmRequest(val phone: String, val code: String)
 data class PhoneConfirmResponse(val verified: Boolean)
-data class LoginRequest(val email: String)
+data class LoginRequest(val email: String, val deviceId: String)
 
 data class TokenResponse(
     @SerializedName("accessToken") val accessToken: String,
@@ -185,4 +185,31 @@ data class UniversityResponse(
     val domain: String,
     val name: String,
     val memberCount: Int = 0
+)
+
+data class PhotoUploadUrlRequest(val userId: String, val contentType: String)
+data class PhotoUploadUrlResponse(val uploadUrl: String, val key: String, val publicUrl: String)
+
+data class UpdateProfileRequest(
+    val displayName: String? = null,
+    val bio: String? = null,
+    val major: String? = null,
+    val profilePhotoURL: String? = null,
+    val socialLinks: List<SocialLink>? = null
+)
+
+data class ProfileResponseWrapper(
+    val profile: ProfileResponse
+)
+
+data class ProfileResponse(
+    val userId: String,
+    val email: String? = null,
+    val displayName: String? = null,
+    val profilePhotoURL: String? = null,
+    val bio: String? = null,
+    val major: String? = null,
+    val socialLinks: List<SocialLink>? = null,
+    val universityDomain: String? = null,
+    val serverType: String? = null
 )

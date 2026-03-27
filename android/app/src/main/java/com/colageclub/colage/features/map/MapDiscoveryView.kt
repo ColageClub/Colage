@@ -21,9 +21,11 @@ import kotlinx.coroutines.launch
 import coil.imageLoader
 import coil.request.ImageRequest
 import coil.request.SuccessResult
+import android.location.Location
 import com.colageclub.colage.core.design.ColageColors
 import com.colageclub.colage.core.design.LocalThemeColor
 import com.colageclub.colage.data.models.NearbyStudent
+import kotlinx.coroutines.flow.StateFlow
 import com.colageclub.colage.features.discovery.MiniProfileSheet
 import com.mapbox.geojson.Point
 import com.mapbox.maps.plugin.attribution.attribution
@@ -45,6 +47,7 @@ fun MapDiscoveryView(
     themeColor: Color = LocalThemeColor.current,
     isVisible: Boolean = true,
     currentUserId: String? = null,
+    currentLocationFlow: StateFlow<Location?>? = null,
     onStudentTapped: (NearbyStudent) -> Unit = {}
 ) {
     var selectedStudent by remember { mutableStateOf<NearbyStudent?>(null) }
@@ -55,6 +58,8 @@ fun MapDiscoveryView(
     // Cache downloaded avatar bitmaps by userId
     val avatarCache = remember { mutableMapOf<String, Bitmap>() }
     val pendingDownloads = remember { mutableSetOf<String>() }
+    // Track last positions for smooth animation (matches iOS 70% lerp)
+    val lastPositions = remember { mutableMapOf<String, Pair<Double, Double>>() }
     // Trigger recomposition when a photo finishes downloading
     var photoRevision by remember { mutableIntStateOf(0) }
     val coroutineScope = rememberCoroutineScope()
@@ -120,8 +125,21 @@ fun MapDiscoveryView(
                         )
                     }
 
+                    // Smooth position: lerp 70% toward target (matches iOS)
+                    val targetLat = student.location.latitude
+                    val targetLng = student.location.longitude
+                    val displayPoint = lastPositions[userId]?.let { (lastLat, lastLng) ->
+                        val lerpLat = lastLat + (targetLat - lastLat) * 0.7
+                        val lerpLng = lastLng + (targetLng - lastLng) * 0.7
+                        lastPositions[userId] = lerpLat to lerpLng
+                        Point.fromLngLat(lerpLng, lerpLat)
+                    } ?: run {
+                        lastPositions[userId] = targetLat to targetLng
+                        Point.fromLngLat(targetLng, targetLat)
+                    }
+
                     val options = PointAnnotationOptions()
-                        .withPoint(Point.fromLngLat(student.location.longitude, student.location.latitude))
+                        .withPoint(displayPoint)
                         .withIconImage(bitmap)
                         .withIconSize(1.0)
                         .withIconAnchor(com.mapbox.maps.extension.style.layers.properties.generated.IconAnchor.CENTER)
@@ -148,10 +166,9 @@ fun MapDiscoveryView(
         // Recenter button (like Google Maps location FAB)
         IconButton(
             onClick = {
-                // Recenter on first student (self) or default
-                val self = students.firstOrNull { it.distance == 0.0 }
-                val lat = self?.location?.latitude ?: 42.2780
-                val lng = self?.location?.longitude ?: -83.7382
+                val gpsLocation = currentLocationFlow?.value
+                val lat = gpsLocation?.latitude ?: 42.2780
+                val lng = gpsLocation?.longitude ?: -83.7382
                 mapViewRef?.mapboxMap?.setCamera(
                     cameraOptions {
                         center(Point.fromLngLat(lng, lat))

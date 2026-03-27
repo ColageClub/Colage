@@ -38,9 +38,18 @@ class SecureStorage @Inject constructor(
         prefs.edit().clear().apply()
     }
 
+    fun getOrCreateDeviceId(): String {
+        val existing = get(KEY_DEVICE_ID)
+        if (existing != null) return existing
+        val newId = java.util.UUID.randomUUID().toString()
+        set(KEY_DEVICE_ID, newId)
+        return newId
+    }
+
     companion object {
         const val KEY_ACCESS_TOKEN = "access_token"
         const val KEY_ID_TOKEN = "id_token"
         const val KEY_REFRESH_TOKEN = "refresh_token"
+        const val KEY_DEVICE_ID = "device_id"
     }
 }

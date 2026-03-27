@@ -5,6 +5,8 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -100,7 +102,7 @@ fun OnboardingNavHost(
         composable(Screen.ServerType.route) {
             ServerTypeScreen(
                 authViewModel = authViewModel,
-                onContinue = { navController.navigate(Screen.PhoneEntry.route) }
+                onContinue = { navController.navigate(Screen.PhotoUpload.route) }
             )
         }
 
@@ -146,11 +148,15 @@ fun OnboardingNavHost(
         }
 
         composable(Screen.UniversityWelcome.route) {
+            val scope = rememberCoroutineScope()
             UniversityWelcomeScreen(
                 authViewModel = authViewModel,
                 onEnter = {
                     authViewModel.createProfile {
-                        appViewModel.setAuthenticated()
+                        scope.launch {
+                            authViewModel.completeOnboarding()
+                            appViewModel.setAuthenticated()
+                        }
                     }
                 }
             )
