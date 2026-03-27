@@ -110,8 +110,33 @@ struct HomeView: View {
         }
         .onAppear {
             locationService.startTracking()
-            nearbyStudents.loadMockData()
+
+            if AppState.devMode {
+                nearbyStudents.loadMockData()
+            } else {
+                // Connect WebSocket
+                let domain = UserProfile.current?.universityDomain ?? ""
+                WebSocketManager.shared.connect(universityDomain: domain)
+
+                // Start listening for real-time updates
+                nearbyStudents.startListeningForUpdates()
+
+                // Fetch initial nearby students once we have GPS
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                    if let coord = locationService.currentLocation {
+                        nearbyStudents.fetchNearbyStudents(
+                            latitude: coord.latitude,
+                            longitude: coord.longitude,
+                            domain: domain
+                        )
+                    }
+                }
+            }
+
             nearbyStudents.filterFloor = appState.currentFloor
+        }
+        .onDisappear {
+            nearbyStudents.stopListening()
         }
         .onChange(of: appState.isVisible) { _, isVisible in
             if isVisible {
@@ -123,7 +148,7 @@ struct HomeView: View {
     }
 }
 
-/// Manages nearby student data (mock for now)
+/// Manages nearby student data — fetches from API + receives WebSocket updates
 class NearbyStudentsViewModel: ObservableObject {
     @Published var students: [NearbyStudent] = []
     @Published var maxDistance: Double = 0.5 // list slider position (0...1), logarithmic
@@ -149,6 +174,125 @@ class NearbyStudentsViewModel: ObservableObject {
         students = (0..<20).map { i in
             NearbyStudent.mock(index: i, baseLat: baseLat, baseLng: baseLng)
         }
+    }
+
+    // MARK: - Real Data
+
+    /// Fetch nearby students from the API
+    func fetchNearbyStudents(latitude: Double, longitude: Double, domain: String) {
+        Task {
+            do {
+                struct NearbyResponse: Decodable {
+                    let students: [NearbyStudentResponse]
+                    struct NearbyStudentResponse: Decodable {
+                        let profile: ProfileData
+                        let location: LocationData
+                        let distance: Double
+                        struct ProfileData: Decodable {
+                            let userId: String
+                            let displayName: String?
+                            let profilePhotoURL: String?
+                            let bio: String?
+                            let major: String?
+                            let socialLinks: [SocialLink]?
+                            let isVisible: Bool?
+                        }
+                        struct LocationData: Decodable {
+                            let latitude: Double
+                            let longitude: Double
+                            let altitude: Double?
+                            let floor: Int?
+                            let timestamp: String?
+                        }
+                    }
+                }
+
+                let path = "/nearby?domain=\(domain)&lat=\(latitude)&lng=\(longitude)&maxDistance=5000"
+                let response: NearbyResponse = try await APIClient.shared.request(method: "GET", path: path)
+
+                let nearbyStudents = response.students.compactMap { s -> NearbyStudent? in
+                    let profile = UserProfile(
+                        userId: s.profile.userId,
+                        universityDomain: domain,
+                        displayName: s.profile.displayName ?? "Student",
+                        profilePhotoURL: s.profile.profilePhotoURL,
+                        bio: s.profile.bio,
+                        major: s.profile.major,
+                        socialLinks: s.profile.socialLinks ?? [],
+                        isVisible: s.profile.isVisible ?? true,
+                        serverType: .student,
+                        createdAt: Date(),
+                        updatedAt: Date()
+                    )
+                    let location = StudentLocation(
+                        userId: s.profile.userId,
+                        latitude: s.location.latitude,
+                        longitude: s.location.longitude,
+                        altitude: s.location.altitude ?? 0,
+                        floor: s.location.floor ?? 1,
+                        timestamp: Date()
+                    )
+                    // Don't include self
+                    guard s.profile.userId != UserProfile.current?.userId else { return nil }
+                    return NearbyStudent(profile: profile, location: location, distance: s.distance)
+                }
+
+                await MainActor.run {
+                    self.students = nearbyStudents
+                }
+            } catch {
+                print("[Nearby] Failed to fetch: \(error)")
+            }
+        }
+    }
+
+    /// Wire WebSocket callbacks for real-time updates
+    func startListeningForUpdates() {
+        WebSocketManager.shared.onStudentJoined = { [weak self] location in
+            self?.handleLocationUpdate(location)
+        }
+        WebSocketManager.shared.onStudentLeft = { [weak self] userId in
+            self?.students.removeAll { $0.profile.userId == userId }
+        }
+        WebSocketManager.shared.onLocationUpdate = { [weak self] locations in
+            for location in locations {
+                self?.handleLocationUpdate(location)
+            }
+        }
+    }
+
+    /// Handle an incoming location update from WebSocket
+    private func handleLocationUpdate(_ location: StudentLocation) {
+        // Don't track self
+        guard location.userId != UserProfile.current?.userId else { return }
+
+        if let index = students.firstIndex(where: { $0.profile.userId == location.userId }) {
+            // Update existing student's location
+            students[index].location = location
+        } else {
+            // New student — create with minimal profile info
+            // The WebSocket broadcast now includes displayName/profilePhotoURL
+            let profile = UserProfile(
+                userId: location.userId,
+                universityDomain: UserProfile.current?.universityDomain ?? "",
+                displayName: location.displayName ?? "Student",
+                profilePhotoURL: location.profilePhotoURL,
+                bio: nil,
+                major: location.major,
+                socialLinks: [],
+                isVisible: true,
+                serverType: .student,
+                createdAt: Date(),
+                updatedAt: Date()
+            )
+            students.append(NearbyStudent(profile: profile, location: location, distance: 0))
+        }
+    }
+
+    func stopListening() {
+        WebSocketManager.shared.onStudentJoined = nil
+        WebSocketManager.shared.onStudentLeft = nil
+        WebSocketManager.shared.onLocationUpdate = nil
     }
 
     /// All students on the selected floor (no distance limit) — used by Map

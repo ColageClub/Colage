@@ -144,6 +144,10 @@ struct StudentLocation: Codable, Identifiable {
     let altitude: Double
     let floor: Int
     let timestamp: Date
+    // Optional profile snapshot from WebSocket broadcast
+    var displayName: String?
+    var profilePhotoURL: String?
+    var major: String?
 }
 
 // MARK: - Nearby Student (location + profile snapshot)

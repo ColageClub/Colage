@@ -7,6 +7,7 @@ import { encode as geohashEncode } from './shared/geohash.mjs';
 const ddb = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 const CONNECTIONS_TABLE = process.env.CONNECTIONS_TABLE || 'colage-connections-dev';
 const LOCATIONS_TABLE = process.env.LOCATIONS_TABLE;
+const USERS_TABLE = process.env.USERS_TABLE;
 
 export const handler = async (event) => {
   const connectionId = event.requestContext.connectionId;
@@ -65,6 +66,21 @@ export const handler = async (event) => {
       },
     }));
 
+    // Fetch minimal profile info for broadcast
+    let profile = null;
+    if (USERS_TABLE) {
+      try {
+        const userResult = await ddb.send(new GetCommand({
+          TableName: USERS_TABLE,
+          Key: { userId: data.userId },
+          ProjectionExpression: 'displayName, profilePhotoURL, major',
+        }));
+        profile = userResult.Item || null;
+      } catch (_) {
+        // Non-fatal — broadcast without profile
+      }
+    }
+
     // Broadcast to peers in same university
     const peers = await ddb.send(new QueryCommand({
       TableName: CONNECTIONS_TABLE,
@@ -82,6 +98,10 @@ export const handler = async (event) => {
         altitude,
         floor,
         timestamp: new Date().toISOString(),
+        // Include profile snapshot so clients can render markers without extra API call
+        displayName: profile?.displayName || null,
+        profilePhotoURL: profile?.profilePhotoURL || null,
+        major: profile?.major || null,
       },
     });
 

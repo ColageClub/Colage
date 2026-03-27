@@ -47,10 +47,26 @@ fun HomeScreen(appViewModel: AppViewModel) {
     var showEditProfile by remember { mutableStateOf(false) }
     var showSettings by remember { mutableStateOf(false) }
 
-    // Load mock data on first appear
+    // Load data on first appear
     LaunchedEffect(Unit) {
         appViewModel.onHomeReady()
-        nearbyVM.loadMockData()
+        if (appViewModel.devMode) {
+            nearbyVM.loadMockData()
+        } else {
+            nearbyVM.startListeningForUpdates()
+            // Fetch initial nearby students after a short delay for GPS fix
+            kotlinx.coroutines.delay(2000)
+            val location = appViewModel.locationService.currentLocation.value
+            val domain = currentProfile?.universityDomain ?: ""
+            if (location != null) {
+                nearbyVM.fetchNearbyStudents(
+                    latitude = location.latitude,
+                    longitude = location.longitude,
+                    domain = domain,
+                    selfUserId = currentProfile?.userId
+                )
+            }
+        }
     }
 
     // Sync floor filter

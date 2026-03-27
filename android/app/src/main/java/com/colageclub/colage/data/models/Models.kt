@@ -110,7 +110,11 @@ data class StudentLocation(
     val longitude: Double,
     val altitude: Double = 0.0,
     val floor: Int = 1,
-    val timestamp: Long = System.currentTimeMillis()
+    val timestamp: Long = System.currentTimeMillis(),
+    // Optional profile snapshot from WebSocket broadcast
+    val displayName: String? = null,
+    val profilePhotoURL: String? = null,
+    val major: String? = null
 )
 
 // MARK: - Nearby Student
@@ -212,4 +216,34 @@ data class ProfileResponse(
     val socialLinks: List<SocialLink>? = null,
     val universityDomain: String? = null,
     val serverType: String? = null
+)
+
+// MARK: - Nearby API Response
+
+data class NearbyResponse(
+    val students: List<NearbyStudentResponse>
+)
+
+data class NearbyStudentResponse(
+    val profile: NearbyProfileData,
+    val location: NearbyLocationData,
+    val distance: Double
+)
+
+data class NearbyProfileData(
+    val userId: String,
+    val displayName: String? = null,
+    val profilePhotoURL: String? = null,
+    val bio: String? = null,
+    val major: String? = null,
+    val socialLinks: List<SocialLink>? = null,
+    val isVisible: Boolean? = null
+)
+
+data class NearbyLocationData(
+    val latitude: Double,
+    val longitude: Double,
+    val altitude: Double? = null,
+    val floor: Int? = null,
+    val timestamp: String? = null
 )

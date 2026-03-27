@@ -384,9 +384,13 @@ class AuthService: ObservableObject {
     /// Authenticate with Cognito and store tokens in Keychain
     func fetchAndStoreTokens() async {
         do {
-            let email = enteredEmail.lowercased()
+            var email = enteredEmail.lowercased()
+            // Fall back to persisted email if in-memory value was lost
+            if email.isEmpty {
+                email = (UserDefaults.standard.string(forKey: "user_email") ?? "").lowercased()
+            }
             guard !email.isEmpty else {
-                print("[Auth] fetchAndStoreTokens: enteredEmail is empty!")
+                print("[Auth] fetchAndStoreTokens: enteredEmail is empty and no persisted email!")
                 return
             }
             print("[Auth] fetchAndStoreTokens: requesting tokens for \(email)")
