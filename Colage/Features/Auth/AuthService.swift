@@ -34,6 +34,7 @@ class AuthService: ObservableObject {
     /// Send email OTP
     func sendEmailOTP(email: String) async -> Bool {
         enteredEmail = email
+        UserDefaults.standard.set(email.lowercased(), forKey: "user_email")
         isLoading = true
         defer { isLoading = false }
 
@@ -383,6 +384,12 @@ class AuthService: ObservableObject {
     /// Authenticate with Cognito and store tokens in Keychain
     func fetchAndStoreTokens() async {
         do {
+            let email = enteredEmail.lowercased()
+            guard !email.isEmpty else {
+                print("[Auth] fetchAndStoreTokens: enteredEmail is empty!")
+                return
+            }
+            print("[Auth] fetchAndStoreTokens: requesting tokens for \(email)")
             struct LoginRequest: Encodable { 
                 let email: String 
                 let deviceId: String
@@ -391,7 +398,7 @@ class AuthService: ObservableObject {
                 method: "POST",
                 path: "/auth/login",
                 body: LoginRequest(
-                    email: enteredEmail.lowercased(),
+                    email: email,
                     deviceId: APIClient.deviceId()
                 )
             )

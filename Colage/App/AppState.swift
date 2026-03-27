@@ -36,8 +36,11 @@ class AppState: ObservableObject {
            KeychainWrapper.get(key: "access_token") != nil {
             UserProfile.current = profile
             authState = .authenticated
-            // Sync profile from server in background (picks up photo URL, etc.)
-            refreshProfileFromServer(userId: profile.userId)
+            // Sync profile from server using email (no auth required)
+            let email = UserDefaults.standard.string(forKey: "user_email") ?? ""
+            if !email.isEmpty {
+                refreshProfileFromServer(email: email)
+            }
         } else if KeychainWrapper.get(key: "access_token") != nil {
             authState = .authenticated
         } else {
@@ -45,8 +48,8 @@ class AppState: ObservableObject {
         }
     }
 
-    /// Fetch latest profile from server and update local copy
-    private func refreshProfileFromServer(userId: String) {
+    /// Fetch latest profile from server by email and update local copy
+    private func refreshProfileFromServer(email: String) {
         Task {
             do {
                 struct ServerProfile: Decodable {
@@ -62,11 +65,13 @@ class AppState: ObservableObject {
                         let socialLinks: [SocialLink]?
                     }
                 }
+                let encoded = email.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? email
                 let result: ServerProfile = try await APIClient.shared.request(
                     method: "GET",
-                    path: "/users/\(userId)"
+                    path: "/auth/me?email=\(encoded)"
                 )
                 let p = result.profile
+                print("[Profile] Synced from server: userId=\(p.userId), photo=\(p.profilePhotoURL ?? "nil")")
                 let updated = UserProfile(
                     userId: p.userId,
                     universityDomain: p.universityDomain ?? UserProfile.current?.universityDomain ?? "",
