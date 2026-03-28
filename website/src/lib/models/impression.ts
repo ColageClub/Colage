@@ -84,6 +84,6 @@ export async function checkFrequencyCap(adId: string, studentId: string): Promis
     getImpressionCount(adId, studentId, startOfDay.getTime()),
   ]);
 
-  // Max 3/student/ad/hour, max 10/student/ad/day
-  return hourly < 3 && daily < 10;
+  // Max 20/student/ad/hour, max 100/student/ad/day (relaxed for early testing)
+  return hourly < 20 && daily < 100;
 }
