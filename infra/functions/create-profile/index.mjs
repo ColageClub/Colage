@@ -1,5 +1,5 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocumentClient, PutCommand, GetCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient, PutCommand, GetCommand, UpdateCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
 import { randomUUID } from 'crypto';
 import { response, parseBody, validate, sanitize, isValidEduEmail, rateLimit, getClientIP } from './shared/validate.mjs';
 
@@ -22,11 +22,19 @@ export const handler = async (event) => {
       return response(429, { error: 'Too many accounts created. Try again later.' });
     }
 
+    // Verify JWT email matches request body email
+    const jwtEmail = event.requestContext?.authorizer?.jwt?.claims?.email;
+    if (!jwtEmail) return response(401, { error: 'Unauthorized' });
+
     const body = parseBody(event);
     const err = validate(body, ['email', 'displayName', 'universityDomain']);
     if (err) return response(400, { error: err });
 
     const email = sanitize(body.email, 254).toLowerCase();
+
+    if (email !== jwtEmail.toLowerCase()) {
+      return response(403, { error: 'Email does not match authenticated user' });
+    }
     const displayName = sanitize(body.displayName, 100);
     const bio = body.bio ? sanitize(body.bio, 500) : null;
     const major = body.major ? sanitize(body.major, 100) : null;
@@ -34,6 +42,17 @@ export const handler = async (event) => {
 
     if (!isValidEduEmail(email)) {
       return response(400, { error: 'Valid .edu email required' });
+    }
+
+    // Check for duplicate email
+    const existing = await ddb.send(new QueryCommand({
+      TableName: USERS_TABLE,
+      IndexName: 'by-email',
+      KeyConditionExpression: 'email = :email',
+      ExpressionAttributeValues: { ':email': email },
+    }));
+    if (existing.Items?.length) {
+      return response(409, { error: 'A profile already exists for this email' });
     }
     if (!universityDomain.endsWith('.edu')) {
       return response(400, { error: 'Valid .edu domain required' });

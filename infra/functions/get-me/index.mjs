@@ -1,18 +1,20 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocumentClient, ScanCommand } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient, QueryCommand } from '@aws-sdk/lib-dynamodb';
 
 const ddb = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 const USERS_TABLE = process.env.USERS_TABLE;
 
 export const handler = async (event) => {
   try {
-    const email = event.queryStringParameters?.email;
-    if (!email) return response(400, { error: 'email query param required' });
+    // Extract email from JWT claims (Cognito authorizer)
+    const email = event.requestContext?.authorizer?.jwt?.claims?.email;
+    if (!email) return response(401, { error: 'Unauthorized' });
 
-    // Scan for user by email (GSI would be better but this works for now)
-    const result = await ddb.send(new ScanCommand({
+    // Query by-email GSI instead of scanning
+    const result = await ddb.send(new QueryCommand({
       TableName: USERS_TABLE,
-      FilterExpression: 'email = :email',
+      IndexName: 'by-email',
+      KeyConditionExpression: 'email = :email',
       ExpressionAttributeValues: { ':email': email.toLowerCase() },
     }));
 
@@ -20,8 +22,8 @@ export const handler = async (event) => {
       return response(404, { error: 'User not found' });
     }
 
-    const { email: _, ...publicProfile } = result.Items[0];
-    return response(200, { profile: publicProfile });
+    // Return full profile (including email) since this is the user's own profile
+    return response(200, { profile: result.Items[0] });
   } catch (err) {
     console.error('get-me error:', err);
     return response(500, { error: 'Failed to get profile' });

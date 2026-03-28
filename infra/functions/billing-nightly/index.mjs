@@ -4,16 +4,32 @@
 // Pauses ads if balance = $0, sends warning if balance < $10
 
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocumentClient, ScanCommand, QueryCommand, UpdateCommand, GetCommand } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient, ScanCommand, UpdateCommand, GetCommand, PutCommand } from '@aws-sdk/lib-dynamodb';
+import { SSMClient, GetParameterCommand } from '@aws-sdk/client-ssm';
 import Stripe from 'stripe';
 
 const ddb = DynamoDBDocumentClient.from(new DynamoDBClient({}));
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+const ssm = new SSMClient({});
 
 const ADS_TABLE = process.env.ADS_TABLE;
 const BUSINESSES_TABLE = process.env.BUSINESSES_TABLE;
 const DAILY_SPEND_TABLE = process.env.DAILY_SPEND_TABLE;
 const IMPRESSIONS_TABLE = process.env.IMPRESSIONS_TABLE;
+const RATE_LIMIT_TABLE = process.env.RATE_LIMIT_TABLE;
+
+// Cache Stripe client across cold starts (loaded from SSM)
+let stripeClient = null;
+
+async function getStripeClient() {
+  if (stripeClient) return stripeClient;
+  const stage = process.env.STAGE || 'dev';
+  const result = await ssm.send(new GetParameterCommand({
+    Name: `/colage/${stage}/stripe-secret-key`,
+    WithDecryption: true,
+  }));
+  stripeClient = new Stripe(result.Parameter.Value);
+  return stripeClient;
+}
 
 // CPM scales with demand per school
 function getCPM(advertiserCount) {
@@ -40,6 +56,31 @@ export async function handler(event) {
   const results = { processed: 0, charged: 0, paused: 0, warnings: 0, errors: [] };
 
   try {
+    // Idempotency: check if billing already completed for this date
+    const runKey = `billing-run#${billingDate}`;
+    try {
+      await ddb.send(new PutCommand({
+        TableName: RATE_LIMIT_TABLE,
+        Item: {
+          pk: runKey,
+          status: 'running',
+          startedAt: new Date().toISOString(),
+          ttl: Math.floor(Date.now() / 1000) + 7 * 86400, // Expire after 7 days
+        },
+        ConditionExpression: 'attribute_not_exists(pk) OR #s <> :completed',
+        ExpressionAttributeNames: { '#s': 'status' },
+        ExpressionAttributeValues: { ':completed': 'completed' },
+      }));
+    } catch (condErr) {
+      if (condErr.name === 'ConditionalCheckFailedException') {
+        console.log(`Billing for ${billingDate} already completed, skipping`);
+        return { skipped: true, reason: 'already_completed', billingDate };
+      }
+      throw condErr;
+    }
+
+    const stripe = await getStripeClient();
+
     // 1. Get all active ads
     const adsResult = await ddb.send(new ScanCommand({
       TableName: ADS_TABLE,
@@ -90,6 +131,13 @@ export async function handler(event) {
 
           if (!spend || spend.impressionCount === 0) {
             console.log(`Ad ${ad.id}: no impressions on ${billingDate}`);
+            continue;
+          }
+
+          // Idempotency: skip if already billed (spend field already set)
+          if (spend.spend && spend.spend > 0) {
+            console.log(`Ad ${ad.id}: already billed $${spend.spend} for ${billingDate}, skipping`);
+            results.processed++;
             continue;
           }
 
@@ -178,6 +226,18 @@ export async function handler(event) {
         results.errors.push(`Error for ${businessId}: ${bizErr.message}`);
       }
     }
+
+    // Mark billing run as completed
+    await ddb.send(new UpdateCommand({
+      TableName: RATE_LIMIT_TABLE,
+      Key: { pk: runKey },
+      UpdateExpression: 'SET #s = :completed, completedAt = :now',
+      ExpressionAttributeNames: { '#s': 'status' },
+      ExpressionAttributeValues: {
+        ':completed': 'completed',
+        ':now': new Date().toISOString(),
+      },
+    }));
   } catch (err) {
     console.error('Nightly billing failed:', err);
     results.errors.push(`Fatal: ${err.message}`);

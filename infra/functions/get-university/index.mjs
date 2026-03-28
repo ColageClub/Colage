@@ -1,5 +1,6 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, GetCommand, PutCommand } from '@aws-sdk/lib-dynamodb';
+import { response } from './shared/validate.mjs';
 
 const ddb = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 const UNIVERSITIES_TABLE = process.env.UNIVERSITIES_TABLE;
@@ -31,6 +32,10 @@ export const handler = async (event) => {
   try {
     const domain = event.pathParameters?.domain;
     if (!domain) return response(400, { error: 'domain required' });
+
+    if (!domain.endsWith('.edu')) {
+      return response(400, { error: 'Invalid university domain: must be a .edu domain' });
+    }
 
     let result = await ddb.send(new GetCommand({
       TableName: UNIVERSITIES_TABLE,
@@ -70,11 +75,3 @@ export const handler = async (event) => {
     return response(500, { error: 'Failed to get university' });
   }
 };
-
-function response(statusCode, body) {
-  return {
-    statusCode,
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  };
-}

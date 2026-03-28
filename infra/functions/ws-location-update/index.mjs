@@ -26,10 +26,7 @@ export const handler = async (event) => {
 
     const { data } = body;
 
-    if (!data?.userId || typeof data.userId !== 'string' || data.userId.length > 128) {
-      return { statusCode: 400, body: 'Invalid userId' };
-    }
-    if (!isValidCoordinate(data.latitude, data.longitude)) {
+    if (!isValidCoordinate(data?.latitude, data?.longitude)) {
       return { statusCode: 400, body: 'Invalid coordinates' };
     }
 
@@ -37,13 +34,18 @@ export const handler = async (event) => {
     const floor = Number.isInteger(data.floor) ? Math.max(-2, Math.min(data.floor, 200)) : 1;
     const altitude = typeof data.altitude === 'number' ? data.altitude : 0;
 
-    // Get connection info
+    // Get verified userId from ConnectionsTable (set during $connect auth)
     const conn = await ddb.send(new GetCommand({
       TableName: CONNECTIONS_TABLE,
       Key: { connectionId },
     }));
 
-    const domain = conn.Item?.universityDomain || 'unknown';
+    if (!conn.Item?.userId) {
+      return { statusCode: 401, body: 'Connection not authenticated' };
+    }
+
+    const verifiedUserId = conn.Item.userId;
+    const domain = conn.Item.universityDomain || 'unknown';
 
     // Compute geohash for spatial indexing (precision 7 = ~150m cells)
     const latitude = parseFloat(data.latitude);
@@ -55,7 +57,7 @@ export const handler = async (event) => {
       TableName: LOCATIONS_TABLE,
       Item: {
         universityDomain: domain,
-        userId: data.userId,
+        userId: verifiedUserId,
         latitude,
         longitude,
         altitude,
@@ -72,7 +74,7 @@ export const handler = async (event) => {
       try {
         const userResult = await ddb.send(new GetCommand({
           TableName: USERS_TABLE,
-          Key: { userId: data.userId },
+          Key: { userId: verifiedUserId },
           ProjectionExpression: 'displayName, profilePhotoURL, major',
         }));
         profile = userResult.Item || null;
@@ -92,7 +94,7 @@ export const handler = async (event) => {
     const message = JSON.stringify({
       action: 'location.update',
       data: {
-        userId: data.userId,
+        userId: verifiedUserId,
         latitude: parseFloat(data.latitude),
         longitude: parseFloat(data.longitude),
         altitude,

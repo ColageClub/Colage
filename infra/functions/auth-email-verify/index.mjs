@@ -2,6 +2,7 @@ import { CognitoIdentityProviderClient, SignUpCommand, AdminGetUserCommand, Rese
 import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, PutCommand } from '@aws-sdk/lib-dynamodb';
+import crypto from 'node:crypto';
 import { response, parseBody, isValidEduEmail, sanitize, rateLimit, getClientIP } from './shared/validate.mjs';
 
 const cognito = new CognitoIdentityProviderClient({});
@@ -15,7 +16,7 @@ const OTP_TABLE = process.env.OTP_TABLE_NAME || 'colage-otp-dev';
 const FROM_EMAIL = process.env.FROM_EMAIL || 'Colage <admin@colageclub.com>';
 
 function generateOTP() {
-  return Math.floor(100000 + Math.random() * 900000).toString();
+  return crypto.randomInt(100000, 999999).toString();
 }
 
 export const handler = async (event) => {

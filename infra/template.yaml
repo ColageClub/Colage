@@ -232,7 +232,11 @@ Resources:
         CorsRules:
           - AllowedHeaders: ['*']
             AllowedMethods: [GET, PUT]
-            AllowedOrigins: ['*']
+            AllowedOrigins:
+              - 'https://colageclub.com'
+              - 'https://www.colageclub.com'
+              - 'http://localhost:3000'
+              - 'http://localhost:3001'
             MaxAge: 3600
       LifecycleConfiguration:
         Rules:
@@ -254,7 +258,11 @@ Resources:
       CorsConfiguration:
         AllowHeaders: ['*']
         AllowMethods: ['*']
-        AllowOrigins: ['*']
+        AllowOrigins:
+          - 'https://colageclub.com'
+          - 'https://www.colageclub.com'
+          - 'http://localhost:3000'
+          - 'http://localhost:3001'
       Auth:
         DefaultAuthorizer: CognitoAuth
         Authorizers:
@@ -336,38 +344,6 @@ Resources:
             Auth:
               Authorizer: NONE
 
-  AuthPhoneVerifyFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: !Sub colage-auth-phone-verify-${Stage}
-      Handler: index.handler
-      CodeUri: ./functions/auth-phone-verify/
-      Events:
-        Api:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref ColageApi
-            Path: /auth/phone/verify
-            Method: POST
-            Auth:
-              Authorizer: NONE
-
-  AuthPhoneConfirmFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: !Sub colage-auth-phone-confirm-${Stage}
-      Handler: index.handler
-      CodeUri: ./functions/auth-phone-confirm/
-      Events:
-        Api:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref ColageApi
-            Path: /auth/phone/confirm
-            Method: POST
-            Auth:
-              Authorizer: NONE
-
   # ============================================================
   # LAMBDA FUNCTIONS - Auth Login + Refresh (no auth required)
   # ============================================================
@@ -385,6 +361,10 @@ Resources:
                 - cognito-idp:AdminInitiateAuth
                 - cognito-idp:AdminSetUserPassword
               Resource: !GetAtt CognitoUserPool.Arn
+        - DynamoDBReadPolicy:
+            TableName: !Ref UsersTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref RateLimitTable
       Events:
         Api:
           Type: HttpApi
@@ -454,8 +434,6 @@ Resources:
             ApiId: !Ref ColageApi
             Path: /auth/me
             Method: GET
-            Auth:
-              Authorizer: NONE
 
   UpdateProfileFunction:
     Type: AWS::Serverless::Function
@@ -485,6 +463,12 @@ Resources:
             TableName: !Ref UsersTable
         - DynamoDBCrudPolicy:
             TableName: !Ref LocationsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ConnectionsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UniversitiesTable
+        - S3CrudPolicy:
+            BucketName: !Ref ProfilePhotosBucket
         - Version: '2012-10-17'
           Statement:
             - Effect: Allow
@@ -517,8 +501,6 @@ Resources:
             ApiId: !Ref ColageApi
             Path: /users
             Method: POST
-            Auth:
-              Authorizer: NONE
 
   # ============================================================
   # LAMBDA FUNCTIONS - University (public)
@@ -614,6 +596,8 @@ Resources:
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref ConnectionsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref UsersTable
 
   WsDisconnectFunction:
     Type: AWS::Serverless::Function
@@ -736,8 +720,7 @@ Resources:
           BUSINESSES_TABLE: !Sub colage-businesses-${Stage}
           DAILY_SPEND_TABLE: !Sub colage-daily-spend-${Stage}
           IMPRESSIONS_TABLE: !Sub colage-impressions-${Stage}
-          # TODO: Move to SSM Parameter Store once IAM has ssm:GetParameters
-          STRIPE_SECRET_KEY: "CONFIGURE_ME"
+          STAGE: !Ref Stage
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Sub colage-ads-${Stage}
@@ -747,6 +730,14 @@ Resources:
             TableName: !Sub colage-daily-spend-${Stage}
         - DynamoDBCrudPolicy:
             TableName: !Sub colage-impressions-${Stage}
+        - DynamoDBCrudPolicy:
+            TableName: !Ref RateLimitTable
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - ssm:GetParameter
+              Resource: 'arn:aws:ssm:*:*:parameter/colage/*/stripe-secret-key'
       Events:
         NightlySchedule:
           Type: Schedule

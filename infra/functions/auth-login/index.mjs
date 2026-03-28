@@ -4,7 +4,9 @@ import {
   AdminSetUserPasswordCommand,
 } from '@aws-sdk/client-cognito-identity-provider';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocumentClient, UpdateCommand } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient, UpdateCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
+import crypto from 'node:crypto';
+import { response, parseBody, rateLimit, getClientIP } from './shared/validate.mjs';
 
 const cognito = new CognitoIdentityProviderClient({});
 const dynamoClient = new DynamoDBClient({});
@@ -12,11 +14,21 @@ const docClient = DynamoDBDocumentClient.from(dynamoClient);
 
 const USER_POOL_ID = process.env.USER_POOL_ID;
 const CLIENT_ID = process.env.USER_POOL_CLIENT_ID;
-const USERS_TABLE = process.env.USERS_TABLE_NAME || 'colage-users-dev';
+const USERS_TABLE = process.env.USERS_TABLE;
 
 export const handler = async (event) => {
   try {
-    const { email, deviceId } = JSON.parse(event.body);
+    // Rate limit: 5/min per IP
+    const ip = getClientIP(event);
+    const ipRL = await rateLimit(`auth-login:${ip}`, 5, 60);
+    if (!ipRL.allowed) {
+      return response(429, { error: 'Too many login attempts. Try again in a minute.' });
+    }
+
+    const body = parseBody(event);
+    if (!body) return response(400, { error: 'Request body is required' });
+
+    const { email, deviceId } = body;
 
     if (!email || !email.includes('@')) {
       return response(400, { error: 'Email required' });
@@ -28,9 +40,14 @@ export const handler = async (event) => {
 
     const normalizedEmail = email.toLowerCase();
 
-    // Set a deterministic password based on email (user never sees it — passwordless flow)
-    // The real auth factor is the email OTP verification
-    const password = `Colage!${Buffer.from(normalizedEmail).toString('base64').slice(0, 20)}1`;
+    // Rate limit: 3/min per email
+    const emailRL = await rateLimit(`auth-login:${normalizedEmail}`, 3, 60);
+    if (!emailRL.allowed) {
+      return response(429, { error: 'Too many login attempts for this email. Try again in a minute.' });
+    }
+
+    // Generate a random password each login (not deterministic)
+    const password = crypto.randomBytes(32).toString('base64url');
 
     // Set the password (works for confirmed users)
     await cognito.send(new AdminSetUserPasswordCommand({
@@ -56,17 +73,27 @@ export const handler = async (event) => {
     }
 
     // Store device ID for single-device enforcement
+    // Fix: query by-email GSI to get userId (table PK), then update with correct key
     try {
-      await docClient.send(new UpdateCommand({
+      const lookup = await docClient.send(new QueryCommand({
         TableName: USERS_TABLE,
-        Key: { email: normalizedEmail },
-        UpdateExpression: 'SET deviceId = :deviceId, updatedAt = :timestamp',
-        ExpressionAttributeValues: {
-          ':deviceId': deviceId,
-          ':timestamp': new Date().toISOString(),
-        },
-        ReturnValues: 'NONE',
+        IndexName: 'by-email',
+        KeyConditionExpression: 'email = :email',
+        ExpressionAttributeValues: { ':email': normalizedEmail },
       }));
+
+      if (lookup.Items?.length) {
+        await docClient.send(new UpdateCommand({
+          TableName: USERS_TABLE,
+          Key: { userId: lookup.Items[0].userId },
+          UpdateExpression: 'SET deviceId = :deviceId, updatedAt = :timestamp',
+          ExpressionAttributeValues: {
+            ':deviceId': deviceId,
+            ':timestamp': new Date().toISOString(),
+          },
+          ReturnValues: 'NONE',
+        }));
+      }
     } catch (dbError) {
       console.warn('Failed to store device ID:', dbError);
       // Continue even if device ID storage fails
@@ -86,11 +113,3 @@ export const handler = async (event) => {
     return response(500, { error: 'Login failed' });
   }
 };
-
-function response(statusCode, body) {
-  return {
-    statusCode,
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  };
-}
