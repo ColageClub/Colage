@@ -12,7 +12,7 @@ const input: React.CSSProperties = { width: "100%", padding: "12px 16px", border
 const label: React.CSSProperties = { display: "block", fontSize: 12, fontWeight: 600, color: "#6B6B6B", marginBottom: 6 };
 const btn: React.CSSProperties = { flex: 1, padding: "14px 0", borderRadius: 12, fontWeight: 600, fontSize: 14, border: "none", cursor: "pointer" };
 
-const commonEmojis = ["☕", "🍕", "🍔", "🏋️", "📚", "🎮", "✂️", "🚗", "🎵", "👕", "💊", "🏪", "🍣", "🌮", "🥗", "🧁"];
+const commonEmojis = ["☕", "🍕", "🍔", "🍻", "🏋️", "📚", "🎮", "✂️", "🚗", "🎵", "👕", "💊", "🏪", "🍣", "🌮", "🥗", "🧁"];
 
 export function CreateAdClient({ session }: { session: Session }) {
   const router = useRouter();
