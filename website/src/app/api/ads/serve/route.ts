@@ -87,10 +87,10 @@ export async function GET(req: NextRequest) {
 
     if (remaining <= 0) continue;
 
-    // Check frequency cap for this student
-    const withinCap = await checkFrequencyCap(ad.id, studentId);
-    if (!withinCap) continue;
-
+    // No artificial frequency cap — natural constraints handle it:
+    // - Daily budget caps total impressions per ad
+    // - Business balance caps total spend
+    // - 30s rotation interval limits client-side frequency
     eligibleAds.push({ ad, remainingBudget: remaining });
   }
 
