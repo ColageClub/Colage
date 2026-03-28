@@ -122,7 +122,8 @@ class APIClient {
 
         // Attach JWT if available (skip for public auth endpoints)
         let isPublic = publicPaths.contains(where: { path.hasPrefix($0) })
-        if !isPublic, let token = KeychainWrapper.get(key: "access_token") {
+        // Use id_token (not access_token) — Cognito ID tokens contain email claim needed by backend
+        if !isPublic, let token = KeychainWrapper.get(key: "id_token") ?? KeychainWrapper.get(key: "access_token") {
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
             // Add device ID header for authenticated requests
             request.setValue(APIClient.deviceId(), forHTTPHeaderField: "X-Device-Id")
@@ -158,9 +159,9 @@ class APIClient {
                     KeychainWrapper.set(key: "id_token", value: tokens.idToken)
                     let newExpiry = Date().addingTimeInterval(TimeInterval(tokens.expiresIn))
                     UserDefaults.standard.set(newExpiry.timeIntervalSince1970, forKey: "token_expiry")
-                    return tokens.accessToken
+                    return tokens.idToken
                 }
-                // Retry original request with new token
+                // Retry original request with new ID token
                 request.setValue("Bearer \(newToken)", forHTTPHeaderField: "Authorization")
                 (data, response) = try await session.data(for: request)
                 httpResponse = response as? HTTPURLResponse

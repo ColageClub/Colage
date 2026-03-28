@@ -43,8 +43,9 @@ class WebSocketManager: ObservableObject {
         let wsBase = Bundle.main.infoDictionary?["WS_BASE_URL"] as? String
             ?? "wss://w0m7jw00ak.execute-api.us-east-2.amazonaws.com/dev"
         var urlString = "\(wsBase)?domain=\(domain)&userId=\(userId)"
-        if let accessToken = KeychainWrapper.get(key: "access_token") {
-            urlString += "&token=\(accessToken)"
+        // Use id_token (not access_token) — backend needs email claim which is only in ID token
+        if let idToken = KeychainWrapper.get(key: "id_token") {
+            urlString += "&token=\(idToken)"
         }
         guard let url = URL(string: urlString) else { return }
 

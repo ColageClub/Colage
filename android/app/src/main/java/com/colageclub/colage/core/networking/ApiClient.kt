@@ -61,7 +61,8 @@ class ApiClient @Inject constructor(
                 }
                 header("Content-Type", "application/json")
 
-                val token = accessToken ?: secureStorage.get(SecureStorage.KEY_ACCESS_TOKEN)
+                // Use id_token (not access_token) — Cognito ID tokens contain email claim needed by backend
+                val token = secureStorage.get(SecureStorage.KEY_ID_TOKEN) ?: secureStorage.get(SecureStorage.KEY_ACCESS_TOKEN)
                 if (!isPublicPath(path) && token != null) {
                     header("Authorization", "Bearer $token")
                 }
