@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.colageclub.colage.BuildConfig
 import com.colageclub.colage.core.networking.ApiClient
 import com.colageclub.colage.core.networking.WebSocketManager
+import com.colageclub.colage.data.models.NearbyResponse
 import com.colageclub.colage.data.models.NearbyStudent
 import com.colageclub.colage.data.models.SocialLink
 import com.colageclub.colage.data.models.SocialPlatform
