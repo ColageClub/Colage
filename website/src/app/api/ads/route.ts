@@ -44,9 +44,13 @@ export async function POST(req: NextRequest) {
     if (mapboxToken) {
       try {
         const encoded = encodeURIComponent(address);
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 5000);
         const geoRes = await fetch(
-          `https://api.mapbox.com/geocoding/v5/mapbox.places/${encoded}.json?access_token=${mapboxToken}&limit=1`
+          `https://api.mapbox.com/geocoding/v5/mapbox.places/${encoded}.json?access_token=${mapboxToken}&limit=1`,
+          { signal: controller.signal }
         );
+        clearTimeout(timeout);
         if (geoRes.ok) {
           const geoData = await geoRes.json();
           if (geoData.features && geoData.features.length > 0) {
