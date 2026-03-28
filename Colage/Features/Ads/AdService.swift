@@ -69,12 +69,42 @@ class AdService: ObservableObject {
         _ = try? await URLSession.shared.data(for: request)
     }
 
-    /// Fetch next ad (rotate)
-    func rotateAd(school: String, studentId: String, userLocation: CLLocationCoordinate2D? = nil) {
-        print("[AdService] Rotate triggered for school=\(school)")
-        Task {
-            await fetchAd(school: school, studentId: studentId, userLocation: userLocation)
+    private var rotationTimer: Timer?
+    private var rotationSchool: String = ""
+    private var rotationStudentId: String = ""
+    private var rotationLocation: CLLocationCoordinate2D?
+
+    /// Start auto-rotation timer
+    func startRotation(school: String, studentId: String, userLocation: CLLocationCoordinate2D? = nil) {
+        rotationSchool = school
+        rotationStudentId = studentId
+        rotationLocation = userLocation
+
+        // Cancel existing timer
+        rotationTimer?.invalidate()
+
+        // Rotate every 30 seconds
+        rotationTimer = Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { [weak self] _ in
+            guard let self else { return }
+            print("[AdService] Rotation timer fired")
+            Task {
+                await self.fetchAd(
+                    school: self.rotationSchool,
+                    studentId: self.rotationStudentId,
+                    userLocation: self.rotationLocation
+                )
+            }
         }
+    }
+
+    /// Update the location used for distance calculation (called from banner)
+    func updateLocation(_ location: CLLocationCoordinate2D?) {
+        rotationLocation = location
+    }
+
+    func stopRotation() {
+        rotationTimer?.invalidate()
+        rotationTimer = nil
     }
 }
 

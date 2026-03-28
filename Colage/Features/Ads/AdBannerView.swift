@@ -8,8 +8,6 @@ struct AdBannerView: View {
     @State private var showAdDetail = false
     @State private var hasFetched = false
 
-    let timer = Timer.publish(every: 30, on: .main, in: .common).autoconnect()
-
     private var school: String {
         UserProfile.current?.universityDomain ?? "umich.edu"
     }
@@ -47,15 +45,15 @@ struct AdBannerView: View {
                     userLocation: locationService.currentLocation
                 )
             }
-        }
-        .onReceive(timer) { _ in
-            print("[AdBanner] Timer fired, showAdDetail=\(showAdDetail)")
-            guard !showAdDetail else { return }
-            adService.rotateAd(
+            // Start rotation timer in AdService (stable, not tied to view lifecycle)
+            adService.startRotation(
                 school: school,
                 studentId: studentId,
                 userLocation: locationService.currentLocation
             )
+        }
+        .onDisappear {
+            adService.stopRotation()
         }
     }
 
