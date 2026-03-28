@@ -18,6 +18,7 @@ class WebSocketManager: ObservableObject {
     var onLocationUpdate: (([StudentLocation]) -> Void)?
     var onStudentJoined: ((StudentLocation) -> Void)?
     var onStudentLeft: ((String) -> Void)?
+    var onReconnect: (() -> Void)?
 
     private init() {
         self.session = URLSession(configuration: .default)
@@ -37,12 +38,24 @@ class WebSocketManager: ObservableObject {
 
     private func performConnect() {
         guard let domain = currentDomain else { return }
+        let isReconnect = reconnectAttempts > 0
         let userId = UserProfile.current?.userId ?? "anonymous"
-        guard let url = URL(string: "wss://w0m7jw00ak.execute-api.us-east-2.amazonaws.com/dev?domain=\(domain)&userId=\(userId)") else { return }
+        let wsBase = Bundle.main.infoDictionary?["WS_BASE_URL"] as? String
+            ?? "wss://w0m7jw00ak.execute-api.us-east-2.amazonaws.com/dev"
+        var urlString = "\(wsBase)?domain=\(domain)&userId=\(userId)"
+        if let accessToken = KeychainWrapper.get(key: "access_token") {
+            urlString += "&token=\(accessToken)"
+        }
+        guard let url = URL(string: urlString) else { return }
 
         webSocketTask = session.webSocketTask(with: url)
         webSocketTask?.resume()
-        DispatchQueue.main.async { self.isConnected = true }
+        DispatchQueue.main.async {
+            self.isConnected = true
+            if isReconnect {
+                self.onReconnect?()
+            }
+        }
         reconnectAttempts = 0
         receiveMessage()
         startPing()

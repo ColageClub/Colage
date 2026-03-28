@@ -17,8 +17,7 @@ struct SettingsView: View {
             List {
                 // Account
                 Section("Account") {
-                    SettingsRow(icon: "envelope.fill", title: "Email", value: authService.enteredEmail)
-                    SettingsRow(icon: "phone.fill", title: "Phone", value: "••••••\(String(authService.enteredPhone.suffix(4)))")
+                    SettingsRow(icon: "envelope.fill", title: "Email", value: authService.enteredEmail.isEmpty ? (KeychainWrapper.get(key: "user_email") ?? "") : authService.enteredEmail)
                 }
 
                 // Server
@@ -85,10 +84,10 @@ struct SettingsView: View {
                 // About
                 Section("About") {
                     SettingsRow(icon: "info.circle.fill", title: "Version", value: "1.0.0")
-                    Link(destination: URL(string: "https://colage.app/privacy")!) {
+                    Link(destination: URL(string: "https://colageclub.com/privacy")!) {
                         SettingsRow(icon: "lock.fill", title: "Privacy Policy")
                     }
-                    Link(destination: URL(string: "https://colage.app/terms")!) {
+                    Link(destination: URL(string: "https://colageclub.com/terms")!) {
                         SettingsRow(icon: "doc.text.fill", title: "Terms of Service")
                     }
                     SettingsRow(icon: "map.fill", title: "Map Data", value: "© Mapbox, OpenStreetMap")

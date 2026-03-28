@@ -8,7 +8,8 @@ class APIClient {
     private let session: URLSession
 
     private init() {
-        self.baseURL = "https://wn7mxcdxca.execute-api.us-east-2.amazonaws.com/dev"
+        self.baseURL = Bundle.main.infoDictionary?["API_BASE_URL"] as? String
+            ?? "https://wn7mxcdxca.execute-api.us-east-2.amazonaws.com/dev"
         self.session = URLSession.shared
     }
 
@@ -33,10 +34,50 @@ class APIClient {
     }
 
     /// Paths that don't need auth tokens
-    private let publicPaths = ["/auth/", "/universities/"]
+    private let publicPaths = ["/auth/email/", "/auth/login", "/auth/refresh", "/universities/"]
 
     private struct TokenRefreshRequest: Encodable { let refreshToken: String }
     private struct TokenRefreshResponse: Decodable { let accessToken: String; let idToken: String; let expiresIn: Int }
+
+    // MARK: - Serialized Token Refresh
+
+    /// Actor that serializes concurrent 401-triggered refresh attempts.
+    /// The first caller performs the actual refresh; subsequent callers wait for the same result.
+    private actor TokenRefreshCoordinator {
+        private var isRefreshing = false
+        private var waitingContinuations: [CheckedContinuation<String, Error>] = []
+
+        func refresh(using performRefresh: @Sendable () async throws -> String) async throws -> String {
+            if isRefreshing {
+                // Another refresh is in flight — wait for it
+                return try await withCheckedThrowingContinuation { continuation in
+                    waitingContinuations.append(continuation)
+                }
+            }
+
+            isRefreshing = true
+            do {
+                let newToken = try await performRefresh()
+                // Resume all waiters with the new token
+                for continuation in waitingContinuations {
+                    continuation.resume(returning: newToken)
+                }
+                waitingContinuations.removeAll()
+                isRefreshing = false
+                return newToken
+            } catch {
+                // Resume all waiters with the error
+                for continuation in waitingContinuations {
+                    continuation.resume(throwing: error)
+                }
+                waitingContinuations.removeAll()
+                isRefreshing = false
+                throw error
+            }
+        }
+    }
+
+    private let refreshCoordinator = TokenRefreshCoordinator()
     
     /// Get or generate a stable device UUID
     static func deviceId() -> String {
@@ -96,24 +137,35 @@ class APIClient {
         var (data, response) = try await session.data(for: request)
         var httpResponse = response as? HTTPURLResponse
 
-        // Auto-refresh on 401
+        // Auto-refresh on 401 — serialized so concurrent requests share one refresh
         if httpResponse?.statusCode == 401, !isPublic,
-           let refreshToken = KeychainWrapper.get(key: "refresh_token") {
-            if let refreshURL = URL(string: "\(baseURL)/auth/refresh") {
-                var refreshRequest = URLRequest(url: refreshURL)
-                refreshRequest.httpMethod = "POST"
-                refreshRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
-                let encoder = JSONEncoder()
-                refreshRequest.httpBody = try encoder.encode(TokenRefreshRequest(refreshToken: refreshToken))
-                if let (refreshData, _) = try? await session.data(for: refreshRequest),
-                   let tokens = try? JSONDecoder().decode(TokenRefreshResponse.self, from: refreshData) {
+           KeychainWrapper.get(key: "refresh_token") != nil {
+            let refreshBaseURL = self.baseURL
+            let currentSession = self.session
+            do {
+                let newToken = try await refreshCoordinator.refresh { @Sendable in
+                    guard let refreshToken = KeychainWrapper.get(key: "refresh_token"),
+                          let refreshURL = URL(string: "\(refreshBaseURL)/auth/refresh") else {
+                        throw APIError.serverError(401, "No refresh token")
+                    }
+                    var refreshRequest = URLRequest(url: refreshURL)
+                    refreshRequest.httpMethod = "POST"
+                    refreshRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
+                    refreshRequest.httpBody = try JSONEncoder().encode(TokenRefreshRequest(refreshToken: refreshToken))
+                    let (refreshData, _) = try await currentSession.data(for: refreshRequest)
+                    let tokens = try JSONDecoder().decode(TokenRefreshResponse.self, from: refreshData)
                     KeychainWrapper.set(key: "access_token", value: tokens.accessToken)
                     KeychainWrapper.set(key: "id_token", value: tokens.idToken)
-                    // Retry original request with new token
-                    request.setValue("Bearer \(tokens.accessToken)", forHTTPHeaderField: "Authorization")
-                    (data, response) = try await session.data(for: request)
-                    httpResponse = response as? HTTPURLResponse
+                    let newExpiry = Date().addingTimeInterval(TimeInterval(tokens.expiresIn))
+                    UserDefaults.standard.set(newExpiry.timeIntervalSince1970, forKey: "token_expiry")
+                    return tokens.accessToken
                 }
+                // Retry original request with new token
+                request.setValue("Bearer \(newToken)", forHTTPHeaderField: "Authorization")
+                (data, response) = try await session.data(for: request)
+                httpResponse = response as? HTTPURLResponse
+            } catch {
+                // Refresh failed — fall through to normal error handling
             }
         }
 

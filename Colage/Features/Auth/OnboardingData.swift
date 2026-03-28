@@ -10,26 +10,4 @@ class OnboardingData: ObservableObject {
     @Published var profilePhoto: UIImage?
     @Published var socialLinks: [SocialPlatform: String] = [:]
     @Published var serverType: ServerType = .student
-
-    /// Build final profile from onboarding data
-    func buildProfile(domain: String) -> UserProfile {
-        let links = socialLinks.compactMap { (platform, handle) -> SocialLink? in
-            guard !handle.isEmpty else { return nil }
-            return SocialLink(platform: platform, handle: handle)
-        }
-
-        return UserProfile(
-            userId: UUID().uuidString,
-            universityDomain: domain,
-            displayName: displayName,
-            profilePhotoURL: nil, // Set after upload
-            bio: bio.isEmpty ? nil : bio,
-            major: major.isEmpty ? nil : major,
-            socialLinks: links,
-            isVisible: true,
-            serverType: serverType,
-            createdAt: Date(),
-            updatedAt: Date()
-        )
-    }
 }

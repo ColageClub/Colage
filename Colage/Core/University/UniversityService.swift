@@ -22,7 +22,7 @@ class UniversityService: ObservableObject {
             return result.university
         } catch {
             print("Failed to resolve university: \(error)")
-            // Fallback to mock
+            print("⚠️ UniversityService: API failed, using mock data")
             return mockUniversity(for: domain)
         }
     }

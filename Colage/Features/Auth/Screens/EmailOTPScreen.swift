@@ -59,6 +59,7 @@ struct EmailOTPScreen: View {
                     }
                 }
                 .disabled(!canResend)
+                .accessibilityLabel(canResend ? "Resend verification code" : "Resend code available in \(resendCountdown) seconds")
                 .padding(.top, 24)
 
                 Spacer()

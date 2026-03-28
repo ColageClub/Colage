@@ -93,9 +93,11 @@ struct MapboxMapView: UIViewRepresentable {
         )
         let mapView = MapView(frame: .zero, mapInitOptions: mapInitOptions)
 
-        // Hide all Mapbox ornaments — attribution in Settings screen instead
-        mapView.ornaments.options.logo.margins = .init(x: -1000, y: -1000)
-        mapView.ornaments.options.attributionButton.margins = .init(x: -1000, y: -1000)
+        // Reposition Mapbox ornaments — keep logo & attribution visible (required)
+        mapView.ornaments.options.logo.margins = .init(x: 8, y: 8)
+        mapView.ornaments.options.logo.position = .bottomLeading
+        mapView.ornaments.options.attributionButton.margins = .init(x: 8, y: 8)
+        mapView.ornaments.options.attributionButton.position = .bottomLeading
         mapView.ornaments.options.scaleBar.visibility = .hidden
         mapView.ornaments.options.compass.visibility = .hidden
 

@@ -211,33 +211,6 @@ struct OwnSocialLinkRow: View {
     }
 }
 
-// MARK: - Stat Card
-
-struct StatCard: View {
-    let value: String
-    let label: String
-    let icon: String
-
-    var body: some View {
-        VStack(spacing: 6) {
-            Image(systemName: icon)
-                .font(.system(size: 18))
-                .foregroundStyle(ColageColors.textTertiary)
-            Text(value)
-                .font(ColageFonts.title3)
-                .foregroundStyle(ColageColors.textPrimary)
-            Text(label)
-                .font(ColageFonts.caption)
-                .foregroundStyle(ColageColors.textTertiary)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 16)
-        .background(ColageColors.surface)
-        .clipShape(RoundedRectangle(cornerRadius: 14))
-        .padding(.horizontal, 4)
-    }
-}
-
 #Preview {
     OwnProfileView()
         .environmentObject(AppState())

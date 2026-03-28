@@ -49,7 +49,7 @@ class LocationService: NSObject, ObservableObject, CLLocationManagerDelegate {
         locationManager.distanceFilter = movementThreshold
         locationManager.activityType = .fitness // Pedestrian on campus
         locationManager.allowsBackgroundLocationUpdates = false
-        locationManager.showsBackgroundLocationIndicator = true
+        locationManager.showsBackgroundLocationIndicator = false
     }
 
     func requestPermission() {

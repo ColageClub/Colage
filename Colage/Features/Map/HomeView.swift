@@ -1,4 +1,5 @@
 import SwiftUI
+import CoreLocation
 
 /// Main home screen — contains the mode picker + Map/List/AR views
 struct HomeView: View {
@@ -76,6 +77,12 @@ struct HomeView: View {
                     .padding(.top, 4)
                 }
 
+                // Stale data banner
+                if nearbyStudents.isDataStale, let fetchTime = nearbyStudents.lastFetchTime {
+                    StaleDataBanner(lastUpdated: fetchTime)
+                        .padding(.top, 4)
+                }
+
                 Spacer()
             }
 
@@ -97,6 +104,25 @@ struct HomeView: View {
             }
             .padding(.top, 80)
 
+            // Error overlay
+            if let errorMsg = nearbyStudents.error, nearbyStudents.students.isEmpty {
+                ErrorStateView(
+                    title: "Something went wrong",
+                    message: errorMsg,
+                    retryAction: {
+                        nearbyStudents.error = nil
+                        let domain = UserProfile.current?.universityDomain ?? ""
+                        if let coord = locationService.currentLocation {
+                            nearbyStudents.fetchNearbyStudents(
+                                latitude: coord.latitude,
+                                longitude: coord.longitude,
+                                domain: domain
+                            )
+                        }
+                    }
+                )
+            }
+
             // Ad banner — bottom of map
             VStack {
                 Spacer()
@@ -110,6 +136,7 @@ struct HomeView: View {
         }
         .onAppear {
             locationService.startTracking()
+            nearbyStudents.locationService = locationService
 
             if AppState.devMode {
                 nearbyStudents.loadMockData()
@@ -120,6 +147,9 @@ struct HomeView: View {
 
                 // Start listening for real-time updates
                 nearbyStudents.startListeningForUpdates()
+
+                // Start periodic refresh (every 60s)
+                nearbyStudents.startPeriodicRefresh()
 
                 // Fetch initial nearby students once we have GPS
                 DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
@@ -154,6 +184,13 @@ class NearbyStudentsViewModel: ObservableObject {
     @Published var maxDistance: Double = 0.5 // list slider position (0...1), logarithmic
     @Published var arMaxDistance: Double = 0.5 // AR slider position (0...1), logarithmic
     @Published var filterFloor: Int? = nil // nil = all floors
+    @Published var error: String?
+    @Published var lastFetchTime: Date?
+
+    var isDataStale: Bool {
+        guard let lastFetch = lastFetchTime else { return false }
+        return Date().timeIntervalSince(lastFetch) > 60 && !WebSocketManager.shared.isConnected
+    }
 
     /// Convert a 0...1 slider position to feet using logarithmic scale
     /// 0 → 10ft, 0.25 → ~30ft, 0.5 → ~60ft, 1.0 → 500ft
@@ -239,12 +276,22 @@ class NearbyStudentsViewModel: ObservableObject {
 
                 await MainActor.run {
                     self.students = nearbyStudents
+                    self.lastFetchTime = Date()
+                    self.error = nil
                 }
             } catch {
                 print("[Nearby] Failed to fetch: \(error)")
+                await MainActor.run {
+                    self.error = "Couldn't load nearby students. Check your connection."
+                }
             }
         }
     }
+
+    /// The location service used for distance calculations and periodic refresh
+    weak var locationService: LocationService?
+
+    private var refreshTask: Task<Void, Never>?
 
     /// Wire WebSocket callbacks for real-time updates
     func startListeningForUpdates() {
@@ -259,6 +306,28 @@ class NearbyStudentsViewModel: ObservableObject {
                 self?.handleLocationUpdate(location)
             }
         }
+        WebSocketManager.shared.onReconnect = { [weak self] in
+            self?.refreshNearby()
+        }
+    }
+
+    /// Start periodic refresh — re-fetches nearby students every 60 seconds
+    func startPeriodicRefresh() {
+        refreshTask?.cancel()
+        refreshTask = Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: 60_000_000_000) // 60s
+                guard !Task.isCancelled else { break }
+                self?.refreshNearby()
+            }
+        }
+    }
+
+    /// Re-fetch nearby students using the current GPS position
+    private func refreshNearby() {
+        guard let coord = locationService?.currentLocation else { return }
+        let domain = UserProfile.current?.universityDomain ?? ""
+        fetchNearbyStudents(latitude: coord.latitude, longitude: coord.longitude, domain: domain)
     }
 
     /// Handle an incoming location update from WebSocket
@@ -266,9 +335,21 @@ class NearbyStudentsViewModel: ObservableObject {
         // Don't track self
         guard location.userId != UserProfile.current?.userId else { return }
 
+        // Calculate distance from user's current location
+        let distance: Double
+        if let userCoord = locationService?.currentLocation {
+            let userCL = CLLocation(latitude: userCoord.latitude, longitude: userCoord.longitude)
+            let studentCL = CLLocation(latitude: location.latitude, longitude: location.longitude)
+            let meters = userCL.distance(from: studentCL)
+            distance = meters * 3.28084 // convert to feet
+        } else {
+            distance = 0
+        }
+
         if let index = students.firstIndex(where: { $0.profile.userId == location.userId }) {
-            // Update existing student's location
+            // Update existing student's location and distance
             students[index].location = location
+            students[index].distance = distance
         } else {
             // New student — create with minimal profile info
             // The WebSocket broadcast now includes displayName/profilePhotoURL
@@ -285,7 +366,7 @@ class NearbyStudentsViewModel: ObservableObject {
                 createdAt: Date(),
                 updatedAt: Date()
             )
-            students.append(NearbyStudent(profile: profile, location: location, distance: 0))
+            students.append(NearbyStudent(profile: profile, location: location, distance: distance))
         }
     }
 
@@ -293,6 +374,9 @@ class NearbyStudentsViewModel: ObservableObject {
         WebSocketManager.shared.onStudentJoined = nil
         WebSocketManager.shared.onStudentLeft = nil
         WebSocketManager.shared.onLocationUpdate = nil
+        WebSocketManager.shared.onReconnect = nil
+        refreshTask?.cancel()
+        refreshTask = nil
     }
 
     /// All students on the selected floor (no distance limit) — used by Map

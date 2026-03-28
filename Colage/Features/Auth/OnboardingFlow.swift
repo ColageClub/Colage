@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Full onboarding flow — 10 screens as NavigationStack
+/// Full onboarding flow — 8 screens as NavigationStack
 struct OnboardingFlow: View {
     @Environment(\.themeColor) private var themeColor
     @EnvironmentObject var appState: AppState
@@ -39,10 +39,6 @@ struct OnboardingFlow: View {
             EmailOTPScreen(onVerified: { path.append(OnboardingStep.serverType) })
         case .serverType:
             ServerTypeScreen(onContinue: { path.append(OnboardingStep.photo) })
-        case .phone:
-            EmptyView() // No longer used
-        case .phoneOTP:
-            EmptyView() // No longer used
         case .photo:
             PhotoUploadScreen(onContinue: { path.append(OnboardingStep.info) })
         case .info:
@@ -53,25 +49,29 @@ struct OnboardingFlow: View {
             PermissionsScreen(onContinue: { path.append(OnboardingStep.welcome) })
         case .welcome:
             UniversityWelcomeScreen(onEnter: {
-                // Build and save profile from onboarding data
-                let domain = authService.extractDomain(from: authService.enteredEmail) ?? "umich.edu"
-                let links = onboardingData.socialLinks.compactMap { (platform, handle) -> SocialLink? in
-                    guard !handle.isEmpty else { return nil }
-                    return SocialLink(platform: platform, handle: handle)
-                }
-                authService.selectedServerType = onboardingData.serverType
-                authService.createProfile(
-                    name: onboardingData.displayName,
-                    bio: onboardingData.bio.isEmpty ? nil : onboardingData.bio,
-                    major: onboardingData.major.isEmpty ? nil : onboardingData.major,
-                    socialLinks: links,
-                    photo: onboardingData.profilePhoto
-                )
-                // Fetch tokens now that onboarding is complete, then authenticate
                 Task {
-                    await authService.fetchAndStoreTokens()
-                    await MainActor.run {
-                        appState.authState = .authenticated
+                    let links = onboardingData.socialLinks.compactMap { (platform, handle) -> SocialLink? in
+                        guard !handle.isEmpty else { return nil }
+                        return SocialLink(platform: platform, handle: handle)
+                    }
+                    authService.selectedServerType = onboardingData.serverType
+                    do {
+                        // Create profile on server — must succeed before fetching tokens
+                        try await authService.createProfile(
+                            name: onboardingData.displayName,
+                            bio: onboardingData.bio.isEmpty ? nil : onboardingData.bio,
+                            major: onboardingData.major.isEmpty ? nil : onboardingData.major,
+                            socialLinks: links,
+                            photo: onboardingData.profilePhoto
+                        )
+                        await authService.fetchAndStoreTokens()
+                        await MainActor.run {
+                            appState.authState = .authenticated
+                        }
+                    } catch {
+                        await MainActor.run {
+                            authService.errorMessage = "Failed to create profile: \(error.localizedDescription)"
+                        }
                     }
                 }
             })
@@ -80,5 +80,5 @@ struct OnboardingFlow: View {
 }
 
 enum OnboardingStep: Hashable {
-    case email, emailOTP, serverType, phone, phoneOTP, photo, info, socialLinks, permissions, welcome
+    case email, emailOTP, serverType, photo, info, socialLinks, permissions, welcome
 }

@@ -121,7 +121,16 @@ struct UniversityWelcomeScreen: View {
 
                 Spacer()
 
+                if let error = authService.errorMessage {
+                    Text(error)
+                        .font(ColageFonts.footnote)
+                        .foregroundStyle(ColageColors.error)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 24)
+                }
+
                 ColagePrimaryButton(title: buttonTitle, action: {
+                    authService.errorMessage = nil
                     onEnter()
                 })
                 .padding(.horizontal, 24)

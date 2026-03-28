@@ -1,15 +1,13 @@
 import Foundation
 import SwiftUI
 
-/// Handles authentication — email verification, phone OTP, session management
+/// Handles authentication — email verification, session management
 class AuthService: ObservableObject {
     @Published var emailVerified = false
-    @Published var phoneVerified = false
     @Published var isLoading = false
     @Published var errorMessage: String?
 
     var enteredEmail: String = ""
-    var enteredPhone: String = ""
     var resolvedUniversity: University?
 
     /// Extract the root .edu domain from an email, collapsing subdomains.
@@ -34,7 +32,7 @@ class AuthService: ObservableObject {
     /// Send email OTP
     func sendEmailOTP(email: String) async -> Bool {
         enteredEmail = email
-        UserDefaults.standard.set(email.lowercased(), forKey: "user_email")
+        KeychainWrapper.set(key: "user_email", value: email.lowercased())
         isLoading = true
         defer { isLoading = false }
 
@@ -76,142 +74,77 @@ class AuthService: ObservableObject {
         }
     }
 
-    /// Send phone OTP via Twilio
-    func sendPhoneOTP(phone: String) async -> Bool {
-        enteredPhone = phone
-        isLoading = true
-        defer { isLoading = false }
-
-        do {
-            struct PhoneRequest: Encodable { let phone: String; let email: String }
-            let _: [String: String] = try await api.request(
-                method: "POST",
-                path: "/auth/phone/verify",
-                body: PhoneRequest(phone: phone, email: enteredEmail.lowercased())
-            )
-            return true
-        } catch {
-            await MainActor.run { errorMessage = error.localizedDescription }
-            return false
-        }
-    }
-
-    /// Confirm phone OTP
-    func confirmPhoneOTP(code: String) async -> Bool {
-        isLoading = true
-        defer { isLoading = false }
-
-        do {
-            struct PhoneConfirm: Encodable { let phone: String; let code: String }
-            struct PhoneResult: Decodable { let verified: Bool }
-            let result: PhoneResult = try await api.request(
-                method: "POST",
-                path: "/auth/phone/confirm",
-                body: PhoneConfirm(phone: enteredPhone, code: code)
-            )
-            await MainActor.run { phoneVerified = result.verified }
-            return result.verified
-        } catch {
-            await MainActor.run { errorMessage = error.localizedDescription }
-            return false
-        }
-    }
-
     /// Create profile (local in dev, API in production)
     /// The server type selected during onboarding (set before profile creation)
     var selectedServerType: ServerType = .student
 
-    func createProfile(name: String, bio: String?, major: String?, socialLinks: [SocialLink], photo: UIImage? = nil) {
+    func createProfile(name: String, bio: String?, major: String?, socialLinks: [SocialLink], photo: UIImage? = nil) async throws {
         let domain = extractDomain(from: enteredEmail) ?? "umich.edu"
-        let profile = UserProfile(
-            userId: UUID().uuidString,
+
+        struct CreateProfileRequest: Encodable {
+            let email: String
+            let displayName: String
+            let bio: String?
+            let major: String?
+            let socialLinks: [SocialLink]
+            let universityDomain: String
+        }
+        struct CreateProfileResponse: Decodable {
+            let profile: ServerProfile
+            struct ServerProfile: Decodable { let userId: String }
+        }
+
+        let result: CreateProfileResponse = try await api.request(
+            method: "POST",
+            path: "/users",
+            body: CreateProfileRequest(
+                email: enteredEmail.lowercased(),
+                displayName: name,
+                bio: bio,
+                major: major,
+                socialLinks: socialLinks,
+                universityDomain: domain
+            )
+        )
+        let serverUserId = result.profile.userId
+
+        // Upload photo if provided
+        var photoURL: String? = nil
+        if let photo = photo {
+            photoURL = await uploadProfilePhoto(photo, userId: serverUserId)
+        }
+
+        // Update local profile with server-assigned userId + photo URL
+        let updated = UserProfile(
+            userId: serverUserId,
             universityDomain: domain,
             displayName: name,
-            profilePhotoURL: nil,
+            profilePhotoURL: photoURL,
             bio: bio,
             major: major,
             socialLinks: socialLinks,
             isVisible: true,
-            serverType: selectedServerType,
+            serverType: self.selectedServerType,
             createdAt: Date(),
             updatedAt: Date()
         )
-        UserProfile.current = profile
-        UserDefaults.standard.set(true, forKey: "dev_onboarding_complete")
-
-        // Store profile JSON for persistence across launches
-        if let data = try? JSONEncoder().encode(profile) {
-            UserDefaults.standard.set(data, forKey: "dev_profile")
+        await MainActor.run {
+            UserProfile.current = updated
+            UserDefaults.standard.set(true, forKey: "dev_onboarding_complete")
+            if let data = try? JSONEncoder().encode(updated),
+               let jsonString = String(data: data, encoding: .utf8) {
+                KeychainWrapper.set(key: "user_profile", value: jsonString)
+            }
         }
 
-        // Create on server + upload photo
-        Task {
-            struct CreateProfileRequest: Encodable {
-                let email: String
-                let displayName: String
-                let bio: String?
-                let major: String?
-                let socialLinks: [SocialLink]
-                let universityDomain: String
-            }
-            struct CreateProfileResponse: Decodable {
-                let profile: ServerProfile
-                struct ServerProfile: Decodable { let userId: String }
-            }
-            do {
-                let result: CreateProfileResponse = try await api.request(
-                    method: "POST",
-                    path: "/users",
-                    body: CreateProfileRequest(
-                        email: enteredEmail.lowercased(),
-                        displayName: name,
-                        bio: bio,
-                        major: major,
-                        socialLinks: socialLinks,
-                        universityDomain: domain
-                    )
-                )
-                let serverUserId = result.profile.userId
-
-                // Upload photo if provided
-                var photoURL: String? = nil
-                if let photo = photo {
-                    photoURL = await uploadProfilePhoto(photo, userId: serverUserId)
-                }
-
-                // Update local profile with server-assigned userId + photo URL
-                let updated = UserProfile(
-                    userId: serverUserId,
-                    universityDomain: domain,
-                    displayName: name,
-                    profilePhotoURL: photoURL,
-                    bio: bio,
-                    major: major,
-                    socialLinks: socialLinks,
-                    isVisible: true,
-                    serverType: self.selectedServerType,
-                    createdAt: Date(),
-                    updatedAt: Date()
-                )
-                await MainActor.run {
-                    UserProfile.current = updated
-                    if let data = try? JSONEncoder().encode(updated) {
-                        UserDefaults.standard.set(data, forKey: "dev_profile")
-                    }
-                }
-
-                // Update photo URL on server if we uploaded
-                if let photoURL = photoURL {
-                    struct UpdateProfileRequest: Encodable { let profilePhotoURL: String }
-                    let _: [String: String] = try await api.request(
-                        method: "PUT",
-                        path: "/users/\(serverUserId)",
-                        body: UpdateProfileRequest(profilePhotoURL: photoURL)
-                    )
-                }
-            } catch {
-                print("Failed to create server profile: \(error)")
-            }
+        // Update photo URL on server if we uploaded
+        if let photoURL = photoURL {
+            struct UpdateProfileRequest: Encodable { let profilePhotoURL: String }
+            let _: [String: String] = try await api.request(
+                method: "PUT",
+                path: "/users/\(serverUserId)",
+                body: UpdateProfileRequest(profilePhotoURL: photoURL)
+            )
         }
     }
 
@@ -263,10 +196,9 @@ class AuthService: ObservableObject {
     // MARK: - Update Profile
 
     /// Update an existing profile (from Edit Profile screen)
-    func updateProfile(name: String, bio: String?, major: String?, socialLinks: [SocialLink], photo: UIImage? = nil) async {
+    func updateProfile(name: String, bio: String?, major: String?, socialLinks: [SocialLink], photo: UIImage? = nil) async throws {
         guard let userId = UserProfile.current?.userId else {
-            print("No current user to update")
-            return
+            throw NSError(domain: "AuthService", code: 0, userInfo: [NSLocalizedDescriptionKey: "No current user to update"])
         }
 
         // Upload photo first if provided
@@ -286,29 +218,25 @@ class AuthService: ObservableObject {
             let profilePhotoURL: String?
         }
 
-        do {
-            struct UpdateResponse: Decodable {
-                let profile: ProfileData
-                struct ProfileData: Decodable {
-                    let userId: String
-                    let displayName: String?
-                    let profilePhotoURL: String?
-                }
+        struct UpdateResponse: Decodable {
+            let profile: ProfileData
+            struct ProfileData: Decodable {
+                let userId: String
+                let displayName: String?
+                let profilePhotoURL: String?
             }
-            let _: UpdateResponse = try await api.request(
-                method: "PUT",
-                path: "/users/\(userId)",
-                body: UpdateRequest(
-                    displayName: name,
-                    bio: bio,
-                    major: major,
-                    socialLinks: socialLinks,
-                    profilePhotoURL: photoURL
-                )
-            )
-        } catch {
-            print("Failed to update profile on server: \(error)")
         }
+        let _: UpdateResponse = try await api.request(
+            method: "PUT",
+            path: "/users/\(userId)",
+            body: UpdateRequest(
+                displayName: name,
+                bio: bio,
+                major: major,
+                socialLinks: socialLinks,
+                profilePhotoURL: photoURL
+            )
+        )
 
         // Update local profile
         let domain = UserProfile.current?.universityDomain ?? "unknown"
@@ -327,8 +255,9 @@ class AuthService: ObservableObject {
         )
         await MainActor.run {
             UserProfile.current = updated
-            if let data = try? JSONEncoder().encode(updated) {
-                UserDefaults.standard.set(data, forKey: "dev_profile")
+            if let data = try? JSONEncoder().encode(updated),
+               let jsonString = String(data: data, encoding: .utf8) {
+                KeychainWrapper.set(key: "user_profile", value: jsonString)
             }
         }
     }
@@ -359,16 +288,65 @@ class AuthService: ObservableObject {
                 body: ConfirmRequest(email: enteredEmail.lowercased(), code: code)
             )
             if result.verified {
+                KeychainWrapper.set(key: "user_email", value: enteredEmail.lowercased())
                 await fetchAndStoreTokens()
+                // Fetch profile from server using authenticated /auth/me
+                await fetchAndRestoreProfile()
                 await MainActor.run {
                     emailVerified = true
-                    phoneVerified = true
                 }
             }
             return result.verified
         } catch {
             await MainActor.run { errorMessage = error.localizedDescription }
             return false
+        }
+    }
+
+    /// Fetch profile from authenticated /auth/me endpoint and restore locally
+    func fetchAndRestoreProfile() async {
+        do {
+            struct ServerProfile: Decodable {
+                let profile: ProfileData
+                struct ProfileData: Decodable {
+                    let userId: String
+                    let displayName: String?
+                    let profilePhotoURL: String?
+                    let bio: String?
+                    let major: String?
+                    let universityDomain: String?
+                    let isVisible: Bool?
+                    let socialLinks: [SocialLink]?
+                    let serverType: String?
+                }
+            }
+            let result: ServerProfile = try await api.request(
+                method: "GET",
+                path: "/auth/me"
+            )
+            let p = result.profile
+            let profile = UserProfile(
+                userId: p.userId,
+                universityDomain: p.universityDomain ?? extractDomain(from: enteredEmail) ?? "",
+                displayName: p.displayName ?? "",
+                profilePhotoURL: p.profilePhotoURL,
+                bio: p.bio,
+                major: p.major,
+                socialLinks: p.socialLinks ?? [],
+                isVisible: p.isVisible ?? true,
+                serverType: ServerType(rawValue: p.serverType ?? "student") ?? .student,
+                createdAt: Date(),
+                updatedAt: Date()
+            )
+            await MainActor.run {
+                UserProfile.current = profile
+                if let data = try? JSONEncoder().encode(profile),
+                   let jsonString = String(data: data, encoding: .utf8) {
+                    KeychainWrapper.set(key: "user_profile", value: jsonString)
+                }
+            }
+        } catch {
+            print("[Auth] Failed to restore profile after login: \(error)")
         }
     }
 
@@ -387,7 +365,7 @@ class AuthService: ObservableObject {
             var email = enteredEmail.lowercased()
             // Fall back to persisted email if in-memory value was lost
             if email.isEmpty {
-                email = (UserDefaults.standard.string(forKey: "user_email") ?? "").lowercased()
+                email = (KeychainWrapper.get(key: "user_email") ?? "").lowercased()
             }
             guard !email.isEmpty else {
                 print("[Auth] fetchAndStoreTokens: enteredEmail is empty and no persisted email!")
@@ -477,8 +455,9 @@ class AuthService: ObservableObject {
                 )
                 await MainActor.run {
                     UserProfile.current = updated
-                    if let data = try? JSONEncoder().encode(updated) {
-                        UserDefaults.standard.set(data, forKey: "dev_profile")
+                    if let data = try? JSONEncoder().encode(updated),
+                       let jsonString = String(data: data, encoding: .utf8) {
+                        KeychainWrapper.set(key: "user_profile", value: jsonString)
                     }
                 }
             }
@@ -518,9 +497,7 @@ class AuthService: ObservableObject {
         KeychainWrapper.clearAll()
         UserProfile.current = nil
         UserDefaults.standard.removeObject(forKey: "dev_onboarding_complete")
-        UserDefaults.standard.removeObject(forKey: "dev_profile")
         UserDefaults.standard.removeObject(forKey: "user_email")
         emailVerified = false
-        phoneVerified = false
     }
 }

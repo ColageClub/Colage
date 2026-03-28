@@ -16,6 +16,8 @@ struct EditProfileView: View {
     @State private var showCamera = false
     @State private var capturedImage: UIImage?
     @State private var isSaving = false
+    @State private var showError = false
+    @State private var errorMessage = ""
 
     init() {
         let profile = UserProfile.current
@@ -97,6 +99,11 @@ struct EditProfileView: View {
                                         RoundedRectangle(cornerRadius: 16)
                                             .strokeBorder(ColageColors.border, lineWidth: 1)
                                     )
+                                    .onChange(of: bio) { _, newValue in
+                                        if newValue.count > 160 {
+                                            bio = String(newValue.prefix(160))
+                                        }
+                                    }
                             }
 
                             VStack(alignment: .leading, spacing: 8) {
@@ -189,6 +196,11 @@ struct EditProfileView: View {
                     profileImage = Image(uiImage: newImage)
                 }
             }
+            .alert("Failed to Save", isPresented: $showError) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text(errorMessage)
+            }
         }
     }
 
@@ -200,16 +212,24 @@ struct EditProfileView: View {
         }
 
         Task {
-            await authService.updateProfile(
-                name: displayName,
-                bio: bio.isEmpty ? nil : bio,
-                major: major.isEmpty ? nil : major,
-                socialLinks: links,
-                photo: profileUIImage
-            )
-            await MainActor.run {
-                isSaving = false
-                dismiss()
+            do {
+                try await authService.updateProfile(
+                    name: displayName,
+                    bio: bio.isEmpty ? nil : bio,
+                    major: major.isEmpty ? nil : major,
+                    socialLinks: links,
+                    photo: profileUIImage
+                )
+                await MainActor.run {
+                    isSaving = false
+                    dismiss()
+                }
+            } catch {
+                await MainActor.run {
+                    isSaving = false
+                    errorMessage = error.localizedDescription
+                    showError = true
+                }
             }
         }
     }

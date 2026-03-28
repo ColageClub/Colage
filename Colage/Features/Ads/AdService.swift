@@ -11,7 +11,8 @@ class AdService: ObservableObject {
     private var ads: [AdData] = []
     private var currentIndex = 0
 
-    private let baseURL = "https://main.dcinq8hq6li09.amplifyapp.com"
+    private let baseURL = Bundle.main.infoDictionary?["AD_BASE_URL"] as? String
+        ?? "https://main.dcinq8hq6li09.amplifyapp.com"
 
     /// Fetch an ad from the server for the given school
     func fetchAd(school: String, studentId: String, userLocation: CLLocationCoordinate2D? = nil) async {
@@ -53,9 +54,6 @@ class AdService: ObservableObject {
             }
         } catch {
             print("[AdService] Fetch failed: \(error)")
-            if let data = try? await URLSession.shared.data(from: URL(string: "\(baseURL)/api/ads/serve?school=\(school)&student_id=\(studentId)")!) {
-                print("[AdService] Raw response: \(String(data: data.0, encoding: .utf8) ?? "nil")")
-            }
             await MainActor.run { isLoading = false }
         }
     }

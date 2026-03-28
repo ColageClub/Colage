@@ -7,6 +7,7 @@ struct ColagePrimaryButton: View {
     let action: () -> Void
     var isLoading: Bool = false
     var isDisabled: Bool = false
+    var accessibilityHint: String? = nil
 
     var body: some View {
         Button(action: {
@@ -28,6 +29,7 @@ struct ColagePrimaryButton: View {
             .clipShape(RoundedRectangle(cornerRadius: 16))
         }
         .disabled(isDisabled || isLoading)
+        .accessibilityHint(accessibilityHint ?? "")
     }
 }
 
@@ -62,50 +64,58 @@ struct OTPCodeField: View {
     @Binding var code: String
     let length: Int
     var onComplete: ((String) -> Void)? = nil
+    @FocusState private var isFocused: Bool
 
     var body: some View {
-        HStack(spacing: 12) {
-            ForEach(0..<length, id: \.self) { index in
-                let char = index < code.count
-                    ? String(code[code.index(code.startIndex, offsetBy: index)])
-                    : ""
-                Text(char)
-                    .font(ColageFonts.title)
-                    .frame(width: 48, height: 60)
-                    .background(ColageColors.surface)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .strokeBorder(
-                                index < code.count ? themeColor : ColageColors.border,
-                                lineWidth: index < code.count ? 2 : 1
-                            )
-                    )
+        ZStack {
+            // Hidden text field for keyboard input
+            TextField("", text: $code)
+                .keyboardType(.numberPad)
+                .textContentType(.oneTimeCode)
+                .focused($isFocused)
+                .opacity(0)
+                .frame(width: 0, height: 0)
+                .onChange(of: code) { _, newValue in
+                    // Limit to length
+                    if newValue.count > length {
+                        code = String(newValue.prefix(length))
+                    }
+                    // Filter non-digits
+                    code = code.filter { $0.isNumber }
+                    if code.count == length {
+                        onComplete?(code)
+                    }
+                }
+
+            // Visual digit boxes
+            HStack(spacing: 12) {
+                ForEach(0..<length, id: \.self) { index in
+                    let char = index < code.count
+                        ? String(code[code.index(code.startIndex, offsetBy: index)])
+                        : ""
+                    Text(char)
+                        .font(ColageFonts.title)
+                        .frame(width: 48, height: 60)
+                        .background(ColageColors.surface)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .strokeBorder(
+                                    index < code.count ? themeColor : ColageColors.border,
+                                    lineWidth: index < code.count ? 2 : 1
+                                )
+                        )
+                }
+            }
+            .contentShape(Rectangle())
+            .onTapGesture {
+                isFocused = true
             }
         }
-        // Tappable text field below the boxes
-        TextField("Enter code", text: $code)
-            .keyboardType(.numberPad)
-            .textContentType(.oneTimeCode)
-            .font(ColageFonts.mono)
-            .foregroundStyle(ColageColors.textPrimary)
-            .multilineTextAlignment(.center)
-            .frame(height: 44)
-            .background(ColageColors.surface)
-            .clipShape(RoundedRectangle(cornerRadius: 10))
-            .padding(.horizontal, 40)
-            .padding(.top, 8)
-            .onChange(of: code) { _, newValue in
-                // Limit to length
-                if newValue.count > length {
-                    code = String(newValue.prefix(length))
-                }
-                // Filter non-digits
-                code = code.filter { $0.isNumber }
-                if code.count == length {
-                    onComplete?(code)
-                }
-            }
+        .onAppear {
+            isFocused = true
+        }
+        .accessibilityLabel("Verification code, \(code.count) of \(length) digits entered")
     }
 }
 
@@ -138,9 +148,11 @@ struct AvatarView: View {
             Circle()
                 .strokeBorder(showBorder ? (borderColor ?? themeColor) : .clear, lineWidth: 2)
         )
+        .accessibilityLabel(accessibilityName.map { "Profile photo for \($0)" } ?? "Profile photo")
     }
 
     var initials: String? = nil
+    var accessibilityName: String? = nil
 
     private var placeholderAvatar: some View {
         ZStack {
@@ -174,6 +186,7 @@ struct VisibilityToggle: View {
                 .background(ColageColors.surface.opacity(0.8))
                 .clipShape(Circle())
         }
+        .accessibilityLabel(isVisible ? "You are visible to others" : "You are hidden from others")
     }
 }
 
@@ -204,6 +217,7 @@ struct FloorPicker: View {
                         )
                         .clipShape(RoundedRectangle(cornerRadius: 8))
                 }
+                .accessibilityLabel("Floor \(floorLabel(floor))")
             }
         }
         .padding(4)
@@ -248,6 +262,7 @@ struct DiscoveryModePicker: View {
                         )
                         .clipShape(RoundedRectangle(cornerRadius: 10))
                 }
+                .accessibilityLabel("\(mode.rawValue) view")
             }
         }
         .padding(4)

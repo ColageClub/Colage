@@ -52,7 +52,7 @@ struct UserProfile: Codable, Identifiable {
     var updatedAt: Date
 
     /// Currently logged-in user profile (stored in memory)
-    static var current: UserProfile?
+    @MainActor static var current: UserProfile?
 }
 
 // MARK: - Social Link

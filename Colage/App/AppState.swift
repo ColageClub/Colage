@@ -30,17 +30,14 @@ class AppState: ObservableObject {
     }()
 
     func checkExistingSession() {
-        // Check for stored profile and Keychain tokens
-        if let data = UserDefaults.standard.data(forKey: "dev_profile"),
+        // Check for stored profile in Keychain and tokens
+        if let jsonString = KeychainWrapper.get(key: "user_profile"),
+           let data = jsonString.data(using: .utf8),
            let profile = try? JSONDecoder().decode(UserProfile.self, from: data),
            KeychainWrapper.get(key: "access_token") != nil {
             UserProfile.current = profile
             authState = .authenticated
-            // Sync profile from server using email (no auth required)
-            let email = UserDefaults.standard.string(forKey: "user_email") ?? ""
-            if !email.isEmpty {
-                refreshProfileFromServer(email: email)
-            }
+            refreshProfileFromServer()
         } else if KeychainWrapper.get(key: "access_token") != nil {
             authState = .authenticated
         } else {
@@ -48,8 +45,8 @@ class AppState: ObservableObject {
         }
     }
 
-    /// Fetch latest profile from server by email and update local copy
-    private func refreshProfileFromServer(email: String) {
+    /// Fetch latest profile from server (authenticated — JWT required)
+    private func refreshProfileFromServer() {
         Task {
             do {
                 struct ServerProfile: Decodable {
@@ -65,30 +62,31 @@ class AppState: ObservableObject {
                         let socialLinks: [SocialLink]?
                     }
                 }
-                let encoded = email.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? email
                 let result: ServerProfile = try await APIClient.shared.request(
                     method: "GET",
-                    path: "/auth/me?email=\(encoded)"
+                    path: "/auth/me"
                 )
                 let p = result.profile
                 print("[Profile] Synced from server: userId=\(p.userId), photo=\(p.profilePhotoURL ?? "nil")")
+                let current = await MainActor.run { UserProfile.current }
                 let updated = UserProfile(
                     userId: p.userId,
-                    universityDomain: p.universityDomain ?? UserProfile.current?.universityDomain ?? "",
-                    displayName: p.displayName ?? UserProfile.current?.displayName ?? "",
+                    universityDomain: p.universityDomain ?? current?.universityDomain ?? "",
+                    displayName: p.displayName ?? current?.displayName ?? "",
                     profilePhotoURL: p.profilePhotoURL,
                     bio: p.bio,
                     major: p.major,
-                    socialLinks: p.socialLinks ?? UserProfile.current?.socialLinks ?? [],
+                    socialLinks: p.socialLinks ?? current?.socialLinks ?? [],
                     isVisible: p.isVisible ?? true,
-                    serverType: UserProfile.current?.serverType ?? .student,
-                    createdAt: UserProfile.current?.createdAt ?? Date(),
+                    serverType: current?.serverType ?? .student,
+                    createdAt: current?.createdAt ?? Date(),
                     updatedAt: Date()
                 )
                 await MainActor.run {
                     UserProfile.current = updated
-                    if let data = try? JSONEncoder().encode(updated) {
-                        UserDefaults.standard.set(data, forKey: "dev_profile")
+                    if let data = try? JSONEncoder().encode(updated),
+                       let jsonString = String(data: data, encoding: .utf8) {
+                        KeychainWrapper.set(key: "user_profile", value: jsonString)
                     }
                 }
             } catch {

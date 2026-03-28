@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// Horizontal ad banner shown at the bottom of the map view
 struct AdBannerView: View {
@@ -214,7 +215,11 @@ struct AdDetailSheet: View {
 
                     VStack(spacing: 10) {
                         Button {
-                            // Open in Maps
+                            if let lat = ad.lat, let lng = ad.lng {
+                                if let url = URL(string: "http://maps.apple.com/?daddr=\(lat),\(lng)") {
+                                    UIApplication.shared.open(url)
+                                }
+                            }
                         } label: {
                             HStack(spacing: 8) {
                                 Image(systemName: "arrow.triangle.turn.up.right.diamond.fill")
