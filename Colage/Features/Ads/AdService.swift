@@ -15,18 +15,27 @@ class AdService: ObservableObject {
 
     /// Fetch an ad from the server for the given school
     func fetchAd(school: String, studentId: String, userLocation: CLLocationCoordinate2D? = nil) async {
+        print("[AdService] Fetching ad for school=\(school) student=\(studentId)")
         await MainActor.run { isLoading = true }
 
         do {
-            guard let url = URL(string: "\(baseURL)/api/ads/serve?school=\(school)&student_id=\(studentId)") else { return }
-            let (data, _) = try await URLSession.shared.data(from: url)
-            let response = try JSONDecoder().decode(AdServeResponse.self, from: data)
+            let urlStr = "\(baseURL)/api/ads/serve?school=\(school)&student_id=\(studentId)"
+            guard let url = URL(string: urlStr) else {
+                print("[AdService] Invalid URL: \(urlStr)")
+                return
+            }
+            let (data, response) = try await URLSession.shared.data(from: url)
+            let httpResponse = response as? HTTPURLResponse
+            print("[AdService] Response: \(httpResponse?.statusCode ?? 0), bytes: \(data.count)")
+
+            let decoded = try JSONDecoder().decode(AdServeResponse.self, from: data)
 
             await MainActor.run {
-                if var ad = response.ad {
+                if var ad = decoded.ad {
+                    print("[AdService] Got ad: \(ad.businessName) (\(ad.id))")
                     // Calculate distance if we have user location and ad location
-                    if let userLoc = userLocation, ad.lat != 0, ad.lng != 0 {
-                        let adLoc = CLLocation(latitude: ad.lat ?? 0, longitude: ad.lng ?? 0)
+                    if let userLoc = userLocation, let lat = ad.lat, let lng = ad.lng, lat != 0, lng != 0 {
+                        let adLoc = CLLocation(latitude: lat, longitude: lng)
                         let userCL = CLLocation(latitude: userLoc.latitude, longitude: userLoc.longitude)
                         let meters = userCL.distance(from: adLoc)
                         let miles = meters / 1609.34
@@ -36,11 +45,16 @@ class AdService: ObservableObject {
                     if !ads.contains(where: { $0.id == ad.id }) {
                         ads.append(ad)
                     }
+                } else {
+                    print("[AdService] Server returned no ad")
                 }
                 isLoading = false
             }
         } catch {
             print("[AdService] Fetch failed: \(error)")
+            if let data = try? await URLSession.shared.data(from: URL(string: "\(baseURL)/api/ads/serve?school=\(school)&student_id=\(studentId)")!) {
+                print("[AdService] Raw response: \(String(data: data.0, encoding: .utf8) ?? "nil")")
+            }
             await MainActor.run { isLoading = false }
         }
     }
@@ -57,6 +71,7 @@ class AdService: ObservableObject {
 
     /// Fetch next ad (rotate)
     func rotateAd(school: String, studentId: String, userLocation: CLLocationCoordinate2D? = nil) {
+        print("[AdService] Rotate triggered for school=\(school)")
         Task {
             await fetchAd(school: school, studentId: studentId, userLocation: userLocation)
         }

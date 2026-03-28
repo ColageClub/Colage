@@ -49,6 +49,7 @@ struct AdBannerView: View {
             }
         }
         .onReceive(timer) { _ in
+            print("[AdBanner] Timer fired, showAdDetail=\(showAdDetail)")
             guard !showAdDetail else { return }
             adService.rotateAd(
                 school: school,
