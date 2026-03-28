@@ -32,7 +32,7 @@ android {
 
     buildTypes {
         debug {
-            buildConfigField("boolean", "DEV_MODE", "true")
+            buildConfigField("boolean", "DEV_MODE", "false") // Set to true for mock data, false for real backend
             buildConfigField("String", "API_BASE_URL", "\"https://wn7mxcdxca.execute-api.us-east-2.amazonaws.com/dev\"")
             buildConfigField("String", "WS_BASE_URL", "\"wss://w0m7jw00ak.execute-api.us-east-2.amazonaws.com/dev\"")
             buildConfigField("String", "AD_BASE_URL", "\"https://main.dcinq8hq6li09.amplifyapp.com\"")
