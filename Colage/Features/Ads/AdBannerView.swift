@@ -55,6 +55,9 @@ struct AdBannerView: View {
         .onDisappear {
             adService.stopRotation()
         }
+        .onChange(of: locationService.currentLocation?.latitude) { _, _ in
+            adService.updateLocation(locationService.currentLocation)
+        }
     }
 
     private func adBanner(ad: AdData) -> some View {

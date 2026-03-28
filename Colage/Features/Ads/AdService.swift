@@ -86,7 +86,7 @@ class AdService: ObservableObject {
         // Rotate every 30 seconds
         rotationTimer = Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { [weak self] _ in
             guard let self else { return }
-            print("[AdService] Rotation timer fired")
+            print("[AdService] Rotation timer fired, hasLocation=\(self.rotationLocation != nil)")
             Task {
                 await self.fetchAd(
                     school: self.rotationSchool,
