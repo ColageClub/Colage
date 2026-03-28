@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Central app state — controls navigation, auth status, and active mode
-class AppState: ObservableObject {
+@MainActor class AppState: ObservableObject {
     enum AuthState {
         case loading
         case onboarding

@@ -9,7 +9,7 @@ import SwiftUI
 /// - distanceFilter triggers updates only when the user actually moves
 /// - Heartbeat timer (30s) catches floor changes and keeps-alive when stationary
 /// - Activity type hint tells iOS to optimize for pedestrian movement
-class LocationService: NSObject, ObservableObject, CLLocationManagerDelegate {
+@MainActor class LocationService: NSObject, ObservableObject, CLLocationManagerDelegate {
     @Published var currentLocation: CLLocationCoordinate2D?
     @Published var currentAltitude: Double = 0
     @Published var currentFloor: Int = 1

@@ -39,7 +39,7 @@ class WebSocketManager: ObservableObject {
     private func performConnect() {
         guard let domain = currentDomain else { return }
         let isReconnect = reconnectAttempts > 0
-        let userId = UserProfile.current?.userId ?? "anonymous"
+        let userId = MainActor.assumeIsolated { UserProfile.current?.userId } ?? "anonymous"
         let wsBase = Bundle.main.infoDictionary?["WS_BASE_URL"] as? String
             ?? "wss://w0m7jw00ak.execute-api.us-east-2.amazonaws.com/dev"
         var urlString = "\(wsBase)?domain=\(domain)&userId=\(userId)"

@@ -179,7 +179,7 @@ struct HomeView: View {
 }
 
 /// Manages nearby student data — fetches from API + receives WebSocket updates
-class NearbyStudentsViewModel: ObservableObject {
+@MainActor class NearbyStudentsViewModel: ObservableObject {
     @Published var students: [NearbyStudent] = []
     @Published var maxDistance: Double = 0.5 // list slider position (0...1), logarithmic
     @Published var arMaxDistance: Double = 0.5 // AR slider position (0...1), logarithmic

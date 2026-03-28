@@ -2,7 +2,7 @@ import Foundation
 import SwiftUI
 
 /// Handles authentication — email verification, session management
-class AuthService: ObservableObject {
+@MainActor class AuthService: ObservableObject {
     @Published var emailVerified = false
     @Published var isLoading = false
     @Published var errorMessage: String?
