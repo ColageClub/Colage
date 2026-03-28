@@ -30,7 +30,7 @@ export function DashboardClient({ session }: { session: Session }) {
 
   async function addFunds(amount: number) {
     setFundingLoading(true);
-    try { const r = await fetch("/api/billing/add-funds", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ amount }) }); if (r.ok) { const d = await r.json(); window.location.href = d.url; } else { const d = await r.json(); alert(d.error || "Failed"); } } catch { alert("Something went wrong."); }
+    try { const r = await fetch("/api/billing/add-funds", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ amount }) }); const d = await r.json(); if (r.ok && d.url) { window.location.href = d.url; } else { alert(d.error || `Failed (${r.status})`); } } catch (err) { alert("Network error: " + (err instanceof Error ? err.message : String(err))); }
     setFundingLoading(false);
   }
 

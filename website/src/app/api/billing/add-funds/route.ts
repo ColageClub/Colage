@@ -15,10 +15,14 @@ export async function POST(req: NextRequest) {
   }
 
   try {
+    if (!process.env.STRIPE_SECRET_KEY) {
+      return NextResponse.json({ error: "Stripe not configured (missing STRIPE_SECRET_KEY)" }, { status: 500 });
+    }
     const url = await createCheckoutSession(session.businessId, session.email, amount);
     return NextResponse.json({ url });
-  } catch (err) {
-    console.error("Failed to create checkout session:", err);
-    return NextResponse.json({ error: "Failed to create payment session" }, { status: 500 });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("Failed to create checkout session:", message, err);
+    return NextResponse.json({ error: `Payment error: ${message}` }, { status: 500 });
   }
 }

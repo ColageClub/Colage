@@ -1,7 +1,11 @@
 import Stripe from "stripe";
 import { getBusiness, updateBusiness } from "./models/business";
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+if (!process.env.STRIPE_SECRET_KEY) {
+  console.error("[Stripe] STRIPE_SECRET_KEY is not set!");
+}
+
+export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "sk_missing");
 
 // Create or retrieve a Stripe Customer for a business
 export async function createOrGetCustomer(businessId: string, email: string): Promise<string> {
