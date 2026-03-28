@@ -61,7 +61,7 @@ fun ColageApp() {
                 appViewModel = appViewModel
             )
             AuthState.AUTHENTICATED -> {
-                val adService = remember { com.colageclub.colage.features.ads.AdService() }
+                val adService = androidx.compose.runtime.remember { com.colageclub.colage.features.ads.AdService() }
                 HomeScreen(
                     appViewModel = appViewModel,
                     adService = adService
