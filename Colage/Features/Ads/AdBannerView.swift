@@ -3,57 +3,28 @@ import SwiftUI
 /// Horizontal ad banner shown at the bottom of the map view
 struct AdBannerView: View {
     @Environment(\.themeColor) private var themeColor
-    @State private var currentAd: AdData? = nil
+    @EnvironmentObject var locationService: LocationService
+    @ObservedObject private var adService = AdService.shared
     @State private var showAdDetail = false
-    @State private var adIndex = 0
+    @State private var hasFetched = false
 
-    // Mock ads loaded directly — no singleton needed
-    private let mockAds: [AdData] = [
-        AdData(
-            id: "ad-1",
-            businessName: "Blue Brew Coffee",
-            bio: "Student-favorite coffee shop since 2019",
-            deal: "15% off any drink — show this ad",
-            logoEmoji: "☕",
-            logoUrl: nil,
-            distance: "0.2 mi"
-        ),
-        AdData(
-            id: "ad-2",
-            businessName: "Campus Pizza Co.",
-            bio: "Late night slices, every night",
-            deal: "Free garlic knots with any large pizza",
-            logoEmoji: "🍕",
-            logoUrl: nil,
-            distance: "0.4 mi"
-        ),
-        AdData(
-            id: "ad-3",
-            businessName: "FitZone Gym",
-            bio: "24/7 gym, 1 block from campus",
-            deal: "First month free for students",
-            logoEmoji: "🏋️",
-            logoUrl: nil,
-            distance: "0.3 mi"
-        ),
-        AdData(
-            id: "ad-4",
-            businessName: "BookStack",
-            bio: "Used textbooks at 60% off retail",
-            deal: "Extra 10% off with .edu email",
-            logoEmoji: "📚",
-            logoUrl: nil,
-            distance: "0.1 mi"
-        ),
-    ]
+    let timer = Timer.publish(every: 30, on: .main, in: .common).autoconnect()
 
-    let timer = Timer.publish(every: 15, on: .main, in: .common).autoconnect()
+    private var school: String {
+        UserProfile.current?.universityDomain ?? "umich.edu"
+    }
+
+    private var studentId: String {
+        UserProfile.current?.userId ?? "anonymous"
+    }
 
     var body: some View {
         VStack {
-            if let ad = currentAd {
+            if let ad = adService.currentAd {
                 Button {
                     showAdDetail = true
+                    // Track tap
+                    Task { await adService.trackTap(adId: ad.id, studentId: studentId) }
                 } label: {
                     adBanner(ad: ad)
                 }
@@ -63,24 +34,27 @@ struct AdBannerView: View {
                         .presentationDetents([.fraction(0.55), .large])
                         .presentationDragIndicator(.visible)
                 }
-            } else {
-                Text("Loading ads...")
-                    .font(.caption)
-                    .foregroundStyle(.white.opacity(0.5))
-                    .padding()
-                    .background(.ultraThinMaterial)
-                    .clipShape(Capsule())
             }
+            // Show nothing if no ads — don't show "Loading..."
         }
         .onAppear {
-            print("[AdBanner] onAppear — setting first ad")
-            currentAd = mockAds.first
+            guard !hasFetched else { return }
+            hasFetched = true
+            Task {
+                await adService.fetchAd(
+                    school: school,
+                    studentId: studentId,
+                    userLocation: locationService.currentLocation
+                )
+            }
         }
         .onReceive(timer) { _ in
-            // Don't rotate while sheet is open
             guard !showAdDetail else { return }
-            adIndex = (adIndex + 1) % mockAds.count
-            currentAd = mockAds[adIndex]
+            adService.rotateAd(
+                school: school,
+                studentId: studentId,
+                userLocation: locationService.currentLocation
+            )
         }
     }
 
@@ -92,7 +66,7 @@ struct AdBannerView: View {
                     .fill(themeColor.opacity(0.15))
                     .frame(width: 44, height: 44)
 
-                Text(ad.logoEmoji)
+                Text(ad.displayEmoji)
                     .font(.system(size: 22))
             }
 
@@ -113,7 +87,7 @@ struct AdBannerView: View {
 
             // Distance
             VStack(alignment: .trailing, spacing: 2) {
-                Text(ad.distance)
+                Text(ad.displayDistance)
                     .font(ColageFonts.monoSmall)
                     .foregroundStyle(ColageColors.textTertiary)
 
@@ -135,7 +109,7 @@ struct AdBannerView: View {
 
                 HStack {
                     Spacer()
-                    Text(ad.logoEmoji)
+                    Text(ad.displayEmoji)
                         .font(.system(size: 60))
                         .opacity(0.04)
                         .offset(x: -10)
@@ -169,7 +143,7 @@ struct AdDetailSheet: View {
                     )
                     .frame(height: 180)
 
-                    Text(ad.logoEmoji)
+                    Text(ad.displayEmoji)
                         .font(.system(size: 100))
                         .opacity(0.08)
 
@@ -184,7 +158,7 @@ struct AdDetailSheet: View {
                                         .strokeBorder(themeColor.opacity(0.3), lineWidth: 2)
                                 )
 
-                            Text(ad.logoEmoji)
+                            Text(ad.displayEmoji)
                                 .font(.system(size: 36))
                         }
                         .offset(y: 36)
@@ -231,7 +205,7 @@ struct AdDetailSheet: View {
                     )
 
                     HStack(spacing: 20) {
-                        InfoBadge(icon: "location.fill", text: ad.distance)
+                        InfoBadge(icon: "location.fill", text: ad.displayDistance)
                         InfoBadge(icon: "clock.fill", text: "Open now")
                         InfoBadge(icon: "camera.fill", text: "Screenshot")
                     }
