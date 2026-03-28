@@ -30,8 +30,8 @@ data class OnboardingData(
             socialLinks = links,
             isVisible = true,
             serverType = serverType,
-            createdAt = System.currentTimeMillis(),
-            updatedAt = System.currentTimeMillis()
+            createdAt = java.time.Instant.now().toString(),
+            updatedAt = java.time.Instant.now().toString()
         )
     }
 }

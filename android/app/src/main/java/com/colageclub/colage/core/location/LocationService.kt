@@ -206,7 +206,7 @@ class LocationService @Inject constructor(
             longitude = location.longitude,
             altitude = currentAltitude,
             floor = _currentFloor.value,
-            timestamp = System.currentTimeMillis()
+            timestamp = java.time.Instant.now().toString()
         )
         webSocketManager.sendLocationUpdate(studentLocation)
 

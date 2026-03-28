@@ -235,7 +235,7 @@ fun EditProfileScreen(
                             bio = bio.ifBlank { null },
                             major = major.ifBlank { null },
                             socialLinks = links,
-                            updatedAt = System.currentTimeMillis()
+                            updatedAt = java.time.Instant.now().toString()
                         )
                         appViewModel.updateProfileOnServer(
                             updatedProfile = updated,
