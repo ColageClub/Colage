@@ -8,10 +8,13 @@ import AdminSearch from "@/components/admin/AdminSearch";
 interface User {
   userId: string;
   name: string;
+  displayName?: string;
   email: string;
   universityDomain: string;
   major?: string;
+  profilePhotoURL?: string;
   createdAt: string;
+  updatedAt?: string;
   lastActive?: string;
   status: string;
   [key: string]: unknown;
@@ -67,7 +70,26 @@ export default function UsersPage() {
   }, []);
 
   const columns: Column<User>[] = [
-    { name: "Name", key: "name", sortable: true },
+    {
+      name: "Name",
+      key: "name",
+      sortable: true,
+      render: (u) => {
+        const displayName = u.displayName || u.name || u.email?.split("@")[0] || "Unknown";
+        return (
+          <div className="flex items-center gap-3">
+            {u.profilePhotoURL ? (
+              <img src={u.profilePhotoURL} alt="" className="w-8 h-8 rounded-full object-cover" />
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-[#222] flex items-center justify-center text-xs text-[#666]">
+                {displayName[0]?.toUpperCase()}
+              </div>
+            )}
+            <span>{displayName}</span>
+          </div>
+        );
+      },
+    },
     { name: "Email", key: "email", sortable: true },
     { name: "School", key: "universityDomain", sortable: true },
     { name: "Major", key: "major" },
@@ -81,20 +103,26 @@ export default function UsersPage() {
       name: "Last Active",
       key: "lastActive",
       sortable: true,
-      render: (u) => u.lastActive ? new Date(u.lastActive).toLocaleDateString() : "—",
+      render: (u) => {
+        const date = u.lastActive || u.updatedAt;
+        return date ? new Date(date).toLocaleDateString() : "—";
+      },
     },
     {
       name: "Status",
       key: "status",
-      render: (u) => (
-        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-          u.status === "active" ? "bg-green-500/10 text-green-400" :
-          u.status === "suspended" ? "bg-yellow-500/10 text-yellow-400" :
-          "bg-red-500/10 text-red-400"
-        }`}>
-          {u.status}
-        </span>
-      ),
+      render: (u) => {
+        const status = u.status || "active";
+        return (
+          <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+            status === "active" ? "bg-green-500/10 text-green-400" :
+            status === "suspended" ? "bg-yellow-500/10 text-yellow-400" :
+            "bg-red-500/10 text-red-400"
+          }`}>
+            {status}
+          </span>
+        );
+      },
     },
   ];
 

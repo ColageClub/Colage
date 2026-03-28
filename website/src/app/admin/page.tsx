@@ -15,10 +15,12 @@ interface Stats {
 interface UserRow {
   userId: string;
   name: string;
+  displayName?: string;
   email: string;
   universityDomain: string;
   createdAt: string;
   status: string;
+  profilePhotoURL?: string;
   [key: string]: unknown;
 }
 
@@ -49,7 +51,23 @@ export default function AdminOverview() {
   }, []);
 
   const userColumns: Column<UserRow>[] = [
-    { name: "Name", key: "name", sortable: true },
+    {
+      name: "Name",
+      key: "name",
+      sortable: true,
+      render: (u) => (
+        <div className="flex items-center gap-3">
+          {u.profilePhotoURL ? (
+            <img src={u.profilePhotoURL} alt="" className="w-8 h-8 rounded-full object-cover" />
+          ) : (
+            <div className="w-8 h-8 rounded-full bg-[#222] flex items-center justify-center text-xs text-[#666]">
+              {(u.displayName || u.name || "?")[0]?.toUpperCase()}
+            </div>
+          )}
+          <span>{u.displayName || u.name || u.email?.split("@")[0]}</span>
+        </div>
+      ),
+    },
     { name: "Email", key: "email", sortable: true },
     { name: "School", key: "universityDomain", sortable: true },
     {
@@ -61,15 +79,18 @@ export default function AdminOverview() {
     {
       name: "Status",
       key: "status",
-      render: (u) => (
-        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-          u.status === "active" ? "bg-green-500/10 text-green-400" :
-          u.status === "suspended" ? "bg-yellow-500/10 text-yellow-400" :
-          "bg-red-500/10 text-red-400"
-        }`}>
-          {u.status}
-        </span>
-      ),
+      render: (u) => {
+        const status = u.status || "active";
+        return (
+          <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+            status === "active" ? "bg-green-500/10 text-green-400" :
+            status === "suspended" ? "bg-yellow-500/10 text-yellow-400" :
+            "bg-red-500/10 text-red-400"
+          }`}>
+            {status}
+          </span>
+        );
+      },
     },
   ];
 

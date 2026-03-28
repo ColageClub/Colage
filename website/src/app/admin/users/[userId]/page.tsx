@@ -7,14 +7,19 @@ import AdminModal from "@/components/admin/AdminModal";
 interface User {
   userId: string;
   name: string;
+  displayName?: string;
   email: string;
   universityDomain: string;
   major?: string;
   bio?: string;
   photoUrl?: string;
+  profilePhotoURL?: string;
+  socialLinks?: Array<{ platform: string; handle: string }>;
   socials?: Record<string, string>;
   status: string;
+  isVisible?: boolean;
   createdAt: string;
+  updatedAt?: string;
   lastActive?: string;
 }
 
@@ -22,6 +27,14 @@ interface Location {
   lat: number;
   lng: number;
   lastUpdated: string;
+}
+
+function getDisplayName(user: User): string {
+  return user.displayName || user.name || user.email?.split("@")[0] || "Unknown";
+}
+
+function getPhoto(user: User): string | undefined {
+  return user.profilePhotoURL || user.photoUrl;
 }
 
 export default function UserDetailPage() {
@@ -83,22 +96,22 @@ export default function UserDetailPage() {
       {/* Profile Card */}
       <div className="bg-[#1A1A1A] border border-[#333] rounded-2xl p-6">
         <div className="flex items-start gap-4">
-          <div className="w-16 h-16 rounded-full bg-[#252525] border border-[#333] flex items-center justify-center text-2xl text-[#666] shrink-0">
-            {user.photoUrl ? (
-              <img src={user.photoUrl} alt={user.name} className="w-full h-full rounded-full object-cover" />
+          <div className="w-16 h-16 rounded-full bg-[#252525] border border-[#333] flex items-center justify-center text-2xl text-[#666] shrink-0 overflow-hidden">
+            {getPhoto(user) ? (
+              <img src={getPhoto(user)} alt={getDisplayName(user)} className="w-full h-full rounded-full object-cover" />
             ) : (
-              user.name?.[0]?.toUpperCase() || "?"
+              getDisplayName(user)[0]?.toUpperCase() || "?"
             )}
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-3 mb-1">
-              <h1 className="text-xl font-bold text-white">{user.name || "Unknown"}</h1>
+              <h1 className="text-xl font-bold text-white">{getDisplayName(user)}</h1>
               <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                user.status === "active" ? "bg-green-500/10 text-green-400" :
+                (user.status || "active") === "active" ? "bg-green-500/10 text-green-400" :
                 user.status === "suspended" ? "bg-yellow-500/10 text-yellow-400" :
                 "bg-red-500/10 text-red-400"
               }`}>
-                {user.status}
+                {user.status || "active"}
               </span>
             </div>
             <p className="text-sm text-[#A0A0A0]">{user.email}</p>
@@ -139,7 +152,7 @@ export default function UserDetailPage() {
             </div>
             <div>
               <span className="text-xs text-[#666]">Last Active</span>
-              <p className="text-sm text-white">{user.lastActive ? new Date(user.lastActive).toLocaleString() : "—"}</p>
+              <p className="text-sm text-white">{(user.lastActive || user.updatedAt) ? new Date(user.lastActive || user.updatedAt!).toLocaleString() : "—"}</p>
             </div>
             {location && (
               <div>
@@ -152,11 +165,16 @@ export default function UserDetailPage() {
       </div>
 
       {/* Socials */}
-      {user.socials && Object.keys(user.socials).length > 0 && (
+      {((user.socialLinks && user.socialLinks.length > 0) || (user.socials && Object.keys(user.socials).length > 0)) && (
         <div className="bg-[#1A1A1A] border border-[#333] rounded-2xl p-6">
           <h2 className="text-sm font-medium text-[#A0A0A0] uppercase tracking-wider mb-4">Socials</h2>
           <div className="flex flex-wrap gap-3">
-            {Object.entries(user.socials).map(([platform, handle]) => (
+            {user.socialLinks?.map((link) => (
+              <span key={link.platform} className="px-3 py-1.5 bg-[#252525] rounded-lg text-sm text-white">
+                <span className="text-[#A0A0A0] capitalize">{link.platform}:</span> {link.handle}
+              </span>
+            ))}
+            {!user.socialLinks && user.socials && Object.entries(user.socials).map(([platform, handle]) => (
               <span key={platform} className="px-3 py-1.5 bg-[#252525] rounded-lg text-sm text-white">
                 <span className="text-[#A0A0A0]">{platform}:</span> {handle}
               </span>
@@ -209,7 +227,7 @@ export default function UserDetailPage() {
         <div className="space-y-4">
           <p className="text-sm text-[#A0A0A0]">
             Are you sure you want to <span className="text-white font-medium">{confirmAction}</span> user{" "}
-            <span className="text-white font-medium">{user.name}</span>?
+            <span className="text-white font-medium">{getDisplayName(user)}</span>?
             {confirmAction === "delete" && " This action cannot be undone."}
           </p>
           <div className="flex gap-3">

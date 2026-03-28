@@ -5,14 +5,24 @@ export interface User {
   userId: string;
   email: string;
   name: string;
+  displayName?: string;
   universityDomain: string;
   major?: string;
   bio?: string;
   photoUrl?: string;
+  profilePhotoURL?: string;
+  socialLinks?: Array<{ platform: string; handle: string }>;
   socials?: Record<string, string>;
   status: "active" | "suspended" | "banned";
+  isVisible?: boolean;
   createdAt: string;
+  updatedAt?: string;
   lastActive?: string;
+}
+
+/** Get display name — handles both 'name' and 'displayName' field conventions */
+export function getUserDisplayName(user: User): string {
+  return user.displayName || user.name || user.email?.split("@")[0] || "Unknown";
 }
 
 // In-memory fallback

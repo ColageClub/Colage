@@ -65,6 +65,7 @@ export const handler = async (event) => {
       profilePhotoURL: null,
       socialLinks,
       isVisible: true,
+      status: 'active',
       createdAt: now,
       updatedAt: now,
     };
