@@ -21,13 +21,8 @@ import SwiftUI
     @Published var showOwnProfile: Bool = false
 
     /// Dev mode — skips real auth, uses mock data
-    static let devMode: Bool = {
-        #if DEBUG
-        return true
-        #else
-        return false
-        #endif
-    }()
+    /// Set to false to test against real backend even in DEBUG builds
+    static let devMode: Bool = false
 
     func checkExistingSession() {
         // Check for stored profile in Keychain and tokens
