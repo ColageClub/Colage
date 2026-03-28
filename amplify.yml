@@ -9,6 +9,9 @@ applications:
         build:
           commands:
             - env | grep -E '^(STRIPE_|NEXT_PUBLIC_|MAPBOX_|API_URL)' >> .env.production
+            - echo "AWS_ACCESS_KEY_ID=$COLAGE_AWS_ACCESS_KEY_ID" >> .env.production
+            - echo "AWS_SECRET_ACCESS_KEY=$COLAGE_AWS_SECRET_ACCESS_KEY" >> .env.production
+            - echo "AWS_REGION=us-east-2" >> .env.production
             - npm run build
       artifacts:
         baseDirectory: .next
