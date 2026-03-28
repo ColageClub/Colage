@@ -13,13 +13,16 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   }
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A]">
+    <div style={{ minHeight: "100vh", background: "#0A0A0A" }}>
       <AdminSidebar />
-      <div className="md:ml-[260px]">
-        <main className="min-h-screen p-6 md:p-8">
-          {children}
-        </main>
-      </div>
+      <main style={{ minHeight: "100vh", marginLeft: 260, padding: "32px" }} className="admin-main">
+        {children}
+      </main>
+      <style>{`
+        @media (max-width: 767px) {
+          .admin-main { margin-left: 0 !important; padding: 24px !important; }
+        }
+      `}</style>
     </div>
   );
 }
