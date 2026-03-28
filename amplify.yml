@@ -8,6 +8,7 @@ applications:
             - npm ci
         build:
           commands:
+            - env | grep -E '^(STRIPE_|NEXT_PUBLIC_|MAPBOX_|API_URL)' >> .env.production
             - npm run build
       artifacts:
         baseDirectory: .next
