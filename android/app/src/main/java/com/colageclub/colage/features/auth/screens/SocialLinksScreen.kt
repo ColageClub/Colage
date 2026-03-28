@@ -63,7 +63,7 @@ fun SocialLinksScreen(
                 .fillMaxSize()
                 .systemBarsPadding()
         ) {
-            OnboardingProgress(currentStep = 6, totalSteps = 10, modifier = Modifier.padding(top = 8.dp))
+            OnboardingProgress(currentStep = 4, totalSteps = 8, modifier = Modifier.padding(top = 8.dp))
 
             Column(
                 modifier = Modifier

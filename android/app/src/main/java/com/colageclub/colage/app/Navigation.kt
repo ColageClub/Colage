@@ -26,8 +26,6 @@ sealed class Screen(val route: String) {
     object EmailEntry : Screen("email_entry")
     object EmailOTP : Screen("email_otp")
     object ServerType : Screen("server_type")
-    object PhoneEntry : Screen("phone_entry")
-    object PhoneOTP : Screen("phone_otp")
     object PhotoUpload : Screen("photo_upload")
     object ProfileInfo : Screen("profile_info")
     object SocialLinks : Screen("social_links")
@@ -61,10 +59,9 @@ fun ColageApp() {
                 appViewModel = appViewModel
             )
             AuthState.AUTHENTICATED -> {
-                val adService = androidx.compose.runtime.remember { com.colageclub.colage.features.ads.AdService() }
                 HomeScreen(
                     appViewModel = appViewModel,
-                    adService = adService
+                    adService = appViewModel.adService
                 )
             }
         }
@@ -110,20 +107,6 @@ fun OnboardingNavHost(
             )
         }
 
-        composable(Screen.PhoneEntry.route) {
-            PhoneEntryScreen(
-                authViewModel = authViewModel,
-                onContinue = { navController.navigate(Screen.PhoneOTP.route) }
-            )
-        }
-
-        composable(Screen.PhoneOTP.route) {
-            PhoneOTPScreen(
-                authViewModel = authViewModel,
-                onVerified = { navController.navigate(Screen.PhotoUpload.route) }
-            )
-        }
-
         composable(Screen.PhotoUpload.route) {
             PhotoUploadScreen(
                 authViewModel = authViewModel,
@@ -156,11 +139,14 @@ fun OnboardingNavHost(
             UniversityWelcomeScreen(
                 authViewModel = authViewModel,
                 onEnter = {
-                    authViewModel.createProfile {
-                        scope.launch {
-                            authViewModel.completeOnboarding()
-                            appViewModel.setAuthenticated()
+                    authViewModel.createProfile { success ->
+                        if (success) {
+                            scope.launch {
+                                authViewModel.completeOnboarding()
+                                appViewModel.setAuthenticated()
+                            }
                         }
+                        // On failure: error is shown via authViewModel.errorMessage
                     }
                 }
             )

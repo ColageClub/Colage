@@ -11,12 +11,15 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.colageclub.colage.core.design.Haptics
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -43,9 +46,44 @@ fun HomeScreen(appViewModel: AppViewModel, adService: com.colageclub.colage.feat
 
     val nearbyVM: NearbyStudentsViewModel = hiltViewModel()
 
+    val nearbyError by nearbyVM.error.collectAsState()
+    val appError by appViewModel.error.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    // Collect students + floor state so mapStudentCount recomputes reactively
+    val allStudents by nearbyVM.students.collectAsState()
+    val filterFloor by nearbyVM.filterFloor.collectAsState()
+    val mapStudentCount by remember {
+        derivedStateOf {
+            allStudents
+                .filter { filterFloor == null || it.location.floor == filterFloor }
+                .size
+        }
+    }
+
+    val lastFetchTime by nearbyVM.lastFetchTime.collectAsState()
+    val wsConnected by nearbyVM.isWebSocketConnected.collectAsState()
+    val isDataStale = lastFetchTime > 0L &&
+        (System.currentTimeMillis() - lastFetchTime) > 60_000 &&
+        !wsConnected
+
     var showOwnProfile by remember { mutableStateOf(false) }
     var showEditProfile by remember { mutableStateOf(false) }
     var showSettings by remember { mutableStateOf(false) }
+
+    // Show errors as snackbars
+    LaunchedEffect(nearbyError) {
+        nearbyError?.let {
+            snackbarHostState.showSnackbar(it)
+            nearbyVM.clearError()
+        }
+    }
+    LaunchedEffect(appError) {
+        appError?.let {
+            snackbarHostState.showSnackbar(it)
+            appViewModel.clearError()
+        }
+    }
 
     // Load data on first appear
     LaunchedEffect(Unit) {
@@ -66,7 +104,13 @@ fun HomeScreen(appViewModel: AppViewModel, adService: com.colageclub.colage.feat
                     selfUserId = currentProfile?.userId
                 )
             }
+            nearbyVM.startPeriodicRefresh()
         }
+    }
+
+    // Cancel periodic refresh on disposal
+    DisposableEffect(Unit) {
+        onDispose { nearbyVM.stopPeriodicRefresh() }
     }
 
     // Sync floor filter
@@ -130,7 +174,7 @@ fun HomeScreen(appViewModel: AppViewModel, adService: com.colageclub.colage.feat
                         ) {
                             Icon(
                                 if (isVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                                contentDescription = "Toggle visibility",
+                                contentDescription = if (isVisible) "You are visible to others, tap to hide" else "You are hidden, tap to show",
                                 tint = if (isVisible) ColageColors.TextPrimary else ColageColors.TextTertiary,
                                 modifier = Modifier.size(18.dp)
                             )
@@ -179,9 +223,19 @@ fun HomeScreen(appViewModel: AppViewModel, adService: com.colageclub.colage.feat
                             )
                             Spacer(Modifier.width(6.dp))
                             Text(
-                                "${nearbyVM.mapStudents().size} nearby",
+                                "$mapStudentCount nearby",
                                 style = ColageFonts.Caption.copy(color = ColageColors.TextTertiary)
                             )
+                        }
+                    }
+
+                    // Stale data banner
+                    if (isDataStale) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            StaleDataBanner(lastUpdatedMs = lastFetchTime)
                         }
                     }
                 }
@@ -211,6 +265,14 @@ fun HomeScreen(appViewModel: AppViewModel, adService: com.colageclub.colage.feat
                         )
                     }
                 }
+
+                // Snackbar host for error feedback
+                SnackbarHost(
+                    hostState = snackbarHostState,
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 80.dp)
+                )
             }
 
     // Full-screen overlays
@@ -264,6 +326,7 @@ fun DiscoveryModePicker(
                     color = if (isSelected) ColageColors.TextPrimary else ColageColors.TextSecondary
                 ),
                 modifier = Modifier
+                    .semantics { contentDescription = "${mode.label} view" }
                     .clip(RoundedCornerShape(10.dp))
                     .background(if (isSelected) LocalThemeColor.current else Color.Transparent)
                     .clickable {
@@ -302,6 +365,7 @@ fun FloorPicker(
                     color = if (isSelected) LocalThemeColor.current else ColageColors.TextSecondary
                 ),
                 modifier = Modifier
+                    .semantics { contentDescription = "Floor $label" }
                     .clip(RoundedCornerShape(6.dp))
                     .background(if (isSelected) LocalThemeColor.current.copy(alpha = 0.15f) else Color.Transparent)
                     .clickable {

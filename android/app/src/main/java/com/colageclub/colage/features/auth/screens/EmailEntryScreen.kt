@@ -41,7 +41,7 @@ fun EmailEntryScreen(
                 .fillMaxSize()
                 .systemBarsPadding()
         ) {
-            OnboardingProgress(currentStep = 0, totalSteps = 10, modifier = Modifier.padding(top = 8.dp))
+            OnboardingProgress(currentStep = 0, totalSteps = 8, modifier = Modifier.padding(top = 8.dp))
 
             Column(
                 modifier = Modifier.fillMaxWidth().padding(top = 48.dp),

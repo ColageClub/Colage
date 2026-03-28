@@ -51,7 +51,7 @@ fun ProfileInfoScreen(
                 .fillMaxSize()
                 .systemBarsPadding()
         ) {
-            OnboardingProgress(currentStep = 5, totalSteps = 10, modifier = Modifier.padding(top = 8.dp))
+            OnboardingProgress(currentStep = 3, totalSteps = 8, modifier = Modifier.padding(top = 8.dp))
 
             Column(
                 modifier = Modifier

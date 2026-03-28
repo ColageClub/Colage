@@ -33,14 +33,21 @@ android {
     buildTypes {
         debug {
             buildConfigField("boolean", "DEV_MODE", "true")
+            buildConfigField("String", "API_BASE_URL", "\"https://wn7mxcdxca.execute-api.us-east-2.amazonaws.com/dev\"")
+            buildConfigField("String", "WS_BASE_URL", "\"wss://w0m7jw00ak.execute-api.us-east-2.amazonaws.com/dev\"")
+            buildConfigField("String", "AD_BASE_URL", "\"https://main.dcinq8hq6li09.amplifyapp.com\"")
         }
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
             buildConfigField("boolean", "DEV_MODE", "false")
+            buildConfigField("String", "API_BASE_URL", "\"https://wn7mxcdxca.execute-api.us-east-2.amazonaws.com/dev\"")
+            buildConfigField("String", "WS_BASE_URL", "\"wss://w0m7jw00ak.execute-api.us-east-2.amazonaws.com/dev\"")
+            buildConfigField("String", "AD_BASE_URL", "\"https://main.dcinq8hq6li09.amplifyapp.com\"")
         }
     }
 
@@ -74,8 +81,6 @@ dependencies {
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
     implementation(libs.hilt.navigation.compose)
-    implementation(libs.retrofit)
-    implementation(libs.retrofit.gson)
     implementation(libs.okhttp)
     implementation(libs.okhttp.logging)
     implementation(libs.coil.compose)

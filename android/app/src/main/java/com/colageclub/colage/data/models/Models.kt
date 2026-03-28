@@ -1,7 +1,6 @@
 package com.colageclub.colage.data.models
 
 import com.google.gson.annotations.SerializedName
-import java.util.Date
 
 // MARK: - University
 
@@ -47,8 +46,8 @@ data class UserProfile(
     val socialLinks: List<SocialLink> = emptyList(),
     val isVisible: Boolean = true,
     val serverType: ServerType = ServerType.STUDENT,
-    val createdAt: Long = System.currentTimeMillis(),
-    val updatedAt: Long = System.currentTimeMillis()
+    val createdAt: String? = null,
+    val updatedAt: String? = null
 )
 
 // MARK: - Social Link
@@ -73,16 +72,16 @@ data class SocialLink(
 }
 
 enum class SocialPlatform(val displayName: String, val iconRes: String) {
-    INSTAGRAM("Instagram", "camera"),
-    TIKTOK("TikTok", "music_note"),
-    X("X", "alternate_email"),
-    SNAPCHAT("Snapchat", "bolt"),
-    FACEBOOK("Facebook", "group"),
-    BEREAL("BeReal", "visibility"),
-    LINKEDIN("LinkedIn", "work"),
-    CUSTOM1("Link 1", "link"),
-    CUSTOM2("Link 2", "link"),
-    CUSTOM3("Link 3", "link");
+    @SerializedName("instagram") INSTAGRAM("Instagram", "camera"),
+    @SerializedName("tiktok") TIKTOK("TikTok", "music_note"),
+    @SerializedName("x") X("X", "alternate_email"),
+    @SerializedName("snapchat") SNAPCHAT("Snapchat", "bolt"),
+    @SerializedName("facebook") FACEBOOK("Facebook", "group"),
+    @SerializedName("bereal") BEREAL("BeReal", "visibility"),
+    @SerializedName("linkedin") LINKEDIN("LinkedIn", "work"),
+    @SerializedName("custom1") CUSTOM1("Link 1", "link"),
+    @SerializedName("custom2") CUSTOM2("Link 2", "link"),
+    @SerializedName("custom3") CUSTOM3("Link 3", "link");
 
     companion object {
         fun fromString(value: String): SocialPlatform? =
@@ -110,7 +109,7 @@ data class StudentLocation(
     val longitude: Double,
     val altitude: Double = 0.0,
     val floor: Int = 1,
-    val timestamp: Long = System.currentTimeMillis(),
+    val timestamp: String? = null,
     // Optional profile snapshot from WebSocket broadcast
     val displayName: String? = null,
     val profilePhotoURL: String? = null,
@@ -149,9 +148,6 @@ data class AdData(
 data class EmailVerifyRequest(val email: String)
 data class EmailConfirmRequest(val email: String, val code: String)
 data class EmailConfirmResponse(val verified: Boolean, val universityDomain: String)
-data class PhoneVerifyRequest(val phone: String, val email: String)
-data class PhoneConfirmRequest(val phone: String, val code: String)
-data class PhoneConfirmResponse(val verified: Boolean)
 data class LoginRequest(val email: String, val deviceId: String)
 
 data class TokenResponse(

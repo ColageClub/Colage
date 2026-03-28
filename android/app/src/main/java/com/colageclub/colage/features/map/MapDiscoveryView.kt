@@ -55,8 +55,11 @@ fun MapDiscoveryView(
     val puckArgb = if (isVisible) themeArgb else ColageColors.Offline.toArgb()
     val context = LocalContext.current
     var mapViewRef by remember { mutableStateOf<MapView?>(null) }
+    var annotationManagerRef by remember { mutableStateOf<PointAnnotationManager?>(null) }
     // Cache downloaded avatar bitmaps by userId
     val avatarCache = remember { mutableMapOf<String, Bitmap>() }
+    // Cache initials placeholder bitmaps by key (initials+color)
+    val initialsCache = remember { mutableMapOf<String, Bitmap>() }
     val pendingDownloads = remember { mutableSetOf<String>() }
     // Track last positions for smooth animation (matches iOS 70% lerp)
     val lastPositions = remember { mutableMapOf<String, Pair<Double, Double>>() }
@@ -75,15 +78,22 @@ fun MapDiscoveryView(
                             zoom(15.5)
                         }
                     )
-                    // Hide all Mapbox ornaments — attribution in Settings screen
-                    logo.enabled = false
-                    attribution.enabled = false
+                    // Mapbox logo + attribution required by ToS
+                    logo.enabled = true
+                    logo.marginLeft = 8f
+                    logo.marginBottom = 8f
+                    attribution.enabled = true
+                    attribution.marginLeft = 96f
+                    attribution.marginBottom = 8f
                     scalebar.enabled = false
                     compass.enabled = false
 
                     location.enabled = true
                     location.pulsingEnabled = isVisible
                     location.puckBearingEnabled = true
+
+                    // Create annotation manager once in factory
+                    annotationManagerRef = annotations.createPointAnnotationManager()
                     mapViewRef = this
                 }
             },
@@ -92,8 +102,7 @@ fun MapDiscoveryView(
                 photoRevision.let { _ -> }
 
                 mapView.location.pulsingEnabled = isVisible
-                val annotationApi = mapView.annotations
-                val manager = annotationApi.createPointAnnotationManager()
+                val manager = annotationManagerRef ?: return@AndroidView
                 manager.deleteAll()
 
                 val studentMap = mutableMapOf<String, NearbyStudent>()
@@ -117,12 +126,16 @@ fun MapDiscoveryView(
                                 pendingDownloads.remove(userId)
                             }
                         }
-                        // Return initials placeholder for now
-                        createAvatarBitmap(
-                            initials = student.profile.displayName.initials(),
-                            borderColor = dotColor,
-                            size = 28
-                        )
+                        // Return cached initials placeholder
+                        val initials = student.profile.displayName.initials()
+                        val cacheKey = "$initials-$dotColor"
+                        initialsCache.getOrPut(cacheKey) {
+                            createAvatarBitmap(
+                                initials = initials,
+                                borderColor = dotColor,
+                                size = 28
+                            )
+                        }
                     }
 
                     // Smooth position: lerp 70% toward target (matches iOS)
@@ -185,7 +198,7 @@ fun MapDiscoveryView(
         ) {
             Icon(
                 Icons.Default.MyLocation,
-                contentDescription = "Recenter",
+                contentDescription = "Recenter map on your location",
                 tint = ColageColors.TextPrimary,
                 modifier = Modifier.size(20.dp)
             )

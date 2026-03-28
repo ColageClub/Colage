@@ -15,7 +15,7 @@ import javax.inject.Singleton
 @Singleton
 class WebSocketManager @Inject constructor() {
 
-    private val wsUrl = "wss://w0m7jw00ak.execute-api.us-east-2.amazonaws.com/dev"
+    private val wsUrl = BuildConfig.WS_BASE_URL
     private val gson = Gson()
 
     private val _isConnected = MutableStateFlow(false)
@@ -29,6 +29,9 @@ class WebSocketManager @Inject constructor() {
     var onLocationUpdate: ((List<StudentLocation>) -> Unit)? = null
     var onStudentJoined: ((StudentLocation) -> Unit)? = null
     var onStudentLeft: ((String) -> Unit)? = null
+    var onReconnected: (() -> Unit)? = null
+
+    private var hasConnectedBefore = false
 
     private val client = OkHttpClient.Builder()
         .readTimeout(0, TimeUnit.MILLISECONDS) // No timeout for WebSocket
@@ -50,6 +53,10 @@ class WebSocketManager @Inject constructor() {
         webSocket = client.newWebSocket(request, object : WebSocketListener() {
             override fun onOpen(webSocket: WebSocket, response: Response) {
                 _isConnected.value = true
+                if (hasConnectedBefore) {
+                    handler.post { onReconnected?.invoke() }
+                }
+                hasConnectedBefore = true
                 reconnectAttempts = 0
                 startPing()
             }

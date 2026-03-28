@@ -46,10 +46,21 @@ class SecureStorage @Inject constructor(
         return newId
     }
 
+    fun saveProfile(json: String) {
+        prefs.edit().putString(KEY_USER_PROFILE, json).apply()
+    }
+
+    fun getProfile(): String? = prefs.getString(KEY_USER_PROFILE, null)
+
+    fun clearProfile() {
+        prefs.edit().remove(KEY_USER_PROFILE).apply()
+    }
+
     companion object {
         const val KEY_ACCESS_TOKEN = "access_token"
         const val KEY_ID_TOKEN = "id_token"
         const val KEY_REFRESH_TOKEN = "refresh_token"
         const val KEY_DEVICE_ID = "device_id"
+        const val KEY_USER_PROFILE = "user_profile"
     }
 }

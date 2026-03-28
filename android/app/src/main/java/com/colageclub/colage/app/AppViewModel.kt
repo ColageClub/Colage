@@ -36,7 +36,8 @@ class AppViewModel @Inject constructor(
     val universityService: UniversityService,
     private val webSocketManager: WebSocketManager,
     val locationService: com.colageclub.colage.core.location.LocationService,
-    private val apiClient: ApiClient
+    private val apiClient: ApiClient,
+    val adService: com.colageclub.colage.features.ads.AdService
 ) : ViewModel() {
 
     private val gson = Gson()
@@ -56,12 +57,18 @@ class AppViewModel @Inject constructor(
     private val _currentProfile = MutableStateFlow<UserProfile?>(null)
     val currentProfile: StateFlow<UserProfile?> = _currentProfile.asStateFlow()
 
+    private val _error = MutableStateFlow<String?>(null)
+    val error: StateFlow<String?> = _error.asStateFlow()
+    fun clearError() { _error.value = null }
+
     // University state proxied from UniversityService
     val currentUniversity = universityService.currentUniversity
     val currentTheme = universityService.currentTheme
     val availableThemes = universityService.availableThemes
 
     val devMode: Boolean get() = BuildConfig.DEV_MODE
+
+    val userEmail: String? get() = prefs.getString("user_email", null)
 
     fun checkExistingSession() {
         if (devMode) {
@@ -73,7 +80,7 @@ class AppViewModel @Inject constructor(
                 _authState.value = AuthState.ONBOARDING
             }
         } else {
-            val profileJson = prefs.getString("user_profile", null)
+            val profileJson = secureStorage.getProfile()
             if (profileJson != null) {
                 try {
                     val profile = gson.fromJson(profileJson, UserProfile::class.java)
@@ -91,7 +98,7 @@ class AppViewModel @Inject constructor(
     }
 
     private fun loadProfileFromStorage() {
-        val json = prefs.getString("user_profile", null) ?: return
+        val json = secureStorage.getProfile() ?: return
         try {
             _currentProfile.value = gson.fromJson(json, UserProfile::class.java)
         } catch (_: Exception) {}
@@ -126,7 +133,6 @@ class AppViewModel @Inject constructor(
         secureStorage.clearAll()
         prefs.edit()
             .remove("onboarding_complete")
-            .remove("user_profile")
             .remove("token_expiry")
             .apply()
         _currentProfile.value = null
@@ -152,7 +158,7 @@ class AppViewModel @Inject constructor(
     fun updateProfile(profile: UserProfile) {
         _currentProfile.value = profile
         val json = gson.toJson(profile)
-        prefs.edit().putString("user_profile", json).apply()
+        secureStorage.saveProfile(json)
     }
 
     fun selectTheme(theme: UniversityTheme) {
@@ -208,9 +214,36 @@ class AppViewModel @Inject constructor(
                     updateProfile(updatedProfile.copy(profilePhotoURL = photoUrl))
                 }
             } catch (_: Exception) {
-                // Fire-and-forget
+                _error.value = "Failed to save profile"
             }
             onComplete()
+        }
+    }
+
+    fun deleteAccount(onResult: (Boolean) -> Unit) {
+        val userId = _currentProfile.value?.userId ?: run { onResult(false); return }
+        viewModelScope.launch {
+            try {
+                apiClient.deleteProfile(userId)
+            } catch (_: Exception) {
+                // Continue with local cleanup even if server fails
+            }
+            logout()
+            onResult(true)
+        }
+    }
+
+    fun switchServerType(to: ServerType, onResult: (Boolean) -> Unit) {
+        val userId = _currentProfile.value?.userId ?: run { onResult(false); return }
+        viewModelScope.launch {
+            try {
+                apiClient.putUpdateProfile(userId, mapOf("serverType" to to.name.lowercase()))
+                val profile = _currentProfile.value?.copy(serverType = to)
+                if (profile != null) updateProfile(profile)
+                onResult(true)
+            } catch (_: Exception) {
+                onResult(false)
+            }
         }
     }
 
@@ -220,9 +253,7 @@ class AppViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
-                val email = prefs.getString("user_email", null)
-                    ?: return@launch
-                val wrapper = apiClient.getProfile(email)
+                val wrapper = apiClient.getMe()
                 val resp = wrapper.profile
                 val updated = profile.copy(
                     userId = resp.userId,

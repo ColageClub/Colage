@@ -1,5 +1,7 @@
 package com.colageclub.colage.features.ads
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -18,6 +20,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -121,6 +124,7 @@ fun AdBannerView(
 @Composable
 fun AdDetailSheet(ad: AdData, onDismiss: () -> Unit) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
+    val context = LocalContext.current
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -208,7 +212,17 @@ fun AdDetailSheet(ad: AdData, onDismiss: () -> Unit) {
                 // Buttons
                 ColagePrimaryButton(
                     title = "Get Directions",
-                    onClick = { /* Open maps */ }
+                    onClick = {
+                        ad.lat?.let { lat -> ad.lng?.let { lng ->
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("google.navigation:q=$lat,$lng"))
+                            intent.setPackage("com.google.android.apps.maps")
+                            try {
+                                context.startActivity(intent)
+                            } catch (e: Exception) {
+                                context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://www.google.com/maps/dir/?api=1&destination=$lat,$lng")))
+                            }
+                        }}
+                    }
                 )
                 Spacer(Modifier.height(10.dp))
                 Button(

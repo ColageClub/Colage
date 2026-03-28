@@ -13,12 +13,13 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.util.Timer
 import java.util.TimerTask
+import com.colageclub.colage.BuildConfig
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class AdService @Inject constructor() {
-    private val baseUrl = "https://main.dcinq8hq6li09.amplifyapp.com"
+    private val baseUrl = BuildConfig.AD_BASE_URL
     private val httpClient = OkHttpClient()
     private val gson = Gson()
 

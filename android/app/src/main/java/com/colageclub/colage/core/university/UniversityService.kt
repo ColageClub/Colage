@@ -5,6 +5,7 @@ import com.colageclub.colage.BuildConfig
 import com.colageclub.colage.core.networking.ApiClient
 import com.colageclub.colage.data.models.University
 import com.colageclub.colage.data.models.UniversityTheme
+import android.util.Log
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -39,6 +40,7 @@ class UniversityService @Inject constructor(
             setUniversity(uni)
             uni
         } catch (_: Exception) {
+            Log.w("UniversityService", "API failed, using mock data")
             mockUniversity(domain).also { setUniversity(it) }
         }
     }

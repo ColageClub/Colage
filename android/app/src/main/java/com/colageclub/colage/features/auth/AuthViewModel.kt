@@ -41,9 +41,6 @@ class AuthViewModel @Inject constructor(
     private val _emailVerified = MutableStateFlow(false)
     val emailVerified: StateFlow<Boolean> = _emailVerified.asStateFlow()
 
-    private val _phoneVerified = MutableStateFlow(false)
-    val phoneVerified: StateFlow<Boolean> = _phoneVerified.asStateFlow()
-
     var resolvedUniversity: University? = null
 
     // Dev mode — true in debug builds
@@ -120,64 +117,6 @@ class AuthViewModel @Inject constructor(
         }
     }
 
-    // MARK: - Phone OTP
-
-    fun sendPhoneOTP(phone: String, onResult: (Boolean) -> Unit) {
-        _onboardingData.update { it.copy(phone = phone) }
-        _isLoading.value = true
-        _errorMessage.value = null
-
-        viewModelScope.launch {
-            if (devMode) {
-                delay(800)
-                _isLoading.value = false
-                onResult(true)
-                return@launch
-            }
-            try {
-                val email = _onboardingData.value.email
-                apiClient.postPhoneVerify(phone, email.lowercase())
-                _isLoading.value = false
-                onResult(true)
-            } catch (e: Exception) {
-                _isLoading.value = false
-                _errorMessage.value = e.message
-                onResult(false)
-            }
-        }
-    }
-
-    fun confirmPhoneOTP(code: String, onResult: (Boolean) -> Unit) {
-        _isLoading.value = true
-        _errorMessage.value = null
-
-        viewModelScope.launch {
-            if (devMode) {
-                delay(500)
-                _isLoading.value = false
-                if (code.length == 6) {
-                    _phoneVerified.value = true
-                    onResult(true)
-                } else {
-                    _errorMessage.value = "Invalid code"
-                    onResult(false)
-                }
-                return@launch
-            }
-            try {
-                val phone = _onboardingData.value.phone
-                val result = apiClient.postPhoneConfirm(phone, code)
-                _isLoading.value = false
-                if (result.verified) _phoneVerified.value = true
-                onResult(result.verified)
-            } catch (e: Exception) {
-                _isLoading.value = false
-                _errorMessage.value = e.message
-                onResult(false)
-            }
-        }
-    }
-
     // MARK: - Profile
 
     fun updateOnboardingName(name: String) = _onboardingData.update { it.copy(displayName = name) }
@@ -192,47 +131,59 @@ class AuthViewModel @Inject constructor(
         val domain = extractDomain(data.email) ?: "unknown.edu"
 
         val profile = data.buildProfile(domain)
-        saveProfileLocally(profile)
-        prefs.edit()
-            .putBoolean("onboarding_complete", true)
-            .putString("user_email", data.email.lowercase())
-            .apply()
 
-        if (!devMode) {
-            viewModelScope.launch {
-                try {
-                    val links = data.socialLinks
-                        .filter { it.value.isNotEmpty() }
-                        .map { SocialLink(platform = it.key, handle = it.value) }
-                    val result = apiClient.postCreateProfile(
-                        CreateProfileRequest(
-                            email = data.email.lowercase(),
-                            displayName = data.displayName,
-                            bio = data.bio.ifEmpty { null },
-                            major = data.major.ifEmpty { null },
-                            socialLinks = links,
-                            universityDomain = domain
-                        )
-                    )
-                    // Update local profile with server-assigned userId
-                    val updated = profile.copy(userId = result.profile.userId)
-                    saveProfileLocally(updated)
-                } catch (e: Exception) {
-                    // Fire-and-forget — silently fail
-                }
-            }
+        if (devMode) {
+            saveProfileLocally(profile)
+            prefs.edit()
+                .putBoolean("onboarding_complete", true)
+                .putString("user_email", data.email.lowercase())
+                .apply()
+            onResult(true)
+            return
         }
 
-        onResult(true)
+        _isLoading.value = true
+        _errorMessage.value = null
+
+        viewModelScope.launch {
+            try {
+                val links = data.socialLinks
+                    .filter { it.value.isNotEmpty() }
+                    .map { SocialLink(platform = it.key, handle = it.value) }
+                val result = apiClient.postCreateProfile(
+                    CreateProfileRequest(
+                        email = data.email.lowercase(),
+                        displayName = data.displayName,
+                        bio = data.bio.ifEmpty { null },
+                        major = data.major.ifEmpty { null },
+                        socialLinks = links,
+                        universityDomain = domain
+                    )
+                )
+                // Update local profile with server-assigned userId
+                val updated = profile.copy(userId = result.profile.userId)
+                saveProfileLocally(updated)
+                prefs.edit()
+                    .putBoolean("onboarding_complete", true)
+                    .putString("user_email", data.email.lowercase())
+                    .apply()
+                _isLoading.value = false
+                onResult(true)
+            } catch (e: Exception) {
+                _isLoading.value = false
+                _errorMessage.value = e.message ?: "Failed to create profile"
+                onResult(false)
+            }
+        }
     }
 
     private fun saveProfileLocally(profile: UserProfile) {
         val json = gson.toJson(profile)
-        prefs.edit().putString("user_profile", json).apply()
+        secureStorage.saveProfile(json)
     }
 
     fun loadProfileFromStorage(): UserProfile? {
-        val json = prefs.getString("user_profile", null) ?: return null
+        val json = secureStorage.getProfile() ?: return null
         return try {
             gson.fromJson(json, UserProfile::class.java)
         } catch (_: Exception) { null }
@@ -274,7 +225,6 @@ class AuthViewModel @Inject constructor(
                 _isLoading.value = false
                 if (code.length == 6) {
                     _emailVerified.value = true
-                    _phoneVerified.value = true
                     // Restore or create profile
                     val existing = loadProfileFromStorage()
                     if (existing == null) {
@@ -294,12 +244,32 @@ class AuthViewModel @Inject constructor(
             }
             try {
                 val result = apiClient.postEmailConfirm(email.lowercase(), code)
-                _isLoading.value = false
                 if (result.verified) {
                     fetchAndStoreTokens()
+                    // Fetch profile from server using authenticated /auth/me
+                    try {
+                        val wrapper = apiClient.getMe()
+                        val resp = wrapper.profile
+                        val serverType = try {
+                            ServerType.valueOf((resp.serverType ?: "student").uppercase())
+                        } catch (_: Exception) { ServerType.STUDENT }
+                        val profile = UserProfile(
+                            userId = resp.userId,
+                            universityDomain = resp.universityDomain ?: extractDomain(email) ?: "unknown.edu",
+                            displayName = resp.displayName ?: email.substringBefore("@"),
+                            profilePhotoURL = resp.profilePhotoURL,
+                            bio = resp.bio,
+                            major = resp.major,
+                            socialLinks = resp.socialLinks ?: emptyList(),
+                            serverType = serverType
+                        )
+                        saveProfileLocally(profile)
+                    } catch (_: Exception) {
+                        // Profile fetch failed — user can still proceed, will sync later
+                    }
                     _emailVerified.value = true
-                    _phoneVerified.value = true
                 }
+                _isLoading.value = false
                 onResult(result.verified)
             } catch (e: Exception) {
                 _isLoading.value = false
@@ -368,12 +338,10 @@ class AuthViewModel @Inject constructor(
         secureStorage.clearAll()
         prefs.edit()
             .remove("onboarding_complete")
-            .remove("user_profile")
             .remove("user_email")
             .remove("token_expiry")
             .apply()
         _emailVerified.value = false
-        _phoneVerified.value = false
         _onboardingData.value = OnboardingData()
     }
 

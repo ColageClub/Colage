@@ -55,7 +55,7 @@ fun PermissionsScreen(onContinue: () -> Unit) {
                 .fillMaxSize()
                 .systemBarsPadding()
         ) {
-            OnboardingProgress(currentStep = 7, totalSteps = 10, modifier = Modifier.padding(top = 8.dp))
+            OnboardingProgress(currentStep = 5, totalSteps = 8, modifier = Modifier.padding(top = 8.dp))
 
             Column(
                 modifier = Modifier.fillMaxWidth().padding(top = 48.dp),

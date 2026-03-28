@@ -1,8 +1,10 @@
 package com.colageclub.colage.features.discovery
 
+import android.location.Location
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.colageclub.colage.BuildConfig
+import com.colageclub.colage.core.location.LocationService
 import com.colageclub.colage.core.networking.ApiClient
 import com.colageclub.colage.core.networking.WebSocketManager
 import com.colageclub.colage.data.models.NearbyResponse
@@ -12,9 +14,12 @@ import com.colageclub.colage.data.models.SocialPlatform
 import com.colageclub.colage.data.models.StudentLocation
 import com.colageclub.colage.data.models.UserProfile
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.math.abs
@@ -24,11 +29,17 @@ import kotlin.random.Random
 @HiltViewModel
 class NearbyStudentsViewModel @Inject constructor(
     private val apiClient: ApiClient,
-    private val webSocketManager: WebSocketManager
+    private val webSocketManager: WebSocketManager,
+    private val locationService: LocationService
 ) : ViewModel() {
 
     private val _students = MutableStateFlow<List<NearbyStudent>>(emptyList())
     val students: StateFlow<List<NearbyStudent>> = _students.asStateFlow()
+
+    private val _error = MutableStateFlow<String?>(null)
+    val error: StateFlow<String?> = _error.asStateFlow()
+
+    fun clearError() { _error.value = null }
 
     private val _maxDistance = MutableStateFlow(0.5f) // list slider 0..1
     val maxDistance: StateFlow<Float> = _maxDistance.asStateFlow()
@@ -38,6 +49,11 @@ class NearbyStudentsViewModel @Inject constructor(
 
     private val _filterFloor = MutableStateFlow<Int?>(null)
     val filterFloor: StateFlow<Int?> = _filterFloor.asStateFlow()
+
+    private val _lastFetchTime = MutableStateFlow(0L)
+    val lastFetchTime: StateFlow<Long> = _lastFetchTime.asStateFlow()
+
+    val isWebSocketConnected: StateFlow<Boolean> get() = webSocketManager.isConnected
 
     fun setMaxDistance(value: Float) { _maxDistance.value = value }
     fun setArMaxDistance(value: Float) { _arMaxDistance.value = value }
@@ -79,12 +95,42 @@ class NearbyStudentsViewModel @Inject constructor(
         _students.value = (0 until 20).map { mockStudent(it, baseLat, baseLng) }
     }
 
+    // MARK: - Periodic Refresh
+
+    private var refreshJob: Job? = null
+    private var lastFetchLat: Double = 0.0
+    private var lastFetchLng: Double = 0.0
+    private var lastFetchDomain: String = ""
+
+    fun startPeriodicRefresh() {
+        refreshJob?.cancel()
+        refreshJob = viewModelScope.launch {
+            while (isActive) {
+                delay(60_000)
+                val location = locationService.currentLocation.value
+                val lat = location?.latitude ?: lastFetchLat
+                val lng = location?.longitude ?: lastFetchLng
+                if (lastFetchDomain.isNotEmpty()) {
+                    fetchNearbyStudents(lat, lng, lastFetchDomain, currentUserId)
+                }
+            }
+        }
+    }
+
+    fun stopPeriodicRefresh() {
+        refreshJob?.cancel()
+        refreshJob = null
+    }
+
     // MARK: - Real Data
 
     private var currentUserId: String? = null
 
     fun fetchNearbyStudents(latitude: Double, longitude: Double, domain: String, selfUserId: String?) {
         currentUserId = selfUserId
+        lastFetchLat = latitude
+        lastFetchLng = longitude
+        lastFetchDomain = domain
         if (BuildConfig.DEV_MODE) return
 
         viewModelScope.launch {
@@ -116,8 +162,9 @@ class NearbyStudentsViewModel @Inject constructor(
                             distance = s.distance
                         )
                     }
+                _lastFetchTime.value = System.currentTimeMillis()
             } catch (e: Exception) {
-                // Silently fail — keep showing whatever we have
+                _error.value = "Failed to load nearby students"
             }
         }
     }
@@ -132,22 +179,45 @@ class NearbyStudentsViewModel @Inject constructor(
         webSocketManager.onLocationUpdate = { locations ->
             locations.forEach { handleLocationUpdate(it) }
         }
+        webSocketManager.onReconnected = {
+            // Re-fetch nearby students after WebSocket reconnection
+            val location = locationService.currentLocation.value
+            if (location != null && lastFetchDomain.isNotEmpty()) {
+                fetchNearbyStudents(location.latitude, location.longitude, lastFetchDomain, currentUserId)
+            }
+        }
     }
 
     fun stopListening() {
         webSocketManager.onStudentJoined = null
         webSocketManager.onStudentLeft = null
         webSocketManager.onLocationUpdate = null
+        webSocketManager.onReconnected = null
+    }
+
+    private fun calculateDistanceFeet(studentLocation: StudentLocation): Double {
+        val userLoc = locationService.currentLocation.value ?: return 0.0
+        val from = Location("").apply {
+            latitude = userLoc.latitude
+            longitude = userLoc.longitude
+        }
+        val to = Location("").apply {
+            latitude = studentLocation.latitude
+            longitude = studentLocation.longitude
+        }
+        val distanceMeters = from.distanceTo(to)
+        return distanceMeters * 3.28084
     }
 
     private fun handleLocationUpdate(location: StudentLocation) {
         if (location.userId == currentUserId) return
 
+        val distanceFeet = calculateDistanceFeet(location)
         val current = _students.value.toMutableList()
         val index = current.indexOfFirst { it.profile.userId == location.userId }
 
         if (index >= 0) {
-            current[index] = current[index].copy(location = location)
+            current[index] = current[index].copy(location = location, distance = distanceFeet)
         } else {
             // New student from WebSocket — create with broadcast profile data
             val profile = UserProfile(
@@ -157,7 +227,7 @@ class NearbyStudentsViewModel @Inject constructor(
                 profilePhotoURL = location.profilePhotoURL,
                 major = location.major
             )
-            current.add(NearbyStudent(profile = profile, location = location, distance = 0.0))
+            current.add(NearbyStudent(profile = profile, location = location, distance = distanceFeet))
         }
         _students.value = current
     }

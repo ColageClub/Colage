@@ -23,13 +23,11 @@ import androidx.compose.ui.unit.dp
 import com.colageclub.colage.app.AppViewModel
 import com.colageclub.colage.core.design.*
 import com.colageclub.colage.core.university.primaryComposeColor
-import com.colageclub.colage.features.auth.AuthViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     appViewModel: AppViewModel,
-    authViewModel: AuthViewModel? = null,
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
@@ -96,8 +94,7 @@ fun SettingsScreen(
 
             // Account section
             SettingsSection("Account") {
-                SettingsRow(Icons.Default.Email, "Email", "student@umich.edu")
-                SettingsRow(Icons.Default.Phone, "Phone", "••••••1234")
+                SettingsRow(Icons.Default.Email, "Email", appViewModel.userEmail ?: "—")
             }
 
             // Privacy section
@@ -236,29 +233,9 @@ fun SettingsScreen(
             text = { Text("You're about to leave your school's server and join the Alumni Network. You won't be able to rejoin your school's server unless you show proof of re-enrollment.") },
             confirmButton = {
                 TextButton(onClick = {
-                    authViewModel?.switchServerType(
+                    appViewModel.switchServerType(
                         to = com.colageclub.colage.data.models.ServerType.ALUMNI
-                    ) { success ->
-                        if (success) {
-                            // Reload profile in AppViewModel
-                            currentProfile?.let { profile ->
-                                val updated = profile.copy(
-                                    serverType = com.colageclub.colage.data.models.ServerType.ALUMNI,
-                                    updatedAt = System.currentTimeMillis()
-                                )
-                                appViewModel.updateProfile(updated)
-                            }
-                        }
-                    } ?: run {
-                        // Fallback: local-only update if no authViewModel
-                        currentProfile?.let { profile ->
-                            val updated = profile.copy(
-                                serverType = com.colageclub.colage.data.models.ServerType.ALUMNI,
-                                updatedAt = System.currentTimeMillis()
-                            )
-                            appViewModel.updateProfile(updated)
-                        }
-                    }
+                    ) { /* result handled internally */ }
                     showAlumniDialog = false
                 }) { Text("Join Alumni", color = ColageColors.Error) }
             },
@@ -276,11 +253,10 @@ fun SettingsScreen(
             text = { Text("This will permanently delete your account and all data. This cannot be undone.") },
             confirmButton = {
                 TextButton(onClick = {
-                    authViewModel?.deleteAccount { _ ->
-                        appViewModel.logout()
-                    } ?: appViewModel.logout()
-                    showDeleteDialog = false
-                    onDismiss()
+                    appViewModel.deleteAccount { _ ->
+                        showDeleteDialog = false
+                        onDismiss()
+                    }
                 }) { Text("Delete", color = ColageColors.Error) }
             },
             dismissButton = {

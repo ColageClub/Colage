@@ -1,5 +1,6 @@
 package com.colageclub.colage.core.networking
 
+import com.colageclub.colage.BuildConfig
 import com.colageclub.colage.core.storage.SecureStorage
 import com.colageclub.colage.data.models.*
 import com.google.gson.Gson
@@ -9,6 +10,8 @@ import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.logging.HttpLoggingInterceptor
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.io.IOException
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -19,15 +22,17 @@ class ApiException(val code: Int, message: String) : Exception(message)
 class ApiClient @Inject constructor(
     private val secureStorage: SecureStorage
 ) {
-    private val baseUrl = "https://wn7mxcdxca.execute-api.us-east-2.amazonaws.com/dev"
+    private val baseUrl = BuildConfig.API_BASE_URL
     private val gson = Gson()
     private val mediaType = "application/json; charset=utf-8".toMediaType()
+    private val refreshMutex = Mutex()
+    private var lastRefreshTime = 0L
 
-    private val publicPaths = listOf("/auth/", "/universities/")
+    private val publicPaths = listOf("/auth/email/", "/auth/login", "/auth/refresh", "/universities/")
 
     private val httpClient = OkHttpClient.Builder()
         .addInterceptor(HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.BODY
+            level = if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BODY else HttpLoggingInterceptor.Level.NONE
         })
         .build()
 
@@ -73,29 +78,48 @@ class ApiClient @Inject constructor(
         var request = buildRequest(method, path, body)
         var response = httpClient.newCall(request).execute()
 
-        // Auto-refresh on 401
+        // Auto-refresh on 401 — mutex prevents concurrent refreshes
         if (response.code == 401 && !isPublicPath(path)) {
-            val refreshToken = secureStorage.get(SecureStorage.KEY_REFRESH_TOKEN)
-            if (refreshToken != null) {
-                try {
-                    val refreshRequest = buildRequest(
-                        "POST",
-                        "/auth/refresh",
-                        RefreshTokenRequest(refreshToken),
-                        null
-                    )
-                    val refreshResponse = httpClient.newCall(refreshRequest).execute()
-                    if (refreshResponse.isSuccessful) {
-                        val refreshBody = refreshResponse.body?.string()
-                        val tokens = gson.fromJson(refreshBody, TokenResponse::class.java)
-                        secureStorage.set(SecureStorage.KEY_ACCESS_TOKEN, tokens.accessToken)
-                        secureStorage.set(SecureStorage.KEY_ID_TOKEN, tokens.idToken)
-                        // Retry original with new token
-                        response.close()
-                        request = buildRequest(method, path, body, tokens.accessToken)
-                        response = httpClient.newCall(request).execute()
+            // Check for device mismatch BEFORE attempting refresh — refresh won't help
+            val errorBody = response.peekBody(1024).string()
+            if (errorBody.contains("device_mismatch")) {
+                response.close()
+                secureStorage.clearAll()
+                throw ApiException(401, "device_mismatch")
+            }
+
+            refreshMutex.withLock {
+                val now = System.currentTimeMillis()
+                if (now - lastRefreshTime < 5000L) {
+                    // Another coroutine already refreshed recently — just retry with current token
+                    response.close()
+                    request = buildRequest(method, path, body)
+                    response = httpClient.newCall(request).execute()
+                } else {
+                    val refreshToken = secureStorage.get(SecureStorage.KEY_REFRESH_TOKEN)
+                    if (refreshToken != null) {
+                        try {
+                            val refreshRequest = buildRequest(
+                                "POST",
+                                "/auth/refresh",
+                                RefreshTokenRequest(refreshToken),
+                                null
+                            )
+                            val refreshResponse = httpClient.newCall(refreshRequest).execute()
+                            if (refreshResponse.isSuccessful) {
+                                val refreshBody = refreshResponse.body?.string()
+                                val tokens = gson.fromJson(refreshBody, TokenResponse::class.java)
+                                secureStorage.set(SecureStorage.KEY_ACCESS_TOKEN, tokens.accessToken)
+                                secureStorage.set(SecureStorage.KEY_ID_TOKEN, tokens.idToken)
+                                lastRefreshTime = System.currentTimeMillis()
+                                // Retry original with new token
+                                response.close()
+                                request = buildRequest(method, path, body, tokens.accessToken)
+                                response = httpClient.newCall(request).execute()
+                            }
+                        } catch (_: Exception) {}
                     }
-                } catch (_: Exception) {}
+                }
             }
         }
 
@@ -115,12 +139,6 @@ class ApiClient @Inject constructor(
 
     suspend fun postEmailConfirm(email: String, code: String): EmailConfirmResponse =
         request("POST", "/auth/email/confirm", EmailConfirmRequest(email, code), EmailConfirmResponse::class.java)
-
-    suspend fun postPhoneVerify(phone: String, email: String): Map<*, *> =
-        request("POST", "/auth/phone/verify", PhoneVerifyRequest(phone, email), Map::class.java)
-
-    suspend fun postPhoneConfirm(phone: String, code: String): PhoneConfirmResponse =
-        request("POST", "/auth/phone/confirm", PhoneConfirmRequest(phone, code), PhoneConfirmResponse::class.java)
 
     suspend fun postLogin(email: String, deviceId: String): TokenResponse =
         request("POST", "/auth/login", LoginRequest(email, deviceId), TokenResponse::class.java)
@@ -146,8 +164,8 @@ class ApiClient @Inject constructor(
     suspend fun deleteProfile(userId: String): Map<*, *> =
         request("DELETE", "/users/$userId", null, Map::class.java)
 
-    suspend fun getProfile(email: String): ProfileResponseWrapper =
-        request("GET", "/auth/me?email=${email}", null, ProfileResponseWrapper::class.java)
+    suspend fun getMe(): ProfileResponseWrapper =
+        request("GET", "/auth/me", null, ProfileResponseWrapper::class.java)
 
     suspend fun uploadToS3(uploadUrl: String, imageBytes: ByteArray, contentType: String) = withContext(Dispatchers.IO) {
         val body = imageBytes.toRequestBody(contentType.toMediaType())

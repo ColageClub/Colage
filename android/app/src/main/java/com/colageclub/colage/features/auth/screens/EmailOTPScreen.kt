@@ -43,7 +43,7 @@ fun EmailOTPScreen(
                 .systemBarsPadding(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            OnboardingProgress(currentStep = 1, totalSteps = 10, modifier = Modifier.padding(top = 8.dp))
+            OnboardingProgress(currentStep = 1, totalSteps = 8, modifier = Modifier.padding(top = 8.dp))
 
             Column(
                 modifier = Modifier.fillMaxWidth().padding(top = 48.dp),

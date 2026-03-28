@@ -70,7 +70,7 @@ fun PhotoUploadScreen(
                 .systemBarsPadding(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            OnboardingProgress(currentStep = 4, totalSteps = 10, modifier = Modifier.padding(top = 8.dp))
+            OnboardingProgress(currentStep = 2, totalSteps = 8, modifier = Modifier.padding(top = 8.dp))
 
             Column(
                 modifier = Modifier.fillMaxWidth().padding(top = 48.dp),

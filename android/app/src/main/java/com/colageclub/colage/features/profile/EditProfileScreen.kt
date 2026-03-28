@@ -42,6 +42,15 @@ fun EditProfileScreen(
     }
     var isSaving by remember { mutableStateOf(false) }
     var selectedPhotoUri by remember { mutableStateOf<Uri?>(null) }
+    val appError by appViewModel.error.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(appError) {
+        appError?.let {
+            snackbarHostState.showSnackbar(it)
+            appViewModel.clearError()
+        }
+    }
 
     val photoPicker = rememberLauncherForActivityResult(
         ActivityResultContracts.PickVisualMedia()
@@ -57,6 +66,7 @@ fun EditProfileScreen(
 
     Scaffold(
         containerColor = ColageColors.Background,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text("Edit Profile", style = ColageFonts.Title3.copy(color = ColageColors.TextPrimary)) },

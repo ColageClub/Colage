@@ -8,7 +8,6 @@ import com.colageclub.colage.data.models.UserProfile
 
 data class OnboardingData(
     val email: String = "",
-    val phone: String = "",
     val displayName: String = "",
     val bio: String = "",
     val major: String = "",

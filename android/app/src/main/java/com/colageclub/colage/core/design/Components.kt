@@ -18,10 +18,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -141,11 +144,18 @@ fun OTPCodeField(
 ) {
     val focusRequester = remember { FocusRequester() }
 
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.semantics {
+            contentDescription = "Verification code, ${code.length} of $length digits entered"
+        }
+    ) {
         // Visual boxes
         Row(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
-            modifier = Modifier.padding(horizontal = 24.dp)
+            modifier = Modifier
+                .padding(horizontal = 24.dp)
+                .clickable { focusRequester.requestFocus() }
         ) {
             repeat(length) { index ->
                 val char = if (index < code.length) code[index].toString() else ""
@@ -182,10 +192,8 @@ fun OTPCodeField(
                 }
             },
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 40.dp, vertical = 8.dp)
-                .height(44.dp)
-                .background(ColageColors.Surface, RoundedCornerShape(10.dp))
+                .size(0.dp)
+                .alpha(0f)
                 .focusRequester(focusRequester),
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.NumberPassword,
@@ -223,7 +231,8 @@ fun AvatarView(
     modifier: Modifier = Modifier,
     borderColor: Color = LocalThemeColor.current,
     showBorder: Boolean = true,
-    initials: String? = null
+    initials: String? = null,
+    name: String? = null
 ) {
     Box(
         modifier = modifier
@@ -241,7 +250,7 @@ fun AvatarView(
                     .data(imageUrl)
                     .crossfade(true)
                     .build(),
-                contentDescription = "Avatar",
+                contentDescription = if (name != null) "Profile photo for $name" else "Profile photo",
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize()
             )

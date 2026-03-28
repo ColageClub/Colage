@@ -122,7 +122,7 @@ fun OwnProfileScreen(
                 colors = ButtonDefaults.buttonColors(containerColor = themeColor.copy(alpha = 0.12f)),
                 contentPadding = PaddingValues(horizontal = 20.dp, vertical = 10.dp)
             ) {
-                Icon(Icons.Default.Edit, null, tint = themeColor, modifier = Modifier.size(14.dp))
+                Icon(Icons.Default.Edit, contentDescription = "Edit profile", tint = themeColor, modifier = Modifier.size(14.dp))
                 Spacer(Modifier.width(6.dp))
                 Text("Edit Profile", style = ColageFonts.CaptionBold.copy(color = themeColor))
             }
