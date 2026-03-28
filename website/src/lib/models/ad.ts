@@ -170,6 +170,7 @@ export async function deleteAd(id: string): Promise<void> {
 // Available schools
 export function getSchools() {
   return [
+    { domain: "hfcc.edu", name: "Henry Ford College", students: 12, city: "Dearborn, MI" },
     { domain: "umich.edu", name: "University of Michigan", students: 847, city: "Ann Arbor, MI" },
     { domain: "harvard.edu", name: "Harvard University", students: 512, city: "Cambridge, MA" },
     { domain: "stanford.edu", name: "Stanford University", students: 623, city: "Stanford, CA" },
