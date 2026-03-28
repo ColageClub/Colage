@@ -140,6 +140,12 @@ class ApiClient @Inject constructor(
     suspend fun updateProfile(userId: String, req: UpdateProfileRequest): Map<*, *> =
         request("PUT", "/users/$userId", req, Map::class.java)
 
+    suspend fun putUpdateProfile(userId: String, fields: Map<String, String>): Map<*, *> =
+        request("PUT", "/users/$userId", fields, Map::class.java)
+
+    suspend fun deleteProfile(userId: String): Map<*, *> =
+        request("DELETE", "/users/$userId", null, Map::class.java)
+
     suspend fun getProfile(email: String): ProfileResponseWrapper =
         request("GET", "/auth/me?email=${email}", null, ProfileResponseWrapper::class.java)
 

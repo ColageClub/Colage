@@ -332,11 +332,44 @@ class AuthViewModel @Inject constructor(
         }
     }
 
+    // MARK: - Server Type Switch
+
+    fun switchServerType(to: ServerType, onResult: (Boolean) -> Unit) {
+        val userId = loadProfileFromStorage()?.userId ?: run { onResult(false); return }
+        viewModelScope.launch {
+            try {
+                apiClient.putUpdateProfile(userId, mapOf("serverType" to to.name.lowercase()))
+                // Update local
+                val profile = loadProfileFromStorage()?.copy(serverType = to)
+                if (profile != null) saveProfileLocally(profile)
+                onResult(true)
+            } catch (e: Exception) {
+                onResult(false)
+            }
+        }
+    }
+
+    // MARK: - Account Deletion
+
+    fun deleteAccount(onResult: (Boolean) -> Unit) {
+        val userId = loadProfileFromStorage()?.userId ?: run { onResult(false); return }
+        viewModelScope.launch {
+            try {
+                apiClient.deleteProfile(userId)
+            } catch (_: Exception) {
+                // Continue with local cleanup even if server fails
+            }
+            logout()
+            onResult(true)
+        }
+    }
+
     fun logout() {
         secureStorage.clearAll()
         prefs.edit()
             .remove("onboarding_complete")
             .remove("user_profile")
+            .remove("user_email")
             .remove("token_expiry")
             .apply()
         _emailVerified.value = false

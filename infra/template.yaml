@@ -474,6 +474,31 @@ Resources:
             Path: /users/{userId}
             Method: PUT
 
+  DeleteProfileFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub colage-delete-profile-${Stage}
+      Handler: index.handler
+      CodeUri: ./functions/delete-profile/
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UsersTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref LocationsTable
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - cognito-idp:AdminDeleteUser
+              Resource: !GetAtt CognitoUserPool.Arn
+      Events:
+        Api:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref ColageApi
+            Path: /users/{userId}
+            Method: DELETE
+
   CreateProfileFunction:
     Type: AWS::Serverless::Function
     Properties:

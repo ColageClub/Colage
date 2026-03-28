@@ -49,6 +49,23 @@ class APIClient {
         }
     }
 
+    /// Fire-and-forget request — ignores response body, just checks for 2xx
+    func requestVoid(
+        method: String = "POST",
+        path: String,
+        body: Encodable? = nil
+    ) async throws {
+        let _: EmptyResponse = try await request(method: method, path: path, body: body)
+    }
+
+    private struct EmptyResponse: Decodable {
+        // Accepts any JSON — just needs to not throw on decode
+        init(from decoder: Decoder) throws {
+            // Accept anything: object, array, or even try to skip
+            _ = try? decoder.singleValueContainer()
+        }
+    }
+
     func request<T: Decodable>(
         method: String = "GET",
         path: String,

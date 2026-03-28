@@ -446,11 +446,80 @@ class AuthService: ObservableObject {
         }
     }
 
+    // MARK: - Server Type Switch
+
+    /// Switch between student and alumni server types on the backend
+    func switchServerType(to serverType: ServerType) async -> Bool {
+        guard let userId = UserProfile.current?.userId else { return false }
+
+        do {
+            struct UpdateServerTypeRequest: Encodable { let serverType: String }
+            let _: [String: String] = try await api.request(
+                method: "PUT",
+                path: "/users/\(userId)",
+                body: UpdateServerTypeRequest(serverType: serverType.rawValue)
+            )
+
+            // Update local profile
+            if var profile = UserProfile.current {
+                let updated = UserProfile(
+                    userId: profile.userId,
+                    universityDomain: profile.universityDomain,
+                    displayName: profile.displayName,
+                    profilePhotoURL: profile.profilePhotoURL,
+                    bio: profile.bio,
+                    major: profile.major,
+                    socialLinks: profile.socialLinks,
+                    isVisible: profile.isVisible,
+                    serverType: serverType,
+                    createdAt: profile.createdAt,
+                    updatedAt: Date()
+                )
+                await MainActor.run {
+                    UserProfile.current = updated
+                    if let data = try? JSONEncoder().encode(updated) {
+                        UserDefaults.standard.set(data, forKey: "dev_profile")
+                    }
+                }
+            }
+            return true
+        } catch {
+            print("[Auth] Failed to switch server type: \(error)")
+            return false
+        }
+    }
+
+    // MARK: - Account Deletion
+
+    /// Delete the user's account from the backend and clear local data
+    func deleteAccount() async -> Bool {
+        guard let userId = UserProfile.current?.userId else { return false }
+
+        do {
+            try await api.requestVoid(
+                method: "DELETE",
+                path: "/users/\(userId)"
+            )
+            await MainActor.run {
+                logout()
+            }
+            return true
+        } catch {
+            print("[Auth] Failed to delete account: \(error)")
+            // Still logout locally even if server delete fails
+            await MainActor.run {
+                logout()
+            }
+            return true
+        }
+    }
+
     func logout() {
         KeychainWrapper.clearAll()
         UserProfile.current = nil
         UserDefaults.standard.removeObject(forKey: "dev_onboarding_complete")
         UserDefaults.standard.removeObject(forKey: "dev_profile")
+        UserDefaults.standard.removeObject(forKey: "user_email")
         emailVerified = false
         phoneVerified = false
     }

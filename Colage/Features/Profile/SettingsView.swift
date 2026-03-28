@@ -9,6 +9,8 @@ struct SettingsView: View {
     @State private var showLogoutConfirm = false
     @State private var showDeleteConfirm = false
     @State private var showAlumniConfirm = false
+    @State private var isSwitchingServer = false
+    @State private var isDeletingAccount = false
 
     var body: some View {
         NavigationStack {
@@ -143,26 +145,15 @@ struct SettingsView: View {
             }
             .alert("Join Alumni Server?", isPresented: $showAlumniConfirm) {
                 Button("Join Alumni", role: .destructive) {
-                    // Switch to alumni server
-                    if var profile = UserProfile.current {
-                        profile = UserProfile(
-                            userId: profile.userId,
-                            universityDomain: profile.universityDomain,
-                            displayName: profile.displayName,
-                            profilePhotoURL: profile.profilePhotoURL,
-                            bio: profile.bio,
-                            major: profile.major,
-                            socialLinks: profile.socialLinks,
-                            isVisible: profile.isVisible,
-                            serverType: .alumni,
-                            createdAt: profile.createdAt,
-                            updatedAt: Date()
-                        )
-                        UserProfile.current = profile
-                        if let data = try? JSONEncoder().encode(profile) {
-                            UserDefaults.standard.set(data, forKey: "dev_profile")
+                    isSwitchingServer = true
+                    Task {
+                        let success = await authService.switchServerType(to: .alumni)
+                        await MainActor.run {
+                            isSwitchingServer = false
+                            if !success {
+                                // Could show error, but the service already prints it
+                            }
                         }
-                        // TODO: API call to update server type
                     }
                 }
                 Button("Cancel", role: .cancel) {}
@@ -171,10 +162,17 @@ struct SettingsView: View {
             }
             .alert("Delete Account", isPresented: $showDeleteConfirm) {
                 Button("Delete", role: .destructive) {
-                    // TODO: API call to delete account
-                    authService.logout()
-                    appState.authState = .onboarding
-                    dismiss()
+                    isDeletingAccount = true
+                    Task {
+                        let success = await authService.deleteAccount()
+                        await MainActor.run {
+                            isDeletingAccount = false
+                            if success {
+                                appState.authState = .onboarding
+                                dismiss()
+                            }
+                        }
+                    }
                 }
                 Button("Cancel", role: .cancel) {}
             } message: {

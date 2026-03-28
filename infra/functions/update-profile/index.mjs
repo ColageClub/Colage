@@ -14,7 +14,7 @@ export const handler = async (event) => {
     // TODO: map Cognito sub → userId for proper auth check
 
     const body = JSON.parse(event.body);
-    const allowedFields = ['displayName', 'bio', 'major', 'socialLinks', 'profilePhotoURL', 'isVisible'];
+    const allowedFields = ['displayName', 'bio', 'major', 'socialLinks', 'profilePhotoURL', 'isVisible', 'serverType'];
     const now = new Date().toISOString();
 
     let updateExpression = 'SET updatedAt = :now';
