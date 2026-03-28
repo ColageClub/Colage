@@ -79,11 +79,3 @@ export async function createCheckoutSession(
   return session.url!;
 }
 
-// Get the balance for a Stripe customer
-export async function getCustomerBalance(stripeCustomerId: string): Promise<number> {
-  const customer = await stripe.customers.retrieve(stripeCustomerId);
-  if (customer.deleted) return 0;
-  // Stripe stores balance in cents, negative = credit owed TO customer
-  // We use our own balance tracking in DynamoDB instead
-  return 0;
-}

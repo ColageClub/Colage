@@ -15,6 +15,14 @@ const SCHOOLS = [
   { name: "Duke University", domain: "duke.edu", color: "#003087", accent: "#FFFFFF" },
 ];
 
+function isLightColor(hex: string): boolean {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return luminance > 0.6;
+}
+
 export default function SchoolShowcase() {
   const [sel, setSel] = useState(SCHOOLS[0]);
   const ref = useRef(null);
@@ -45,7 +53,7 @@ export default function SchoolShowcase() {
               cursor: "pointer",
               transition: "all 0.3s",
               background: sel.domain === s.domain ? s.color : "#F9F6F2",
-              color: sel.domain === s.domain ? (s.accent.startsWith("#F") || s.accent === "#FFFFFF" ? "#fff" : s.accent) : "#6B6B6B",
+              color: sel.domain === s.domain ? (isLightColor(s.accent) ? "#fff" : s.accent) : "#6B6B6B",
               transform: sel.domain === s.domain ? "scale(1.05)" : "scale(1)",
               boxShadow: sel.domain === s.domain ? "0 4px 16px rgba(0,0,0,0.15)" : "none",
             }}

@@ -25,67 +25,33 @@ export function getUserDisplayName(user: User): string {
   return user.displayName || user.name || user.email?.split("@")[0] || "Unknown";
 }
 
-// In-memory fallback
-const memoryStore = new Map<string, User>();
-let useMemory = false;
-
-async function tryDynamo<T>(dynamoFn: () => Promise<T>, memoryFn: () => T): Promise<T> {
-  if (useMemory) return memoryFn();
-  try {
-    return await dynamoFn();
-  } catch (err: unknown) {
-    const error = err as { name?: string };
-    if (error.name === "ResourceNotFoundException" || error.name === "UnrecognizedClientException" || error.name === "CredentialsProviderError") {
-      console.warn("[User] DynamoDB unavailable, falling back to in-memory store");
-      useMemory = true;
-      return memoryFn();
-    }
-    throw err;
-  }
-}
-
 export async function getUser(userId: string): Promise<User | null> {
-  return tryDynamo(
-    async () => {
-      const result = await docClient.send(new GetCommand({
-        TableName: Tables.USERS,
-        Key: { userId },
-      }));
-      return (result.Item as User) || null;
-    },
-    () => memoryStore.get(userId) || null,
-  );
+  const result = await docClient.send(new GetCommand({
+    TableName: Tables.USERS,
+    Key: { userId },
+  }));
+  return (result.Item as User) || null;
 }
 
 export async function getUsersBySchool(universityDomain: string): Promise<User[]> {
-  return tryDynamo(
-    async () => {
-      const result = await docClient.send(new QueryCommand({
-        TableName: Tables.USERS,
-        IndexName: "by-university",
-        KeyConditionExpression: "universityDomain = :domain",
-        ExpressionAttributeValues: { ":domain": universityDomain },
-      }));
-      return (result.Items as User[]) || [];
-    },
-    () => [...memoryStore.values()].filter(u => u.universityDomain === universityDomain),
-  );
+  const result = await docClient.send(new QueryCommand({
+    TableName: Tables.USERS,
+    IndexName: "by-university",
+    KeyConditionExpression: "universityDomain = :domain",
+    ExpressionAttributeValues: { ":domain": universityDomain },
+  }));
+  return (result.Items as User[]) || [];
 }
 
 export async function getUserCountBySchool(universityDomain: string): Promise<number> {
-  return tryDynamo(
-    async () => {
-      const result = await docClient.send(new QueryCommand({
-        TableName: Tables.USERS,
-        IndexName: "by-university",
-        KeyConditionExpression: "universityDomain = :domain",
-        ExpressionAttributeValues: { ":domain": universityDomain },
-        Select: "COUNT",
-      }));
-      return result.Count || 0;
-    },
-    () => [...memoryStore.values()].filter(u => u.universityDomain === universityDomain).length,
-  );
+  const result = await docClient.send(new QueryCommand({
+    TableName: Tables.USERS,
+    IndexName: "by-university",
+    KeyConditionExpression: "universityDomain = :domain",
+    ExpressionAttributeValues: { ":domain": universityDomain },
+    Select: "COUNT",
+  }));
+  return result.Count || 0;
 }
 
 export async function scanUsers(options?: {
@@ -94,99 +60,79 @@ export async function scanUsers(options?: {
   school?: string;
   search?: string;
 }): Promise<{ users: User[]; lastKey?: Record<string, unknown> }> {
-  return tryDynamo(
-    async () => {
-      if (options?.school) {
-        const result = await docClient.send(new QueryCommand({
-          TableName: Tables.USERS,
-          IndexName: "by-university",
-          KeyConditionExpression: "universityDomain = :domain",
-          ExpressionAttributeValues: { ":domain": options.school },
-          Limit: options?.limit || 50,
-          ...(options?.lastKey && { ExclusiveStartKey: options.lastKey }),
-        }));
-        let users = (result.Items as User[]) || [];
-        if (options?.search) {
-          const q = options.search.toLowerCase();
-          users = users.filter(u =>
-            u.name?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q)
-          );
-        }
-        return { users, lastKey: result.LastEvaluatedKey };
-      }
+  const limit = options?.limit || 50;
+  const search = options?.search;
 
-      const result = await docClient.send(new ScanCommand({
-        TableName: Tables.USERS,
-        Limit: options?.limit || 50,
-        ...(options?.lastKey && { ExclusiveStartKey: options.lastKey }),
-      }));
-      let users = (result.Items as User[]) || [];
-      if (options?.search) {
-        const q = options.search.toLowerCase();
-        users = users.filter(u =>
-          u.name?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q)
-        );
-      }
-      return { users, lastKey: result.LastEvaluatedKey };
-    },
-    () => {
-      let users = [...memoryStore.values()];
-      if (options?.school) users = users.filter(u => u.universityDomain === options.school);
-      if (options?.search) {
-        const q = options.search.toLowerCase();
-        users = users.filter(u =>
-          u.name?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q)
-        );
-      }
-      return { users: users.slice(0, options?.limit || 50) };
-    },
-  );
+  if (options?.school) {
+    // Query by school GSI — search filtering must be done client-side for Query
+    const result = await docClient.send(new QueryCommand({
+      TableName: Tables.USERS,
+      IndexName: "by-university",
+      KeyConditionExpression: "universityDomain = :domain",
+      ExpressionAttributeValues: { ":domain": options.school },
+      // When searching, fetch more items so client-side filter has enough to work with
+      Limit: search ? 500 : limit,
+      ...(options?.lastKey && { ExclusiveStartKey: options.lastKey }),
+    }));
+    let users = (result.Items as User[]) || [];
+    if (search) {
+      const q = search.toLowerCase();
+      users = users.filter(u =>
+        u.name?.toLowerCase().includes(q) ||
+        u.displayName?.toLowerCase().includes(q) ||
+        u.email?.toLowerCase().includes(q)
+      );
+    }
+    return { users: users.slice(0, limit), lastKey: result.LastEvaluatedKey };
+  }
+
+  // Scan — use DynamoDB FilterExpression for server-side search when possible
+  if (search) {
+    const result = await docClient.send(new ScanCommand({
+      TableName: Tables.USERS,
+      // Don't limit the scan when filtering — DynamoDB applies Limit before FilterExpression
+      Limit: 500,
+      FilterExpression: "contains(email, :search) OR contains(#name, :search) OR contains(displayName, :search)",
+      ExpressionAttributeNames: { "#name": "name" },
+      ExpressionAttributeValues: { ":search": search },
+      ...(options?.lastKey && { ExclusiveStartKey: options.lastKey }),
+    }));
+    const users = (result.Items as User[]) || [];
+    return { users: users.slice(0, limit), lastKey: result.LastEvaluatedKey };
+  }
+
+  const result = await docClient.send(new ScanCommand({
+    TableName: Tables.USERS,
+    Limit: limit,
+    ...(options?.lastKey && { ExclusiveStartKey: options.lastKey }),
+  }));
+  const users = (result.Items as User[]) || [];
+  return { users, lastKey: result.LastEvaluatedKey };
 }
 
 export async function getTotalUserCount(): Promise<number> {
-  return tryDynamo(
-    async () => {
-      const result = await docClient.send(new ScanCommand({
-        TableName: Tables.USERS,
-        Select: "COUNT",
-      }));
-      return result.Count || 0;
-    },
-    () => memoryStore.size,
-  );
+  const result = await docClient.send(new ScanCommand({
+    TableName: Tables.USERS,
+    Select: "COUNT",
+  }));
+  return result.Count || 0;
 }
 
 export async function updateUserStatus(userId: string, status: "active" | "suspended" | "banned"): Promise<User | null> {
-  return tryDynamo(
-    async () => {
-      const result = await docClient.send(new UpdateCommand({
-        TableName: Tables.USERS,
-        Key: { userId },
-        UpdateExpression: "SET #status = :status",
-        ExpressionAttributeNames: { "#status": "status" },
-        ExpressionAttributeValues: { ":status": status },
-        ReturnValues: "ALL_NEW",
-      }));
-      return (result.Attributes as User) || null;
-    },
-    () => {
-      const user = memoryStore.get(userId);
-      if (!user) return null;
-      user.status = status;
-      memoryStore.set(userId, user);
-      return user;
-    },
-  );
+  const result = await docClient.send(new UpdateCommand({
+    TableName: Tables.USERS,
+    Key: { userId },
+    UpdateExpression: "SET #status = :status",
+    ExpressionAttributeNames: { "#status": "status" },
+    ExpressionAttributeValues: { ":status": status },
+    ReturnValues: "ALL_NEW",
+  }));
+  return (result.Attributes as User) || null;
 }
 
 export async function deleteUser(userId: string): Promise<void> {
-  return tryDynamo(
-    async () => {
-      await docClient.send(new DeleteCommand({
-        TableName: Tables.USERS,
-        Key: { userId },
-      }));
-    },
-    () => { memoryStore.delete(userId); },
-  );
+  await docClient.send(new DeleteCommand({
+    TableName: Tables.USERS,
+    Key: { userId },
+  }));
 }

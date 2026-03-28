@@ -14,12 +14,14 @@ const faqs = [
   { q: "What platforms is Colage available on?", a: "Colage is available on iOS and Android. Download from the App Store or Google Play." },
 ];
 
-function Item({ q, a }: { q: string; a: string }) {
+function Item({ q, a, i }: { q: string; a: string; i: number }) {
   const [open, setOpen] = useState(false);
   return (
     <div style={{ borderBottom: "1px solid #E8E3DB" }}>
       <button
         onClick={() => setOpen(!open)}
+        aria-expanded={open}
+        aria-controls={`faq-answer-${i}`}
         style={{ width: "100%", padding: "24px 0", display: "flex", justifyContent: "space-between", alignItems: "center", background: "none", border: "none", cursor: "pointer", textAlign: "left" }}
       >
         <span style={{ fontSize: 18, fontWeight: 500, color: "#1E1E1E", paddingRight: 32 }}>{q}</span>
@@ -28,6 +30,7 @@ function Item({ q, a }: { q: string; a: string }) {
       <AnimatePresence>
         {open && (
           <motion.div
+            id={`faq-answer-${i}`}
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
@@ -51,7 +54,7 @@ export default function FAQSection() {
       <div style={{ maxWidth: 800, margin: "0 auto", padding: "0 48px" }}>
         <SectionHeading badge="FAQ" title="Questions? Answered." />
         <motion.div ref={ref} initial={{ opacity: 0, y: 20 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.7, delay: 0.1 }}>
-          {faqs.map((f) => <Item key={f.q} q={f.q} a={f.a} />)}
+          {faqs.map((f, i) => <Item key={f.q} q={f.q} a={f.a} i={i} />)}
         </motion.div>
       </div>
     </section>

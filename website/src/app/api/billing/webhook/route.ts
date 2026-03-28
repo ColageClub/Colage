@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
-import { getBusiness, updateBusiness } from "@/lib/models/business";
 import Stripe from "stripe";
+import { UpdateCommand } from "@aws-sdk/lib-dynamodb";
+import { docClient, Tables } from "@/lib/db";
 
 // Disable body parsing — we need the raw body for signature verification
 export const dynamic = "force-dynamic";
@@ -33,11 +34,29 @@ export async function POST(req: NextRequest) {
     const creditAmount = parseFloat(session.metadata?.creditAmount || "0");
 
     if (businessId && creditAmount > 0) {
-      const business = await getBusiness(businessId);
-      if (business) {
-        const newBalance = (business.balance || 0) + creditAmount;
-        await updateBusiness(businessId, { balance: newBalance });
+      const sessionId = session.id;
+      try {
+        const result = await docClient.send(new UpdateCommand({
+          TableName: Tables.BUSINESSES,
+          Key: { id: businessId },
+          UpdateExpression: "ADD balance :amount, processedWebhooks :sidSet",
+          ConditionExpression: "attribute_not_exists(processedWebhooks) OR NOT contains(processedWebhooks, :sid)",
+          ExpressionAttributeValues: {
+            ":amount": creditAmount,
+            ":sidSet": new Set([sessionId]),
+            ":sid": sessionId,
+          },
+          ReturnValues: "ALL_NEW",
+        }));
+        const newBalance = (result.Attributes as { balance?: number })?.balance ?? 0;
         console.log(`[Webhook] Credited $${creditAmount} to business ${businessId}. New balance: $${newBalance}`);
+      } catch (err: unknown) {
+        const error = err as { name?: string };
+        if (error.name === "ConditionalCheckFailedException") {
+          console.log(`[Webhook] Session ${sessionId} already processed for business ${businessId}, skipping`);
+        } else {
+          throw err;
+        }
       }
     }
   }

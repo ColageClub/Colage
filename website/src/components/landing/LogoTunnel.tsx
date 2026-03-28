@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useMemo } from "react";
+import { useRef, useMemo, useEffect } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 
@@ -58,6 +58,12 @@ function Logos() {
         scale: 0.8 + Math.random() * 0.6,
       };
     }), []);
+
+  useEffect(() => {
+    return () => {
+      particles.forEach(p => p.tex.dispose());
+    };
+  }, [particles]);
 
   useFrame((_, dt) => {
     particles.forEach((p, i) => {

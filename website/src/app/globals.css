@@ -64,3 +64,38 @@ body {
 @media (max-width: 680px) {
   .ads-map-grid { flex-direction: column !important; align-items: center !important; }
 }
+
+/* Skip to content link */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  z-index: 9999;
+}
+.skip-link:focus {
+  position: fixed;
+  top: 0;
+  left: 0;
+  padding: 16px 24px;
+  background: #A51C30;
+  color: white;
+  z-index: 9999;
+  font-size: 16px;
+  text-decoration: none;
+  border-radius: 0 0 8px 0;
+  width: auto;
+  height: auto;
+  overflow: visible;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

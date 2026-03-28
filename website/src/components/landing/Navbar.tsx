@@ -24,6 +24,7 @@ export default function Navbar() {
   return (
     <>
       <motion.nav
+        role="navigation"
         initial={{ y: -80 }}
         animate={{ y: 0 }}
         transition={{ duration: 0.6, delay: 0.3 }}
@@ -51,7 +52,7 @@ export default function Navbar() {
           }}
         >
           <a
-            href="#"
+            href="/"
             style={{
               fontFamily: "var(--font-serif)",
               fontSize: 28,
@@ -124,6 +125,8 @@ export default function Navbar() {
           <button
             onClick={() => setOpen(!open)}
             className="nav-mobile-btn"
+            aria-label="Toggle menu"
+            aria-expanded={open}
             style={{
               display: "none",
               background: "none",

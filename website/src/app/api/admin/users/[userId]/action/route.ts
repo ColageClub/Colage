@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-auth";
 import { updateUserStatus, deleteUser, getUser } from "@/lib/models/user";
+import { DeleteCommand } from "@aws-sdk/lib-dynamodb";
+import { docClient, Tables } from "@/lib/db";
 
 export async function POST(
   request: NextRequest,
@@ -32,9 +34,20 @@ export async function POST(
       case "ban":
         await updateUserStatus(userId, "banned");
         return NextResponse.json({ success: true, status: "banned" });
-      case "delete":
+      case "delete": {
         await deleteUser(userId);
+        // Cascade: clean up location record
+        try {
+          await docClient.send(new DeleteCommand({
+            TableName: Tables.LOCATIONS,
+            Key: { universityDomain: user.universityDomain, userId },
+          }));
+          console.log(`[AdminDelete] Cleaned up location for user ${userId} at ${user.universityDomain}`);
+        } catch (cleanupErr) {
+          console.warn(`[AdminDelete] Location cleanup failed for user ${userId}:`, cleanupErr);
+        }
         return NextResponse.json({ success: true, status: "deleted" });
+      }
       default:
         return NextResponse.json({ error: "Invalid action" }, { status: 400 });
     }

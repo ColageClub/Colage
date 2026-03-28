@@ -8,7 +8,7 @@ export default function FooterCTA() {
   const inView = useInView(ref, { once: true, margin: "-80px" });
 
   return (
-    <section style={{ padding: "120px 0 0", background: "#1a0a0e", color: "#fff" }}>
+    <footer style={{ padding: "120px 0 0", background: "#1a0a0e", color: "#fff" }}>
       {/* CTA */}
       <motion.div
         ref={ref}
@@ -26,12 +26,12 @@ export default function FooterCTA() {
 
         <div style={{ marginTop: 40, display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
           {[
-            { store: "App Store", sub: "Download on the", icon: "🍎" },
-            { store: "Google Play", sub: "Get it on", icon: "▶️" },
+            { store: "App Store", sub: "Download on the", href: "https://apps.apple.com" },
+            { store: "Google Play", sub: "Get it on", href: "https://play.google.com" },
           ].map((b) => (
             <a
               key={b.store}
-              href="#"
+              href={b.href}
               style={{
                 display: "inline-flex",
                 alignItems: "center",
@@ -46,7 +46,6 @@ export default function FooterCTA() {
               onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.9")}
               onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
             >
-              <span style={{ fontSize: 28 }}>{b.icon}</span>
               <div style={{ textAlign: "left" }}>
                 <div style={{ fontSize: 10, opacity: 0.6, lineHeight: 1 }}>{b.sub}</div>
                 <div style={{ fontSize: 16, fontWeight: 600, lineHeight: 1.2 }}>{b.store}</div>
@@ -74,6 +73,6 @@ export default function FooterCTA() {
         </div>
         <p style={{ fontSize: 14, color: "rgba(255,255,255,0.25)" }}>© {new Date().getFullYear()} Colage. All rights reserved.</p>
       </div>
-    </section>
+    </footer>
   );
 }

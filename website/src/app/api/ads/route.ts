@@ -1,7 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
+import { randomUUID } from "node:crypto";
 import { getSession } from "@/lib/auth";
 import * as AdModel from "@/lib/models/ad";
 import { getSpendForAds } from "@/lib/models/daily-spend";
+
+type AdStatus = AdModel.Ad["status"];
+
+function isValidTransition(current: AdStatus, next: AdStatus, isAdmin: boolean): boolean {
+  if (isAdmin) {
+    const adminAllowed: Record<string, AdStatus[]> = {
+      pending: ["active", "rejected"],
+      active: ["paused"],
+      paused: ["active"],
+    };
+    return adminAllowed[current]?.includes(next) ?? false;
+  }
+  // Business transitions
+  const bizAllowed: Record<string, AdStatus[]> = {
+    active: ["paused"],
+    paused: ["active"],
+  };
+  return bizAllowed[current]?.includes(next) ?? false;
+}
 
 export const dynamic = "force-dynamic";
 
@@ -11,7 +31,7 @@ export async function GET() {
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const ads = await AdModel.getAdsByBusiness(session.businessId);
-  const schools = AdModel.getSchools();
+  const schools = await AdModel.getSchools();
 
   // Get today's spend for each ad
   const adIds = ads.map(a => a.id);
@@ -70,7 +90,7 @@ export async function POST(req: NextRequest) {
   }
 
   const ad = await AdModel.createAd({
-    id: `ad-${Date.now()}`,
+    id: `ad-${randomUUID()}`,
     businessId: session.businessId,
     school,
     emoji: emoji || "🏪",
@@ -81,7 +101,7 @@ export async function POST(req: NextRequest) {
     lat,
     lng,
     dailyBudget: Math.max(1, Math.min(100, dailyBudget)),
-    status: "active",
+    status: "pending",
     impressions: 0,
     taps: 0,
     totalSpend: 0,
@@ -111,11 +131,27 @@ export async function PUT(req: NextRequest) {
   if (updates.bio !== undefined) allowed.bio = updates.bio;
   if (updates.deal !== undefined) allowed.deal = updates.deal;
   if (updates.dailyBudget !== undefined) allowed.dailyBudget = Math.max(1, Math.min(100, updates.dailyBudget));
-  if (updates.status !== undefined) allowed.status = updates.status;
   if (updates.school !== undefined) allowed.school = updates.school;
   if (updates.businessName !== undefined) allowed.businessName = updates.businessName;
   if (updates.emoji !== undefined) allowed.emoji = updates.emoji;
   if (updates.address !== undefined) allowed.address = updates.address;
+
+  // Status transition validation
+  if (updates.status !== undefined) {
+    if (ad.status === "rejected" && updates.status === "active") {
+      return NextResponse.json(
+        { error: "Rejected ads cannot be reactivated. Please create a new ad." },
+        { status: 403 }
+      );
+    }
+    if (!isValidTransition(ad.status, updates.status, false)) {
+      return NextResponse.json(
+        { error: `Cannot transition from '${ad.status}' to '${updates.status}'` },
+        { status: 400 }
+      );
+    }
+    allowed.status = updates.status;
+  }
 
   const updated = await AdModel.updateAd(id, allowed);
   return NextResponse.json({ ad: updated });

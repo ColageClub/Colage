@@ -20,6 +20,9 @@ export const metadata: Metadata = {
   title: "Colage — Be You.",
   description:
     "The social discovery app for college students. See who's on campus. Connect in real life.",
+  alternates: {
+    canonical: "https://colageclub.com",
+  },
   openGraph: {
     title: "Colage — Be You.",
     description:
@@ -27,11 +30,13 @@ export const metadata: Metadata = {
     url: "https://colageclub.com",
     siteName: "Colage",
     type: "website",
+    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "Colage — Be You." }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Colage — Be You.",
     description: "The social discovery app for college students. See who's on campus.",
+    images: ["/og-image.png"],
   },
 };
 
@@ -42,7 +47,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${cormorant.variable} ${dmSans.variable}`}>
-      <body className={dmSans.className}>{children}</body>
+      <body className={dmSans.className}>
+        <a href="#main-content" className="skip-link">Skip to content</a>
+        {children}
+      </body>
     </html>
   );
 }

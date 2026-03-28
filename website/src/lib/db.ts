@@ -17,15 +17,17 @@ export const docClient = DynamoDBDocumentClient.from(client, {
 });
 
 // Table names
+const stage = process.env.STAGE || "dev";
+
 export const Tables = {
-  BUSINESSES: "colage-businesses-dev",
-  ADS: "colage-ads-dev",
-  IMPRESSIONS: "colage-impressions-dev",
-  DAILY_SPEND: "colage-daily-spend-dev",
-  USERS: "colage-users-dev",
-  UNIVERSITIES: "colage-universities-dev",
-  LOCATIONS: "colage-locations-dev",
-  CONNECTIONS: "colage-connections-dev",
+  BUSINESSES: `colage-businesses-${stage}`,
+  ADS: `colage-ads-${stage}`,
+  IMPRESSIONS: `colage-impressions-${stage}`,
+  DAILY_SPEND: `colage-daily-spend-${stage}`,
+  USERS: `colage-users-${stage}`,
+  UNIVERSITIES: `colage-universities-${stage}`,
+  LOCATIONS: `colage-locations-${stage}`,
+  CONNECTIONS: `colage-connections-${stage}`,
 } as const;
 
 /*

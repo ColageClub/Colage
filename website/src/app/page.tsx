@@ -15,7 +15,7 @@ import FooterCTA from "@/components/landing/FooterCTA";
 
 export default function Home() {
   return (
-    <main>
+    <main id="main-content">
       <Navbar />
       <HeroSection />
       <AboutSection />

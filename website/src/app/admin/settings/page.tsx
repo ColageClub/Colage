@@ -90,33 +90,6 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      {/* Feature Flags */}
-      <div className="bg-[#1A1A1A] border border-[#333] rounded-2xl p-6">
-        <h2 className="text-lg font-semibold text-white mb-4">Feature Flags</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {[
-            { name: "AR Mode", description: "Augmented reality campus view", enabled: true },
-            { name: "Ads System", description: "Business ad serving and billing", enabled: true },
-            { name: "Location Sharing", description: "Real-time location updates", enabled: true },
-            { name: "Push Notifications", description: "Mobile push notifications", enabled: false },
-          ].map((flag) => (
-            <div key={flag.name} className="flex items-center justify-between px-4 py-3 bg-[#252525] rounded-xl">
-              <div>
-                <div className="text-sm font-medium text-white">{flag.name}</div>
-                <div className="text-xs text-[#666]">{flag.description}</div>
-              </div>
-              <div className={`w-10 h-6 rounded-full flex items-center px-1 ${
-                flag.enabled ? "bg-[#6C5CE7]" : "bg-[#333]"
-              }`}>
-                <div className={`w-4 h-4 rounded-full bg-white transition-transform ${
-                  flag.enabled ? "translate-x-4" : ""
-                }`} />
-              </div>
-            </div>
-          ))}
-        </div>
-        <p className="text-xs text-[#666] mt-3">Feature flags are display-only placeholders.</p>
-      </div>
     </div>
   );
 }

@@ -122,28 +122,6 @@ export function confirmNewPassword(email: string, code: string, newPassword: str
   });
 }
 
-// ─── Get Current Session (if logged in) ───────────────────
-export function getCurrentSession(): Promise<AuthResult | null> {
-  const user = userPool.getCurrentUser();
-  if (!user) return Promise.resolve(null);
-
-  return new Promise((resolve) => {
-    user.getSession((err: Error | null, session: CognitoUserSession | null) => {
-      if (err || !session || !session.isValid()) return resolve(null);
-      const idToken = session.getIdToken();
-      const payload = idToken.decodePayload();
-      resolve({
-        idToken: idToken.getJwtToken(),
-        accessToken: session.getAccessToken().getJwtToken(),
-        refreshToken: session.getRefreshToken().getToken(),
-        email: payload["email"] as string,
-        businessName: (payload["custom:biz_name"] as string) || "",
-        sub: payload["sub"] as string,
-      });
-    });
-  });
-}
-
 // ─── Sign Out ─────────────────────────────────────────────
 export function signOut(): void {
   const user = userPool.getCurrentUser();

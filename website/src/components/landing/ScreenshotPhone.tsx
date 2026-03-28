@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+
 export default function ScreenshotPhone({ src, alt }: { src: string; alt: string }) {
   return (
     <div style={{ position: "relative" }}>
@@ -19,9 +21,13 @@ export default function ScreenshotPhone({ src, alt }: { src: string; alt: string
         {/* Notch */}
         <div style={{ position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)", width: 110, height: 26, background: "#000", borderRadius: "0 0 14px 14px", zIndex: 2 }} />
         {/* Screenshot */}
-        <img
+        <Image
           src={src}
           alt={alt}
+          width={300}
+          height={620}
+          loading="lazy"
+          quality={85}
           style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "top" }}
         />
       </div>

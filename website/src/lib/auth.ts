@@ -1,5 +1,6 @@
 // Business auth — reads Cognito tokens from httpOnly cookies
 import { cookies } from "next/headers";
+import { createHmac, timingSafeEqual } from "node:crypto";
 
 export interface Session {
   businessId: string; // Cognito sub
@@ -7,28 +8,67 @@ export interface Session {
   businessName: string;
 }
 
+function getSecret(): string {
+  const secret = process.env.SESSION_SECRET;
+  if (!secret) {
+    if (process.env.NODE_ENV === "production") {
+      console.warn("[Auth] WARNING: SESSION_SECRET not set in production! Using insecure default.");
+    }
+    return "colage-dev-secret-change-me";
+  }
+  return secret;
+}
+
+function sign(payload: string): string {
+  return createHmac("sha256", getSecret()).update(payload).digest("base64url");
+}
+
+function verifySignature(payload: string, signature: string): boolean {
+  const expected = sign(payload);
+  try {
+    const sigBuf = Buffer.from(signature, "base64url");
+    const expBuf = Buffer.from(expected, "base64url");
+    if (sigBuf.length !== expBuf.length) return false;
+    return timingSafeEqual(sigBuf, expBuf);
+  } catch {
+    return false;
+  }
+}
+
+const COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "lax" as const,
+  path: "/",
+  maxAge: 60 * 60 * 24 * 30, // 30 days
+};
+
 export async function getSession(): Promise<Session | null> {
   const cookieStore = await cookies();
-  const session = cookieStore.get("colage_biz_session");
-  if (session) {
-    try {
-      return JSON.parse(session.value);
-    } catch {
-      return null;
-    }
+  const cookie = cookieStore.get("colage_biz_session");
+  if (!cookie) return null;
+
+  try {
+    const { payload, signature } = JSON.parse(
+      Buffer.from(cookie.value, "base64url").toString()
+    );
+    if (!payload || !signature) return null;
+    if (!verifySignature(payload, signature)) return null;
+    return JSON.parse(payload);
+  } catch {
+    return null;
   }
-  return null;
 }
 
 export async function setSession(session: Session) {
+  const payload = JSON.stringify(session);
+  const signature = sign(payload);
+  const cookieValue = Buffer.from(
+    JSON.stringify({ payload, signature })
+  ).toString("base64url");
+
   const cookieStore = await cookies();
-  cookieStore.set("colage_biz_session", JSON.stringify(session), {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: 60 * 60 * 24 * 30, // 30 days
-  });
+  cookieStore.set("colage_biz_session", cookieValue, COOKIE_OPTIONS);
 }
 
 export async function setTokens(accessToken: string, idToken: string, refreshToken?: string) {

@@ -1,7 +1,73 @@
 export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { getBusinessByEmail, createBusiness } from "@/lib/models/business";
-import { cookies } from "next/headers";
+import { setSession, logout } from "@/lib/auth";
+
+const COGNITO_POOL_ID = process.env.NEXT_PUBLIC_BIZ_POOL_ID || "us-east-2_jeryfm6Xs";
+const COGNITO_CLIENT_ID = process.env.NEXT_PUBLIC_BIZ_CLIENT_ID || "jffa9jhioo8adpvtq5bv2r9ks";
+const COGNITO_ISSUER = `https://cognito-idp.us-east-2.amazonaws.com/${COGNITO_POOL_ID}`;
+
+// Rate limiting: max 10 login requests per minute per IP
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+const RATE_LIMIT_WINDOW_MS = 60 * 1000;
+const RATE_LIMIT_MAX = 10;
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+  // Clean up expired entries
+  for (const [key, entry] of rateLimitMap) {
+    if (entry.resetAt <= now) rateLimitMap.delete(key);
+  }
+  const entry = rateLimitMap.get(ip);
+  if (!entry || entry.resetAt <= now) {
+    rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    return true;
+  }
+  entry.count++;
+  return entry.count <= RATE_LIMIT_MAX;
+}
+
+/** Decode a base64url string (JWT segment) */
+function decodeBase64Url(str: string): string {
+  // Pad to multiple of 4
+  const padded = str + "=".repeat((4 - (str.length % 4)) % 4);
+  return Buffer.from(padded, "base64").toString("utf-8");
+}
+
+/** Verify JWT structural integrity and claims (not full JWKS signature verification) */
+function verifyIdToken(idToken: string): { email: string; sub: string; businessName: string } | null {
+  try {
+    const parts = idToken.split(".");
+    if (parts.length !== 3) return null;
+
+    const claims = JSON.parse(decodeBase64Url(parts[1]));
+
+    // Verify issuer
+    if (claims.iss !== COGNITO_ISSUER) return null;
+
+    // Verify token_use
+    if (claims.token_use !== "id") return null;
+
+    // Verify expiration
+    if (!claims.exp || claims.exp < Math.floor(Date.now() / 1000)) return null;
+
+    // Verify audience (client ID)
+    if (claims.aud !== COGNITO_CLIENT_ID) return null;
+
+    // Extract required fields
+    const email = claims.email;
+    const sub = claims.sub;
+    if (!email || !sub) return null;
+
+    return {
+      email,
+      sub,
+      businessName: claims["custom:biz_name"] || email.split("@")[0],
+    };
+  } catch {
+    return null;
+  }
+}
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
@@ -9,10 +75,23 @@ export async function POST(req: NextRequest) {
 
   // ─── Cognito-authenticated login ───────────────────────
   if (action === "cognito-login") {
-    const { idToken, email, businessName, sub } = body;
-    if (!idToken || !email || !sub) {
-      return NextResponse.json({ error: "Missing auth data" }, { status: 400 });
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+    if (!checkRateLimit(ip)) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
     }
+
+    const { idToken } = body;
+    if (!idToken) {
+      return NextResponse.json({ error: "Missing idToken" }, { status: 400 });
+    }
+
+    // Verify the JWT and extract claims server-side
+    const verified = verifyIdToken(idToken);
+    if (!verified) {
+      return NextResponse.json({ error: "Invalid or expired token" }, { status: 401 });
+    }
+
+    const { email, sub, businessName } = verified;
 
     // Ensure business exists in DB (create on first login)
     let biz = await getBusinessByEmail(email);
@@ -20,7 +99,7 @@ export async function POST(req: NextRequest) {
       biz = await createBusiness({
         id: sub,
         email,
-        name: businessName || email.split("@")[0],
+        name: businessName,
         address: "",
         category: "Other",
         logoUrl: null,
@@ -30,79 +109,15 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    const session = { businessId: biz.id, email: biz.email, businessName: biz.name };
-    const cookieStore = await cookies();
-    cookieStore.set("colage_biz_session", JSON.stringify(session), {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-      maxAge: 60 * 60 * 24 * 30, // 30 days
-    });
-
-    return NextResponse.json({ success: true, business: biz });
-  }
-
-  // ─── Legacy login (dev fallback) ───────────────────────
-  if (action === "login") {
-    const { email } = body;
-    if (!email) return NextResponse.json({ error: "Email required" }, { status: 400 });
-
-    let biz = await getBusinessByEmail(email);
-    if (!biz) {
-      return NextResponse.json({ error: "Account not found. Please sign up first." }, { status: 400 });
-    }
-
-    const session = { businessId: biz.id, email: biz.email, businessName: biz.name };
-    const cookieStore = await cookies();
-    cookieStore.set("colage_biz_session", JSON.stringify(session), {
-      httpOnly: true,
-      path: "/",
-      maxAge: 60 * 60 * 24 * 30,
-    });
-
-    return NextResponse.json({ success: true, business: biz });
-  }
-
-  // ─── Legacy signup (dev fallback) ──────────────────────
-  if (action === "signup") {
-    const { email, businessName, address, category } = body;
-    if (!email || !businessName) {
-      return NextResponse.json({ error: "Email and business name required" }, { status: 400 });
-    }
-
-    const existing = await getBusinessByEmail(email);
-    if (existing) {
-      return NextResponse.json({ error: "Account already exists. Try logging in." }, { status: 400 });
-    }
-
-    const biz = await createBusiness({
-      id: `biz-${Date.now()}`,
-      email,
-      name: businessName,
-      address: address || "",
-      category: category || "Other",
-      logoUrl: null,
-      stripeCustomerId: null,
-      balance: 0,
-      createdAt: new Date().toISOString(),
-    });
-
-    const session = { businessId: biz.id, email: biz.email, businessName: biz.name };
-    const cookieStore = await cookies();
-    cookieStore.set("colage_biz_session", JSON.stringify(session), {
-      httpOnly: true,
-      path: "/",
-      maxAge: 60 * 60 * 24 * 30,
-    });
+    // Set HMAC-signed session cookie
+    await setSession({ businessId: biz.id, email: biz.email, businessName: biz.name });
 
     return NextResponse.json({ success: true, business: biz });
   }
 
   // ─── Logout ────────────────────────────────────────────
   if (action === "logout") {
-    const cookieStore = await cookies();
-    cookieStore.delete("colage_biz_session");
+    await logout();
     return NextResponse.json({ success: true });
   }
 
