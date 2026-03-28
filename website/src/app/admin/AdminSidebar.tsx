@@ -90,7 +90,7 @@ export default function AdminSidebar() {
       </aside>
 
       {/* Desktop sidebar */}
-      <aside className="hidden md:block fixed inset-y-0 left-0 w-[260px] bg-[#111] border-r border-[#222]">
+      <aside className="hidden md:block fixed inset-y-0 left-0 w-[260px] bg-[#111] border-r border-[#222] z-50">
         {sidebar}
       </aside>
     </>
