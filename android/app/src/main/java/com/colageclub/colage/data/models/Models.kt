@@ -132,24 +132,16 @@ data class NearbyStudent(
 data class AdData(
     val id: String,
     val businessName: String,
-    val bio: String,
+    val bio: String = "",
     val deal: String,
-    val logoEmoji: String,
+    val emoji: String? = null,
     val logoUrl: String? = null,
-    val distance: String
-)
-
-object MockAds {
-    val all = listOf(
-        AdData("ad-1", "Blue Brew Coffee", "Student-favorite coffee shop since 2019",
-            "15% off any drink — show this ad", "☕", null, "0.2 mi"),
-        AdData("ad-2", "Campus Pizza Co.", "Late night slices, every night",
-            "Free garlic knots with any large pizza", "🍕", null, "0.4 mi"),
-        AdData("ad-3", "FitZone Gym", "24/7 gym, 1 block from campus",
-            "First month free for students", "🏋️", null, "0.3 mi"),
-        AdData("ad-4", "BookStack", "Used textbooks at 60% off retail",
-            "Extra 10% off with .edu email", "📚", null, "0.1 mi")
-    )
+    var distance: String? = null,
+    val lat: Double? = null,
+    val lng: Double? = null
+) {
+    val displayEmoji: String get() = emoji ?: "🏪"
+    val displayDistance: String get() = distance ?: "nearby"
 }
 
 // MARK: - API Request/Response Models

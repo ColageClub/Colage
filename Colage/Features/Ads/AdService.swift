@@ -46,7 +46,8 @@ class AdService: ObservableObject {
                         ads.append(ad)
                     }
                 } else {
-                    print("[AdService] Server returned no ad")
+                    print("[AdService] Server returned no ad, keeping current")
+                    // Keep showing the last ad — don't clear it
                 }
                 isLoading = false
             }

@@ -1,77 +1,101 @@
 package com.colageclub.colage.features.ads
 
-import com.colageclub.colage.BuildConfig
-import com.colageclub.colage.core.networking.ApiClient
+import android.location.Location
 import com.colageclub.colage.data.models.AdData
-import com.colageclub.colage.data.models.MockAds
+import com.google.gson.Gson
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
+import java.util.Timer
+import java.util.TimerTask
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class AdService @Inject constructor(
-    private val apiClient: ApiClient
-) {
+class AdService @Inject constructor() {
+    private val baseUrl = "https://main.dcinq8hq6li09.amplifyapp.com"
+    private val httpClient = OkHttpClient()
+    private val gson = Gson()
+
     private val _currentAd = MutableStateFlow<AdData?>(null)
     val currentAd: StateFlow<AdData?> = _currentAd.asStateFlow()
 
-    private val _isLoading = MutableStateFlow(false)
-    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+    private var rotationTimer: Timer? = null
+    private var rotationSchool: String = ""
+    private var rotationStudentId: String = ""
+    var userLocation: Location? = null
 
-    private var ads = mutableListOf<AdData>()
-    private var currentIndex = 0
+    /** Fetch an ad from the server */
+    suspend fun fetchAd(school: String, studentId: String, location: Location? = null) {
+        withContext(Dispatchers.IO) {
+            try {
+                val url = "$baseUrl/api/ads/serve?school=$school&student_id=$studentId"
+                val request = Request.Builder().url(url).get().build()
+                val response = httpClient.newCall(request).execute()
+                val body = response.body?.string() ?: return@withContext
+                val parsed = gson.fromJson(body, AdServeResponse::class.java)
 
-    /** Fetch an ad from the server for the given school */
-    suspend fun fetchAd(school: String, studentId: String) {
-        if (BuildConfig.DEV_MODE) {
-            if (ads.isEmpty()) ads.addAll(MockAds.all)
-            _currentAd.value = ads.firstOrNull()
-            return
-        }
-
-        _isLoading.value = true
-        try {
-            val response = apiClient.request(
-                method = "GET",
-                path = "/api/ads/serve?school=$school&student_id=$studentId",
-                responseClass = AdServeResponse::class.java
-            )
-            response.ad?.let { ad ->
-                _currentAd.value = ad
-                if (ads.none { it.id == ad.id }) ads.add(ad)
+                parsed.ad?.let { ad ->
+                    // Calculate distance
+                    val loc = location ?: userLocation
+                    if (loc != null && (ad.lat ?: 0.0) != 0.0 && (ad.lng ?: 0.0) != 0.0) {
+                        val adLoc = Location("ad").apply {
+                            latitude = ad.lat ?: 0.0
+                            longitude = ad.lng ?: 0.0
+                        }
+                        val meters = loc.distanceTo(adLoc)
+                        val miles = meters / 1609.34f
+                        ad.distance = String.format("%.1f mi", miles)
+                    }
+                    _currentAd.value = ad
+                } // If null, keep showing current ad
+            } catch (e: Exception) {
+                // Keep current ad on failure
             }
-        } catch (e: Exception) {
-            // Fallback to mock
-            if (ads.isEmpty()) ads.addAll(MockAds.all)
-            _currentAd.value = ads.firstOrNull()
-        } finally {
-            _isLoading.value = false
         }
     }
 
-    /** Track a tap on an ad */
+    /** Track a tap */
     suspend fun trackTap(adId: String, studentId: String) {
-        if (BuildConfig.DEV_MODE) return
-        try {
-            apiClient.request(
-                method = "POST",
-                path = "/api/ads/serve",
-                body = mapOf("adId" to adId, "studentId" to studentId, "action" to "tap"),
-                responseClass = Map::class.java
-            )
-        } catch (_: Exception) {}
+        withContext(Dispatchers.IO) {
+            try {
+                val json = gson.toJson(mapOf("adId" to adId, "studentId" to studentId, "action" to "tap"))
+                val request = Request.Builder()
+                    .url("$baseUrl/api/ads/serve")
+                    .post(json.toRequestBody("application/json".toMediaType()))
+                    .build()
+                httpClient.newCall(request).execute()
+            } catch (_: Exception) {}
+        }
     }
 
-    /** Rotate to next ad */
-    fun rotateAd() {
-        if (ads.isEmpty()) return
-        currentIndex = (currentIndex + 1) % ads.size
-        _currentAd.value = ads[currentIndex]
+    /** Start auto-rotation */
+    fun startRotation(school: String, studentId: String, location: Location? = null) {
+        rotationSchool = school
+        rotationStudentId = studentId
+        userLocation = location
+
+        rotationTimer?.cancel()
+        rotationTimer = Timer().apply {
+            scheduleAtFixedRate(object : TimerTask() {
+                override fun run() {
+                    CoroutineScope(Dispatchers.IO).launch {
+                        fetchAd(rotationSchool, rotationStudentId, userLocation)
+                    }
+                }
+            }, 30_000L, 30_000L)
+        }
     }
 
-    data class AdServeResponse(
-        val ad: AdData?
-    )
+    fun stopRotation() {
+        rotationTimer?.cancel()
+        rotationTimer = null
+    }
+
+    data class AdServeResponse(val ad: AdData?)
 }

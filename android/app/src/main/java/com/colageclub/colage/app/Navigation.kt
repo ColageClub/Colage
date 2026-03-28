@@ -60,9 +60,13 @@ fun ColageApp() {
                 navController = navController,
                 appViewModel = appViewModel
             )
-            AuthState.AUTHENTICATED -> HomeScreen(
-                appViewModel = appViewModel
-            )
+            AuthState.AUTHENTICATED -> {
+                val adService = remember { com.colageclub.colage.features.ads.AdService() }
+                HomeScreen(
+                    appViewModel = appViewModel,
+                    adService = adService
+                )
+            }
         }
     }
 }

@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { getAdsBySchoolAndStatus, updateAd } from "@/lib/models/ad";
 import { checkFrequencyCap, recordImpression } from "@/lib/models/impression";

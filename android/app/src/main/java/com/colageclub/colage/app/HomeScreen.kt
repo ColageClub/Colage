@@ -32,7 +32,7 @@ import com.colageclub.colage.features.profile.OwnProfileScreen
 import com.colageclub.colage.features.profile.SettingsScreen
 
 @Composable
-fun HomeScreen(appViewModel: AppViewModel) {
+fun HomeScreen(appViewModel: AppViewModel, adService: com.colageclub.colage.features.ads.AdService? = null) {
     val discoveryMode by appViewModel.discoveryMode.collectAsState()
     val currentProfile by appViewModel.currentProfile.collectAsState()
     val isVisible by appViewModel.isVisible.collectAsState()
@@ -204,7 +204,12 @@ fun HomeScreen(appViewModel: AppViewModel) {
                         .align(Alignment.BottomCenter)
                         .padding(horizontal = 12.dp, vertical = 16.dp)
                 ) {
-                    AdBannerView()
+                    adService?.let { svc ->
+                        AdBannerView(
+                            adService = svc,
+                            userProfile = appViewModel.currentProfile.collectAsState().value
+                        )
+                    }
                 }
             }
 

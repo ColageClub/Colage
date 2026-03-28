@@ -3,6 +3,8 @@ import { getSession } from "@/lib/auth";
 import * as AdModel from "@/lib/models/ad";
 import { getSpendForAds } from "@/lib/models/daily-spend";
 
+export const dynamic = "force-dynamic";
+
 // GET /api/ads — list ads for current business + today's spend
 export async function GET() {
   const session = await getSession();

@@ -11,6 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -22,24 +23,26 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.colageclub.colage.core.design.*
 import com.colageclub.colage.data.models.AdData
-import com.colageclub.colage.data.models.MockAds
-import kotlinx.coroutines.delay
+import com.colageclub.colage.data.models.UserProfile
 
 @Composable
-fun AdBannerView() {
-    val ads = MockAds.all
-    var currentIndex by remember { mutableIntStateOf(0) }
+fun AdBannerView(
+    adService: AdService,
+    userProfile: UserProfile? = null
+) {
+    val currentAd by adService.currentAd.collectAsState()
     var showDetail by remember { mutableStateOf(false) }
-    val currentAd = ads.getOrNull(currentIndex)
+    val school = userProfile?.universityDomain ?: "umich.edu"
+    val studentId = userProfile?.userId ?: "anonymous"
 
-    // Rotate every 15s
-    LaunchedEffect(showDetail) {
-        while (true) {
-            delay(15_000)
-            if (!showDetail) {
-                currentIndex = (currentIndex + 1) % ads.size
-            }
-        }
+    // Initial fetch + start rotation
+    LaunchedEffect(school, studentId) {
+        adService.fetchAd(school, studentId)
+        adService.startRotation(school, studentId)
+    }
+
+    DisposableEffect(Unit) {
+        onDispose { adService.stopRotation() }
     }
 
     currentAd?.let { ad ->
@@ -53,7 +56,7 @@ fun AdBannerView() {
         ) {
             // Subtle emoji watermark — matches iOS
             Text(
-                ad.logoEmoji,
+                ad.displayEmoji,
                 fontSize = 60.sp,
                 modifier = Modifier
                     .align(Alignment.CenterEnd)
@@ -74,7 +77,7 @@ fun AdBannerView() {
                         .background(LocalThemeColor.current.copy(alpha = 0.15f), RoundedCornerShape(12.dp)),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(ad.logoEmoji, fontSize = 22.sp)
+                    Text(ad.displayEmoji, fontSize = 22.sp)
                 }
 
                 // Info
@@ -95,7 +98,7 @@ fun AdBannerView() {
 
                 // Distance + Ad badge
                 Column(horizontalAlignment = Alignment.End) {
-                    Text(ad.distance, style = ColageFonts.MonoSmall.copy(color = ColageColors.TextTertiary))
+                    Text(ad.displayDistance, style = ColageFonts.MonoSmall.copy(color = ColageColors.TextTertiary))
                     Text(
                         "Ad",
                         fontSize = 8.sp,
@@ -150,7 +153,7 @@ fun AdDetailSheet(ad: AdData, onDismiss: () -> Unit) {
                         .border(2.dp, LocalThemeColor.current.copy(alpha = 0.3f), RoundedCornerShape(20.dp)),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(ad.logoEmoji, fontSize = 36.sp)
+                    Text(ad.displayEmoji, fontSize = 36.sp)
                 }
             }
 
@@ -195,7 +198,7 @@ fun AdDetailSheet(ad: AdData, onDismiss: () -> Unit) {
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
-                    InfoBadge(Icons.Default.LocationOn, ad.distance)
+                    InfoBadge(Icons.Default.LocationOn, ad.displayDistance)
                     InfoBadge(Icons.Default.Schedule, "Open now")
                     InfoBadge(Icons.Default.CameraAlt, "Screenshot")
                 }
