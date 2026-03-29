@@ -119,6 +119,8 @@ class AppViewModel @Inject constructor(
         // Connect WebSocket + resolve university when home screen appears
         val profile = _currentProfile.value ?: return
         val domain = profile.universityDomain
+        // Start location tracking — needed for broadcasting and nearby features
+        locationService.startTracking(profile.userId)
         // Use id_token — backend needs email claim which is only in Cognito ID tokens
         val token = secureStorage.get(SecureStorage.KEY_ID_TOKEN) ?: secureStorage.get(SecureStorage.KEY_ACCESS_TOKEN)
         webSocketManager.connect(domain, profile.userId, token)
