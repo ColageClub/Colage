@@ -20,8 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
+
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -142,20 +141,16 @@ fun OTPCodeField(
     length: Int = 6,
     onComplete: (String) -> Unit = {}
 ) {
-    val focusRequester = remember { FocusRequester() }
-
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.semantics {
             contentDescription = "Verification code, ${code.length} of $length digits entered"
         }
     ) {
-        // Visual boxes
+        // Visual boxes (display only — input happens in the text field below)
         Row(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
-            modifier = Modifier
-                .padding(horizontal = 24.dp)
-                .clickable { focusRequester.requestFocus() }
+            modifier = Modifier.padding(horizontal = 24.dp)
         ) {
             repeat(length) { index ->
                 val char = if (index < code.length) code[index].toString() else ""
@@ -168,8 +163,7 @@ fun OTPCodeField(
                             width = if (isFilled) 2.dp else 1.dp,
                             color = if (isFilled) LocalThemeColor.current else ColageColors.Border,
                             shape = RoundedCornerShape(12.dp)
-                        )
-                        .clickable { focusRequester.requestFocus() },
+                        ),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
@@ -181,7 +175,8 @@ fun OTPCodeField(
             }
         }
 
-        // Hidden text field that captures input
+        // Text field for input — visible but minimal, positioned under the boxes
+        Spacer(modifier = Modifier.height(8.dp))
         BasicTextField(
             value = code,
             onValueChange = { newValue ->
@@ -192,9 +187,10 @@ fun OTPCodeField(
                 }
             },
             modifier = Modifier
-                .size(0.dp)
-                .alpha(0f)
-                .focusRequester(focusRequester),
+                .fillMaxWidth()
+                .padding(horizontal = 48.dp)
+                .height(48.dp)
+                .background(ColageColors.Surface, RoundedCornerShape(12.dp)),
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.NumberPassword,
                 imeAction = ImeAction.Done
@@ -212,6 +208,9 @@ fun OTPCodeField(
                         .padding(horizontal = 16.dp),
                     contentAlignment = Alignment.Center
                 ) {
+                    if (code.isEmpty()) {
+                        Text("Enter code", style = ColageFonts.Body.copy(color = ColageColors.TextTertiary))
+                    }
                     innerTextField()
                 }
             }
