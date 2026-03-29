@@ -219,7 +219,8 @@ fun OTPCodeField(
     }
 
     LaunchedEffect(Unit) {
-        focusRequester.requestFocus()
+        kotlinx.coroutines.delay(100) // Wait for layout to complete before requesting focus
+        try { focusRequester.requestFocus() } catch (_: Exception) { }
     }
 }
 
