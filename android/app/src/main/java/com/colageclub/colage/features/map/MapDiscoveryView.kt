@@ -56,6 +56,9 @@ fun MapDiscoveryView(
     val context = LocalContext.current
     var mapViewRef by remember { mutableStateOf<MapView?>(null) }
     var annotationManagerRef by remember { mutableStateOf<PointAnnotationManager?>(null) }
+    // Stable student map — shared between update lambda and click listener
+    val studentAnnotationMap = remember { mutableMapOf<String, NearbyStudent>() }
+    var clickListenerAdded by remember { mutableStateOf(false) }
     // Cache downloaded avatar bitmaps by userId
     val avatarCache = remember { mutableMapOf<String, Bitmap>() }
     // Cache initials placeholder bitmaps by key (initials+color)
@@ -109,8 +112,18 @@ fun MapDiscoveryView(
                 mapView.location.pulsingEnabled = isVisible
                 val manager = annotationManagerRef ?: return@AndroidView
                 manager.deleteAll()
+                studentAnnotationMap.clear()
 
-                val studentMap = mutableMapOf<String, NearbyStudent>()
+                // Add click listener only once — references the stable studentAnnotationMap
+                if (!clickListenerAdded) {
+                    manager.addClickListener { annotation ->
+                        studentAnnotationMap[annotation.id]?.let {
+                            selectedStudent = it
+                        }
+                        true
+                    }
+                    clickListenerAdded = true
+                }
                 students.forEach { student ->
                     val isSelf = currentUserId != null && student.profile.userId == currentUserId
                     val dotColor = if (isSelf) puckArgb else themeArgb
@@ -159,7 +172,7 @@ fun MapDiscoveryView(
                     val options = PointAnnotationOptions()
                         .withPoint(displayPoint)
                         .withIconImage(bitmap)
-                        .withIconSize(1.5)
+                        .withIconSize(1.0)
                         .withIconAnchor(com.mapbox.maps.extension.style.layers.properties.generated.IconAnchor.CENTER)
                         .withTextField(student.profile.displayName.split(" ").first())
                         .withTextSize(9.0)
@@ -168,17 +181,9 @@ fun MapDiscoveryView(
                         .withTextHaloColor(android.graphics.Color.BLACK)
                         .withTextHaloWidth(1.5)
                     val annotation = manager.create(options)
-                    studentMap[annotation.id] = student
+                    studentAnnotationMap[annotation.id] = student
                 }
 
-                // Remove old listeners before adding new one (update is called repeatedly)
-                manager.addClickListener { annotation ->
-                    studentMap[annotation.id]?.let {
-                        selectedStudent = it
-                    }
-                    true
-                }
-                // Also set icon-allow-overlap to prevent annotations from being hidden
                 manager.iconAllowOverlap = true
                 manager.textAllowOverlap = true
             },
