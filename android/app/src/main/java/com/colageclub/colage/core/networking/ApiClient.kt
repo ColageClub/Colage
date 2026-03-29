@@ -150,8 +150,8 @@ class ApiClient @Inject constructor(
     suspend fun postCreateProfile(req: CreateProfileRequest): CreateProfileResponse =
         request("POST", "/users", req, CreateProfileResponse::class.java)
 
-    suspend fun getUniversity(domain: String): UniversityResponse =
-        request("GET", "/universities/$domain", null, UniversityResponse::class.java)
+    suspend fun getUniversity(domain: String): UniversityResponseWrapper =
+        request("GET", "/universities/$domain", null, UniversityResponseWrapper::class.java)
 
     suspend fun getPhotoUploadUrl(userId: String, contentType: String): PhotoUploadUrlResponse =
         request("POST", "/photos/upload-url", PhotoUploadUrlRequest(userId, contentType), PhotoUploadUrlResponse::class.java)

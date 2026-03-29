@@ -172,11 +172,16 @@ data class CreateProfileResponse(val profile: ServerProfile) {
     data class ServerProfile(val userId: String)
 }
 
-data class UniversityResponse(
-    val id: String,
-    val domain: String,
-    val name: String,
-    val memberCount: Int = 0
+data class UniversityResponseWrapper(
+    val university: UniversityResponseData
+)
+
+data class UniversityResponseData(
+    val domain: String = "",
+    val name: String = "",
+    val memberCount: Int = 0,
+    val brandingThemes: List<UniversityTheme> = emptyList(),
+    val createdAt: String? = null
 )
 
 data class PhotoUploadUrlRequest(val userId: String, val contentType: String)

@@ -30,12 +30,14 @@ class UniversityService @Inject constructor(
             return mockUniversity(domain).also { setUniversity(it) }
         }
         return try {
-            val response = apiClient.getUniversity(domain)
+            val wrapper = apiClient.getUniversity(domain)
+            val response = wrapper.university
             val uni = University(
-                id = response.id,
+                id = response.domain,
                 domain = response.domain,
                 name = response.name,
-                memberCount = response.memberCount
+                memberCount = response.memberCount,
+                brandingThemes = response.brandingThemes
             )
             setUniversity(uni)
             uni

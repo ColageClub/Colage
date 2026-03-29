@@ -74,7 +74,12 @@ fun MapDiscoveryView(
                     mapboxMap.loadStyle(Style.DARK)
                     mapboxMap.setCamera(
                         cameraOptions {
-                            center(Point.fromLngLat(-83.7382, 42.2780))
+                            // Use GPS if available, otherwise default to US center
+                            val initLoc = currentLocationFlow?.value
+                            center(Point.fromLngLat(
+                                initLoc?.longitude ?: -95.7129,
+                                initLoc?.latitude ?: 37.0902
+                            ))
                             zoom(15.5)
                         }
                     )
@@ -180,8 +185,9 @@ fun MapDiscoveryView(
         IconButton(
             onClick = {
                 val gpsLocation = currentLocationFlow?.value
-                val lat = gpsLocation?.latitude ?: 42.2780
-                val lng = gpsLocation?.longitude ?: -83.7382
+                if (gpsLocation == null) return@IconButton // Don't recenter without a GPS fix
+                val lat = gpsLocation.latitude
+                val lng = gpsLocation.longitude
                 mapViewRef?.mapboxMap?.setCamera(
                     cameraOptions {
                         center(Point.fromLngLat(lng, lat))
