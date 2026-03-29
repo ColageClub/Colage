@@ -147,6 +147,9 @@ class AuthViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
+                // Fetch tokens FIRST — /users requires JWT auth
+                fetchAndStoreTokens()
+
                 val links = data.socialLinks
                     .filter { it.value.isNotEmpty() }
                     .map { SocialLink(platform = it.key, handle = it.value) }

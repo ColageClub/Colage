@@ -79,6 +79,9 @@ import SwiftUI
     var selectedServerType: ServerType = .student
 
     func createProfile(name: String, bio: String?, major: String?, socialLinks: [SocialLink], photo: UIImage? = nil) async throws {
+        // Fetch tokens FIRST — /users requires JWT auth
+        await fetchAndStoreTokens()
+        
         let domain = extractDomain(from: enteredEmail) ?? "umich.edu"
 
         struct CreateProfileRequest: Encodable {
