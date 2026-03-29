@@ -159,7 +159,7 @@ fun MapDiscoveryView(
                     val options = PointAnnotationOptions()
                         .withPoint(displayPoint)
                         .withIconImage(bitmap)
-                        .withIconSize(1.0)
+                        .withIconSize(1.5)
                         .withIconAnchor(com.mapbox.maps.extension.style.layers.properties.generated.IconAnchor.CENTER)
                         .withTextField(student.profile.displayName.split(" ").first())
                         .withTextSize(9.0)
@@ -171,12 +171,16 @@ fun MapDiscoveryView(
                     studentMap[annotation.id] = student
                 }
 
+                // Remove old listeners before adding new one (update is called repeatedly)
                 manager.addClickListener { annotation ->
                     studentMap[annotation.id]?.let {
                         selectedStudent = it
                     }
                     true
                 }
+                // Also set icon-allow-overlap to prevent annotations from being hidden
+                manager.iconAllowOverlap = true
+                manager.textAllowOverlap = true
             },
             modifier = Modifier.fillMaxSize()
         )

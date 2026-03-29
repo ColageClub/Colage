@@ -18,7 +18,9 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class AdService @Inject constructor() {
+class AdService @Inject constructor(
+    private val locationService: com.colageclub.colage.core.location.LocationService
+) {
     private val baseUrl = BuildConfig.AD_BASE_URL
     private val httpClient = OkHttpClient()
     private val gson = Gson()
@@ -42,8 +44,8 @@ class AdService @Inject constructor() {
                 val parsed = gson.fromJson(body, AdServeResponse::class.java)
 
                 parsed.ad?.let { ad ->
-                    // Calculate distance
-                    val loc = location ?: userLocation
+                    // Calculate distance — use provided location, cached, or from LocationService
+                    val loc = location ?: userLocation ?: locationService.currentLocation.value
                     if (loc != null && (ad.lat ?: 0.0) != 0.0 && (ad.lng ?: 0.0) != 0.0) {
                         val adLoc = Location("ad").apply {
                             latitude = ad.lat ?: 0.0
