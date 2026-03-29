@@ -1,6 +1,8 @@
 package com.colageclub.colage.app
 
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -77,7 +79,8 @@ fun OnboardingNavHost(
 
     NavHost(
         navController = navController,
-        startDestination = Screen.Welcome.route
+        startDestination = Screen.Welcome.route,
+        modifier = Modifier.navigationBarsPadding()
     ) {
         composable(Screen.Welcome.route) {
             WelcomeScreen(

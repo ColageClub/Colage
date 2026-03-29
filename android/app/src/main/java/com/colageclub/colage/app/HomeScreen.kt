@@ -118,7 +118,7 @@ fun HomeScreen(appViewModel: AppViewModel, adService: com.colageclub.colage.feat
         nearbyVM.setFilterFloor(currentFloor)
     }
 
-    Box(modifier = Modifier.fillMaxSize().background(ColageColors.Background)) {
+    Box(modifier = Modifier.fillMaxSize().background(ColageColors.Background).navigationBarsPadding()) {
                 // Discovery views with animated transitions
                 AnimatedContent(
                     targetState = discoveryMode,
