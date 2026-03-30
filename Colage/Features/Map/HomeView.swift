@@ -147,6 +147,15 @@ struct HomeView: View {
                 let domain = UserProfile.current?.universityDomain ?? ""
                 WebSocketManager.shared.connect(universityDomain: domain)
 
+                // Resolve university (needed for name label + theming on session restore)
+                if universityService.currentUniversity == nil, !domain.isEmpty {
+                    Task {
+                        if let uni = await universityService.resolveUniversity(domain: domain) {
+                            universityService.setUniversity(uni)
+                        }
+                    }
+                }
+
                 // Start listening for real-time updates
                 nearbyStudents.startListeningForUpdates()
 
