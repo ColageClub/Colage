@@ -18,17 +18,19 @@ struct HomeView: View {
         ZStack {
             ColageColors.background.ignoresSafeArea()
 
-            // Active discovery mode
-            Group {
-                switch appState.activeMode {
-                case .map:
-                    MapDiscoveryView(
-                        students: nearbyStudents,
-                        allMapStudents: nearbyStudents.mapStudents
-                    )
-                case .list:
+            // Discovery modes — map stays alive (hidden) to preserve camera state
+            ZStack {
+                MapDiscoveryView(
+                    students: nearbyStudents,
+                    allMapStudents: nearbyStudents.mapStudents
+                )
+                .opacity(appState.activeMode == .map ? 1 : 0)
+                .allowsHitTesting(appState.activeMode == .map)
+
+                if appState.activeMode == .list {
                     ListDiscoveryView(students: nearbyStudents)
-                case .ar:
+                }
+                if appState.activeMode == .ar {
                     ARDiscoveryView(students: nearbyStudents)
                 }
             }
