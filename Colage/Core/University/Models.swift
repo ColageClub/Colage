@@ -4,11 +4,15 @@ import SwiftUI
 // MARK: - University
 
 struct University: Codable, Identifiable {
-    let id: String
+    var id: String { domain }
     let domain: String
     let name: String
     var memberCount: Int
     let brandingThemes: [UniversityTheme]
+    
+    private enum CodingKeys: String, CodingKey {
+        case domain, name, memberCount, brandingThemes
+    }
 }
 
 // MARK: - University Theme

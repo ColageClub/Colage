@@ -43,7 +43,6 @@ class UniversityService: ObservableObject {
         switch domain {
         case "umich.edu":
             return University(
-                id: "umich",
                 domain: "umich.edu",
                 name: "University of Michigan",
                 memberCount: 847,
@@ -76,7 +75,6 @@ class UniversityService: ObservableObject {
             )
         case "harvard.edu":
             return University(
-                id: "harvard",
                 domain: "harvard.edu",
                 name: "Harvard University",
                 memberCount: 512,
@@ -93,7 +91,6 @@ class UniversityService: ObservableObject {
             )
         case "stanford.edu":
             return University(
-                id: "stanford",
                 domain: "stanford.edu",
                 name: "Stanford University",
                 memberCount: 623,
@@ -114,7 +111,6 @@ class UniversityService: ObservableObject {
                 .replacingOccurrences(of: ".edu", with: "")
                 .uppercased()
             return University(
-                id: domain,
                 domain: domain,
                 name: shortName,
                 memberCount: 0,
