@@ -17,6 +17,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -58,13 +59,14 @@ fun AdBannerView(
                 .clickable { showDetail = true }
         ) {
             // Subtle emoji watermark — matches iOS
+            // Use graphicsLayer for alpha (Compose alpha modifier can skip emoji rendering at low values)
             Text(
                 ad.displayEmoji,
                 fontSize = 60.sp,
                 modifier = Modifier
                     .align(Alignment.CenterEnd)
                     .offset(x = (-10).dp)
-                    .alpha(0.04f)
+                    .graphicsLayer { alpha = 0.06f }
             )
             Row(
                 modifier = Modifier
