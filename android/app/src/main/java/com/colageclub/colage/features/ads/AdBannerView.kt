@@ -176,10 +176,10 @@ fun AdDetailSheet(ad: AdData, onDismiss: () -> Unit) {
                 modifier = Modifier.padding(horizontal = 24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(ad.businessName, style = ColageFonts.Title.copy(color = ColageColors.TextPrimary))
+                Text(ad.businessName, style = ColageFonts.Title.copy(color = ColageColors.TextPrimary, textAlign = TextAlign.Center))
                 if (ad.bio.isNotEmpty()) {
                     Spacer(Modifier.height(6.dp))
-                    Text(ad.bio, style = ColageFonts.Body.copy(color = ColageColors.TextSecondary))
+                    Text(ad.bio, style = ColageFonts.Body.copy(color = ColageColors.TextSecondary, textAlign = TextAlign.Center))
                 }
 
                 Spacer(Modifier.height(20.dp))
