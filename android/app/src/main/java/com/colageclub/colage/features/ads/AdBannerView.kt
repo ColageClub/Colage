@@ -58,16 +58,6 @@ fun AdBannerView(
                 .border(0.5.dp, ColageColors.Border.copy(alpha = 0.5f), RoundedCornerShape(18.dp))
                 .clickable { showDetail = true }
         ) {
-            // Subtle emoji watermark — matches iOS
-            // Use graphicsLayer for alpha (Compose alpha modifier can skip emoji rendering at low values)
-            Text(
-                ad.displayEmoji,
-                fontSize = 60.sp,
-                modifier = Modifier
-                    .align(Alignment.CenterEnd)
-                    .offset(x = (-10).dp)
-                    .graphicsLayer { alpha = 0.06f }
-            )
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -114,6 +104,15 @@ fun AdBannerView(
                     )
                 }
             }
+            // Subtle emoji watermark — drawn on top of Row content with low alpha
+            Text(
+                ad.displayEmoji,
+                fontSize = 60.sp,
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+                    .offset(x = (-10).dp)
+                    .graphicsLayer { alpha = 0.04f }
+            )
         }
 
         if (showDetail) {
