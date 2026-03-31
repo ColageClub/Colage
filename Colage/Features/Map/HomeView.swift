@@ -72,7 +72,7 @@ struct HomeView: View {
                         Circle()
                             .fill(ColageColors.online)
                             .frame(width: 6, height: 6)
-                        Text("\(uni.memberCount) students")
+                        Text("\(nearbyStudents.students.count) visible")
                             .font(ColageFonts.caption)
                             .foregroundStyle(ColageColors.textTertiary)
                     }
