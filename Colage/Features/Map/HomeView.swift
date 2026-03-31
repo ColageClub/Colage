@@ -182,8 +182,21 @@ struct HomeView: View {
         .onChange(of: appState.isVisible) { _, isVisible in
             if isVisible {
                 locationService.startTracking()
+                let domain = UserProfile.current?.universityDomain ?? ""
+                WebSocketManager.shared.connect(universityDomain: domain)
             } else {
                 locationService.stopTracking()
+                WebSocketManager.shared.disconnect()
+            }
+            // Update server
+            if let userId = UserProfile.current?.userId {
+                Task {
+                    try? await APIClient.shared.requestVoid(
+                        method: "PUT",
+                        path: "/users/\(userId)",
+                        body: ["isVisible": isVisible]
+                    )
+                }
             }
         }
     }

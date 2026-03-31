@@ -151,7 +151,34 @@ class AppViewModel @Inject constructor(
     }
 
     fun toggleVisibility() {
-        _isVisible.value = !_isVisible.value
+        val newValue = !_isVisible.value
+        _isVisible.value = newValue
+
+        val profile = _currentProfile.value ?: return
+        val domain = profile.universityDomain
+
+        if (newValue) {
+            // Visible: start tracking + reconnect WebSocket
+            locationService.startTracking(profile.userId)
+            val token = secureStorage.get(SecureStorage.KEY_ID_TOKEN) ?: secureStorage.get(SecureStorage.KEY_ACCESS_TOKEN)
+            webSocketManager.connect(domain, profile.userId, token)
+        } else {
+            // Hidden: stop tracking + disconnect WebSocket
+            locationService.stopTracking()
+            webSocketManager.disconnect()
+        }
+
+        // Update server
+        viewModelScope.launch {
+            try {
+                apiClient.request<Any>(
+                    method = "PUT",
+                    path = "/users/${profile.userId}",
+                    body = mapOf("isVisible" to newValue),
+                    responseType = Any::class.java
+                )
+            } catch (_: Exception) { }
+        }
     }
 
     fun setFloor(floor: Int) {
