@@ -150,6 +150,14 @@ fun AdDetailSheet(ad: AdData, onDismiss: () -> Unit) {
                     ),
                 contentAlignment = Alignment.BottomCenter
             ) {
+                // Large emoji watermark in header background
+                Text(
+                    ad.displayEmoji,
+                    fontSize = 100.sp,
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .graphicsLayer { alpha = 0.08f }
+                )
                 Box(
                     modifier = Modifier
                         .size(72.dp)
