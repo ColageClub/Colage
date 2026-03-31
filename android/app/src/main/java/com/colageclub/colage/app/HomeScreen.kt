@@ -223,7 +223,7 @@ fun HomeScreen(appViewModel: AppViewModel, adService: com.colageclub.colage.feat
                             )
                             Spacer(Modifier.width(6.dp))
                             Text(
-                                "$mapStudentCount nearby",
+                                "${uni.memberCount} students",
                                 style = ColageFonts.Caption.copy(color = ColageColors.TextTertiary)
                             )
                         }
