@@ -114,7 +114,7 @@ struct AdBannerView: View {
                     Spacer()
                     Text(ad.displayEmoji)
                         .font(.system(size: 60))
-                        .opacity(0.04)
+                        .opacity(0.08)
                         .offset(x: -10)
                 }
                 .clipShape(RoundedRectangle(cornerRadius: 18))

@@ -64,7 +64,7 @@ fun AdBannerView(
                 modifier = Modifier
                     .align(Alignment.CenterEnd)
                     .offset(x = (-10).dp)
-                    .alpha(0.04f)
+                    .alpha(0.08f)
             )
             Row(
                 modifier = Modifier
