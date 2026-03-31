@@ -175,7 +175,7 @@ class AppViewModel @Inject constructor(
                     method = "PUT",
                     path = "/users/${profile.userId}",
                     body = mapOf("isVisible" to newValue),
-                    responseType = Any::class.java
+                    responseClass = Any::class.java
                 )
             } catch (_: Exception) { }
         }
