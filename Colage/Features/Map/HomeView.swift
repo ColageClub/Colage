@@ -72,7 +72,7 @@ struct HomeView: View {
                         Circle()
                             .fill(ColageColors.online)
                             .frame(width: 6, height: 6)
-                        Text("\(nearbyStudents.students.count) visible")
+                        Text("\(appState.activeMode == .map ? nearbyStudents.totalInViewport : nearbyStudents.students.count) visible")
                             .font(ColageFonts.caption)
                             .foregroundStyle(ColageColors.textTertiary)
                     }
@@ -143,6 +143,9 @@ struct HomeView: View {
             if AppState.devMode {
                 nearbyStudents.loadMockData()
             } else {
+                // Broadcast location immediately via REST (before WS connects)
+                locationService.broadcastImmediately()
+
                 // Connect WebSocket
                 let domain = UserProfile.current?.universityDomain ?? ""
                 WebSocketManager.shared.connect(universityDomain: domain)
@@ -159,8 +162,9 @@ struct HomeView: View {
                 // Start listening for real-time updates
                 nearbyStudents.startListeningForUpdates()
 
-                // Start periodic refresh (every 60s)
-                nearbyStudents.startPeriodicRefresh()
+                // Start periodic refresh timers
+                nearbyStudents.startListRefresh()  // 15s list refresh
+                nearbyStudents.startMapRefresh()   // 20s map viewport refresh
 
                 // Fetch initial nearby students once we have GPS
                 DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
@@ -170,8 +174,20 @@ struct HomeView: View {
                             longitude: coord.longitude,
                             domain: domain
                         )
+                        // Fetch initial viewport students with default campus bounds
+                        nearbyStudents.fetchViewportStudents(
+                            swLat: coord.latitude - 0.01,
+                            swLng: coord.longitude - 0.01,
+                            neLat: coord.latitude + 0.01,
+                            neLng: coord.longitude + 0.01,
+                            myLat: coord.latitude,
+                            myLng: coord.longitude
+                        )
                     }
                 }
+
+                // Start background location monitoring
+                locationService.startBackgroundMonitoring()
             }
 
             nearbyStudents.filterFloor = appState.currentFloor
@@ -205,11 +221,21 @@ struct HomeView: View {
 /// Manages nearby student data — fetches from API + receives WebSocket updates
 @MainActor class NearbyStudentsViewModel: ObservableObject {
     @Published var students: [NearbyStudent] = []
+    @Published var mapViewportStudents: [NearbyStudent] = []
+    @Published var totalInViewport: Int = 0
+    @Published var lastMapFetch: Date?
     @Published var maxDistance: Double = 0.5 // list slider position (0...1), logarithmic
     @Published var arMaxDistance: Double = 0.5 // AR slider position (0...1), logarithmic
     @Published var filterFloor: Int? = nil // nil = all floors
     @Published var error: String?
     @Published var lastFetchTime: Date?
+
+    // Stored viewport bounds — updated when map reports camera changes
+    var currentViewportSW: CLLocationCoordinate2D?
+    var currentViewportNE: CLLocationCoordinate2D?
+
+    private var mapRefreshTask: Task<Void, Never>?
+    private var listRefreshTask: Task<Void, Never>?
 
     var isDataStale: Bool {
         guard let lastFetch = lastFetchTime else { return false }
@@ -235,6 +261,108 @@ struct HomeView: View {
         students = (0..<20).map { i in
             NearbyStudent.mock(index: i, baseLat: baseLat, baseLng: baseLng)
         }
+    }
+
+    // MARK: - Viewport API
+
+    /// Fetch students visible in the current map viewport
+    func fetchViewportStudents(swLat: Double, swLng: Double, neLat: Double, neLng: Double, myLat: Double, myLng: Double, floor: Int? = nil) {
+        Task {
+            do {
+                // Viewport API returns flat objects (not nested profile/location)
+                struct ViewportResponse: Decodable {
+                    let students: [ViewportStudent]
+                    let totalInViewport: Int
+                    let truncated: Bool
+                    struct ViewportStudent: Decodable {
+                        let userId: String
+                        let latitude: Double
+                        let longitude: Double
+                        let floor: Int?
+                        let distance: Double?
+                        let lastSeen: String?
+                        let displayName: String?
+                        let profilePhotoURL: String?
+                        let major: String?
+                        let bio: String?
+                    }
+                }
+
+                let domain = UserProfile.current?.universityDomain ?? ""
+                var path = "/nearby/viewport?domain=\(domain)&swLat=\(swLat)&swLng=\(swLng)&neLat=\(neLat)&neLng=\(neLng)&myLat=\(myLat)&myLng=\(myLng)&limit=100"
+                if let floor = floor {
+                    path += "&floor=\(floor)"
+                }
+                let response: ViewportResponse = try await APIClient.shared.request(method: "GET", path: path)
+
+                let iso8601 = ISO8601DateFormatter()
+
+                let viewportStudents = response.students.compactMap { s -> NearbyStudent? in
+                    guard s.userId != UserProfile.current?.userId else { return nil }
+                    let profile = UserProfile(
+                        userId: s.userId,
+                        universityDomain: domain,
+                        displayName: s.displayName ?? "Student",
+                        profilePhotoURL: s.profilePhotoURL,
+                        bio: s.bio,
+                        major: s.major,
+                        socialLinks: [],
+                        isVisible: true,
+                        serverType: .student,
+                        createdAt: Date(),
+                        updatedAt: Date()
+                    )
+                    let lastSeen = s.lastSeen.flatMap { iso8601.date(from: $0) }
+                    let location = StudentLocation(
+                        userId: s.userId,
+                        latitude: s.latitude,
+                        longitude: s.longitude,
+                        altitude: 0,
+                        floor: s.floor ?? 1,
+                        timestamp: lastSeen ?? Date(),
+                        lastSeen: lastSeen
+                    )
+                    return NearbyStudent(profile: profile, location: location, distance: s.distance ?? 0)
+                }
+
+                self.mapViewportStudents = viewportStudents
+                self.totalInViewport = response.totalInViewport
+                self.lastMapFetch = Date()
+            } catch {
+                print("[Viewport] Failed to fetch: \(error)")
+            }
+        }
+    }
+
+    /// Start periodic map viewport refresh (every 20s)
+    func startMapRefresh() {
+        mapRefreshTask?.cancel()
+        mapRefreshTask = Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: 20_000_000_000) // 20s
+                guard !Task.isCancelled else { break }
+                self?.refreshViewport()
+            }
+        }
+    }
+
+    /// Start periodic list refresh (every 15s)
+    func startListRefresh() {
+        listRefreshTask?.cancel()
+        listRefreshTask = Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: 15_000_000_000) // 15s
+                guard !Task.isCancelled else { break }
+                self?.refreshNearby()
+            }
+        }
+    }
+
+    /// Re-fetch viewport students using stored bounds
+    private func refreshViewport() {
+        guard let sw = currentViewportSW, let ne = currentViewportNE,
+              let coord = locationService?.currentLocation else { return }
+        fetchViewportStudents(swLat: sw.latitude, swLng: sw.longitude, neLat: ne.latitude, neLng: ne.longitude, myLat: coord.latitude, myLng: coord.longitude)
     }
 
     // MARK: - Real Data
@@ -264,6 +392,7 @@ struct HomeView: View {
                             let altitude: Double?
                             let floor: Int?
                             let timestamp: String?
+                            let lastSeen: String?
                         }
                     }
                 }
@@ -271,6 +400,7 @@ struct HomeView: View {
                 let path = "/nearby?domain=\(domain)&lat=\(latitude)&lng=\(longitude)&maxDistance=5000"
                 let response: NearbyResponse = try await APIClient.shared.request(method: "GET", path: path)
 
+                let iso8601 = ISO8601DateFormatter()
                 let nearbyStudents = response.students.compactMap { s -> NearbyStudent? in
                     let profile = UserProfile(
                         userId: s.profile.userId,
@@ -285,13 +415,15 @@ struct HomeView: View {
                         createdAt: Date(),
                         updatedAt: Date()
                     )
+                    let lastSeen = s.location.lastSeen.flatMap { iso8601.date(from: $0) }
                     let location = StudentLocation(
                         userId: s.profile.userId,
                         latitude: s.location.latitude,
                         longitude: s.location.longitude,
                         altitude: s.location.altitude ?? 0,
                         floor: s.location.floor ?? 1,
-                        timestamp: Date()
+                        timestamp: s.location.timestamp.flatMap { iso8601.date(from: $0) } ?? Date(),
+                        lastSeen: lastSeen
                     )
                     // Don't include self
                     guard s.profile.userId != UserProfile.current?.userId else { return nil }
@@ -401,11 +533,16 @@ struct HomeView: View {
         WebSocketManager.shared.onReconnect = nil
         refreshTask?.cancel()
         refreshTask = nil
+        mapRefreshTask?.cancel()
+        mapRefreshTask = nil
+        listRefreshTask?.cancel()
+        listRefreshTask = nil
     }
 
-    /// All students on the selected floor (no distance limit) — used by Map
+    /// Map students — uses viewport API results if available, falls back to WebSocket data
     var mapStudents: [NearbyStudent] {
-        students.filter { student in
+        let source = mapViewportStudents.isEmpty ? students : mapViewportStudents
+        return source.filter { student in
             filterFloor == nil || student.location.floor == filterFloor
         }
         .sorted { $0.distance < $1.distance }

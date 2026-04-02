@@ -538,6 +538,8 @@ Resources:
             TableName: !Ref LocationsTable
         - DynamoDBReadPolicy:
             TableName: !Ref UsersTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref RateLimitTable
       Events:
         Api:
           Type: HttpApi
@@ -545,6 +547,48 @@ Resources:
             ApiId: !Ref ColageApi
             Path: /nearby
             Method: GET
+
+  GetNearbyViewportFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub colage-get-nearby-viewport-${Stage}
+      Handler: index.handler
+      CodeUri: ./functions/get-nearby-viewport/
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref LocationsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref UsersTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref RateLimitTable
+      Events:
+        Api:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref ColageApi
+            Path: /nearby/viewport
+            Method: GET
+
+  PostLocationFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub colage-post-location-${Stage}
+      Handler: index.handler
+      CodeUri: ./functions/post-location/
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref LocationsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref UsersTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref RateLimitTable
+      Events:
+        Api:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref ColageApi
+            Path: /location
+            Method: POST
 
   # ============================================================
   # LAMBDA FUNCTIONS - Photo Upload (auth required)
@@ -608,6 +652,8 @@ Resources:
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref ConnectionsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref LocationsTable
 
   WsLocationUpdateFunction:
     Type: AWS::Serverless::Function

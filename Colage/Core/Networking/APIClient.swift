@@ -90,6 +90,17 @@ class APIClient {
         }
     }
 
+    /// Post current location via REST (used on app open before WebSocket connects, and in background)
+    func postLocation(latitude: Double, longitude: Double, altitude: Double, floor: Int) async throws {
+        struct LocationBody: Encodable {
+            let latitude: Double
+            let longitude: Double
+            let altitude: Double
+            let floor: Int
+        }
+        try await requestVoid(method: "POST", path: "/location", body: LocationBody(latitude: latitude, longitude: longitude, altitude: altitude, floor: floor))
+    }
+
     /// Fire-and-forget request — ignores response body, just checks for 2xx
     func requestVoid(
         method: String = "POST",

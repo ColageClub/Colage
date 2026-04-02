@@ -70,6 +70,10 @@ struct MiniProfileSheet: View {
                     }
                 }
                 .padding(.top, 2)
+
+                // Last seen indicator
+                lastSeenView
+                    .padding(.top, 2)
             }
 
             Spacer()
@@ -109,6 +113,42 @@ struct MiniProfileSheet: View {
             }
 
 
+        }
+    }
+
+    // MARK: - Last Seen
+
+    @ViewBuilder
+    private var lastSeenView: some View {
+        if let lastSeen = student.location.lastSeen {
+            let elapsed = Date().timeIntervalSince(lastSeen)
+            if elapsed < 30 {
+                // Active now
+                HStack(spacing: 4) {
+                    Circle()
+                        .fill(ColageColors.online)
+                        .frame(width: 6, height: 6)
+                    Text("Active now")
+                        .font(ColageFonts.monoSmall)
+                        .foregroundStyle(ColageColors.online)
+                }
+            } else if elapsed < 120 {
+                // X min ago
+                let minutes = max(1, Int(elapsed / 60))
+                Text("\(minutes)m ago")
+                    .font(ColageFonts.monoSmall)
+                    .foregroundStyle(ColageColors.textSecondary)
+            } else {
+                // Last seen Xm ago
+                let minutes = Int(elapsed / 60)
+                Text("Last seen \(minutes)m ago")
+                    .font(ColageFonts.monoSmall)
+                    .foregroundStyle(ColageColors.textTertiary)
+            }
+        } else {
+            Text("Last seen unknown")
+                .font(ColageFonts.monoSmall)
+                .foregroundStyle(ColageColors.textTertiary)
         }
     }
 

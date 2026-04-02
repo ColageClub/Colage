@@ -29,6 +29,17 @@ struct MapDiscoveryView: View {
                 recenterTrigger: recenterTrigger,
                 onStudentTapped: { student in
                     selectedStudent = student
+                },
+                onViewportChanged: { sw, ne in
+                    students.currentViewportSW = sw
+                    students.currentViewportNE = ne
+                    if let coord = locationService.currentLocation {
+                        students.fetchViewportStudents(
+                            swLat: sw.latitude, swLng: sw.longitude,
+                            neLat: ne.latitude, neLng: ne.longitude,
+                            myLat: coord.latitude, myLng: coord.longitude
+                        )
+                    }
                 }
             )
             .ignoresSafeArea()
@@ -82,6 +93,7 @@ struct MapboxMapView: UIViewRepresentable {
     var recenterCoordinate: CLLocationCoordinate2D?
     var recenterTrigger: UUID?
     var onStudentTapped: ((NearbyStudent) -> Void)?
+    var onViewportChanged: ((CLLocationCoordinate2D, CLLocationCoordinate2D) -> Void)?
 
     func makeCoordinator() -> Coordinator {
         Coordinator(parent: self)
@@ -113,6 +125,12 @@ struct MapboxMapView: UIViewRepresentable {
         context.coordinator.mapView = mapView
         context.coordinator.setupAnnotations(mapView: mapView)
 
+        // Observe camera changes for viewport reporting
+        let coordinator = context.coordinator
+        mapView.mapboxMap.onEvery(event: .cameraChanged) { _ in
+            coordinator.handleCameraChanged()
+        }
+
         return mapView
     }
 
@@ -142,6 +160,7 @@ struct MapboxMapView: UIViewRepresentable {
         private var annotationManager: PointAnnotationManager?
         private var studentMap: [String: NearbyStudent] = [:]
         var lastRecenterTrigger: UUID?
+        private var viewportDebounceTimer: Timer?
 
         init(parent: MapboxMapView) {
             self.parent = parent
@@ -151,6 +170,24 @@ struct MapboxMapView: UIViewRepresentable {
         private var pendingDownloads: Set<String> = []
         /// Track last known positions for smooth animation
         private var lastPositions: [String: CLLocationCoordinate2D] = [:]
+
+        /// Debounce camera changes — report viewport after 300ms of inactivity
+        func handleCameraChanged() {
+            viewportDebounceTimer?.invalidate()
+            viewportDebounceTimer = Timer.scheduledTimer(withTimeInterval: 0.3, repeats: false) { [weak self] _ in
+                self?.reportViewport()
+            }
+        }
+
+        private func reportViewport() {
+            guard let mapView = mapView else { return }
+            let bounds = mapView.mapboxMap.coordinateBounds(for: mapView.bounds)
+            let sw = bounds.southwest
+            let ne = bounds.northeast
+            DispatchQueue.main.async {
+                self.parent.onViewportChanged?(sw, ne)
+            }
+        }
 
         func setupAnnotations(mapView: MapView) {
             let manager = mapView.annotations.makePointAnnotationManager()
@@ -217,6 +254,13 @@ struct MapboxMapView: UIViewRepresentable {
                 annotation.iconImage = imageId
                 annotation.iconSize = 1.0
                 annotation.iconAnchor = .center
+
+                // Fade stale markers — if lastSeen > 60s ago, reduce opacity
+                if let lastSeen = student.location.lastSeen,
+                   Date().timeIntervalSince(lastSeen) > 60 {
+                    annotation.iconOpacity = 0.6
+                    annotation.textOpacity = 0.6
+                }
 
                 studentMap[annotation.id] = student
                 annotations.append(annotation)

@@ -148,10 +148,16 @@ struct StudentLocation: Codable, Identifiable {
     let altitude: Double
     let floor: Int
     let timestamp: Date
+    var lastSeen: Date?
     // Optional profile snapshot from WebSocket broadcast
     var displayName: String?
     var profilePhotoURL: String?
     var major: String?
+
+    private enum CodingKeys: String, CodingKey {
+        case userId, latitude, longitude, altitude, floor, timestamp, lastSeen
+        case displayName, profilePhotoURL, major
+    }
 }
 
 // MARK: - Nearby Student (location + profile snapshot)
@@ -203,7 +209,8 @@ struct NearbyStudent: Identifiable {
                     if index < 6 { return 1 }
                     return allFloors[(index - 6) % allFloors.count]
                 }(),
-                timestamp: Date()
+                timestamp: Date(),
+                lastSeen: Date()
             ),
             distance: dist
         )

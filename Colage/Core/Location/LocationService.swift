@@ -37,7 +37,7 @@ import SwiftUI
     private let broadcastMinInterval: TimeInterval = 3.0
 
     /// Heartbeat interval — catch floor changes + keep alive when standing still
-    private let heartbeatInterval: TimeInterval = 30.0
+    private let heartbeatInterval: TimeInterval = 15.0
 
     /// Meters per floor (approximate)
     private let metersPerFloor: Double = 3.5
@@ -78,12 +78,39 @@ import SwiftUI
     }
 
     func stopTracking() {
+        sendDisconnect()
         locationManager.stopUpdatingLocation()
         altimeter.stopRelativeAltitudeUpdates()
         heartbeatTimer?.invalidate()
         heartbeatTimer = nil
         isTracking = false
         lastBroadcastLocation = nil
+    }
+
+    /// Immediately broadcast last known location via REST (before WebSocket connects)
+    func broadcastImmediately() {
+        guard let location = locationManager.location else { return }
+        let age = -location.timestamp.timeIntervalSinceNow
+        guard age < 30, location.horizontalAccuracy >= 0, location.horizontalAccuracy < 100 else { return }
+
+        Task {
+            try? await APIClient.shared.postLocation(
+                latitude: location.coordinate.latitude,
+                longitude: location.coordinate.longitude,
+                altitude: currentAltitude,
+                floor: currentFloor
+            )
+        }
+    }
+
+    /// Send disconnect message via WebSocket
+    func sendDisconnect() {
+        WebSocketManager.shared.sendDisconnect()
+    }
+
+    /// Start monitoring significant location changes for background updates
+    func startBackgroundMonitoring() {
+        locationManager.startMonitoringSignificantLocationChanges()
     }
 
     // MARK: - CLLocationManagerDelegate
@@ -100,6 +127,19 @@ import SwiftUI
         guard age < 10, location.horizontalAccuracy >= 0, location.horizontalAccuracy < 100 else { return }
 
         currentLocation = location.coordinate
+
+        // Background mode: POST via REST instead of WebSocket
+        if UIApplication.shared.applicationState == .background {
+            Task {
+                try? await APIClient.shared.postLocation(
+                    latitude: location.coordinate.latitude,
+                    longitude: location.coordinate.longitude,
+                    altitude: currentAltitude,
+                    floor: currentFloor
+                )
+            }
+            return
+        }
 
         // Decide whether to broadcast
         let shouldBroadcast: Bool

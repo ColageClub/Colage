@@ -119,8 +119,10 @@ export const handler = async (event) => {
             altitude: loc.altitude || 0,
             floor: loc.floor || 1,
             timestamp: loc.timestamp,
+            lastSeen: loc.timestamp,
           },
           distance: Math.round(dist),
+          lastSeen: loc.timestamp || new Date().toISOString(),
         };
       })
       .filter(s => s.distance <= cappedMaxDist)

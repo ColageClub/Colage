@@ -89,6 +89,15 @@ class WebSocketManager: ObservableObject {
         }
     }
 
+    /// Send disconnect message so server can clean up immediately
+    func sendDisconnect() {
+        guard !AppState.devMode else { return }
+        let message = URLSessionWebSocketTask.Message.string(
+            "{\"action\":\"student.disconnect\"}"
+        )
+        webSocketTask?.send(message) { _ in }
+    }
+
     func sendLocationUpdate(_ location: StudentLocation) {
         guard !AppState.devMode else { return }
 

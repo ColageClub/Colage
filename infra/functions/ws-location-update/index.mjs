@@ -52,7 +52,7 @@ export const handler = async (event) => {
     const longitude = parseFloat(data.longitude);
     const geohash = geohashEncode(latitude, longitude, 7);
 
-    // Store location with 5-min TTL
+    // Store location with 2-min TTL
     await ddb.send(new PutCommand({
       TableName: LOCATIONS_TABLE,
       Item: {
@@ -64,7 +64,8 @@ export const handler = async (event) => {
         floor,
         geohash,
         timestamp: new Date().toISOString(),
-        ttl: Math.floor(Date.now() / 1000) + 300,
+        status: 'active',
+        ttl: Math.floor(Date.now() / 1000) + 120,
       },
     }));
 
