@@ -53,6 +53,7 @@ fun HomeScreen(appViewModel: AppViewModel, adService: com.colageclub.colage.feat
     // Collect students + floor state so mapStudentCount recomputes reactively
     val allStudents by nearbyVM.students.collectAsState()
     val filterFloor by nearbyVM.filterFloor.collectAsState()
+    val totalInViewport by nearbyVM.totalInViewport.collectAsState()
     val mapStudentCount by remember {
         derivedStateOf {
             allStudents
@@ -91,7 +92,11 @@ fun HomeScreen(appViewModel: AppViewModel, adService: com.colageclub.colage.feat
         if (appViewModel.devMode) {
             nearbyVM.loadMockData()
         } else {
+            // Broadcast location immediately via REST (before WebSocket connects)
+            appViewModel.locationService.broadcastImmediately()
+
             nearbyVM.startListeningForUpdates()
+
             // Fetch initial nearby students after a short delay for GPS fix
             kotlinx.coroutines.delay(2000)
             val location = appViewModel.locationService.currentLocation.value
@@ -103,14 +108,24 @@ fun HomeScreen(appViewModel: AppViewModel, adService: com.colageclub.colage.feat
                     domain = domain,
                     selfUserId = currentProfile?.userId
                 )
+                // Fetch initial viewport students with default campus bounds
+                nearbyVM.fetchViewportStudents(
+                    swLat = location.latitude - 0.01,
+                    swLng = location.longitude - 0.01,
+                    neLat = location.latitude + 0.01,
+                    neLng = location.longitude + 0.01,
+                    myLat = location.latitude,
+                    myLng = location.longitude
+                )
             }
-            nearbyVM.startPeriodicRefresh()
+            nearbyVM.startListRefresh()  // 15s list refresh
+            nearbyVM.startMapRefresh()   // 20s map viewport refresh
         }
     }
 
     // Cancel periodic refresh on disposal
     DisposableEffect(Unit) {
-        onDispose { nearbyVM.stopPeriodicRefresh() }
+        onDispose { nearbyVM.stopListening() }
     }
 
     // Sync floor filter
@@ -136,7 +151,19 @@ fun HomeScreen(appViewModel: AppViewModel, adService: com.colageclub.colage.feat
                             themeColor = themeColor,
                             isVisible = isVisible,
                             currentUserId = currentProfile?.userId,
-                            currentLocationFlow = appViewModel.locationService.currentLocation
+                            currentLocationFlow = appViewModel.locationService.currentLocation,
+                            onViewportChanged = { swLat, swLng, neLat, neLng ->
+                                nearbyVM.currentViewportSW = swLat to swLng
+                                nearbyVM.currentViewportNE = neLat to neLng
+                                val loc = appViewModel.locationService.currentLocation.value
+                                if (loc != null) {
+                                    nearbyVM.fetchViewportStudents(
+                                        swLat = swLat, swLng = swLng,
+                                        neLat = neLat, neLng = neLng,
+                                        myLat = loc.latitude, myLng = loc.longitude
+                                    )
+                                }
+                            }
                         )
                     }
                     DiscoveryMode.LIST -> ListDiscoveryView(
@@ -223,7 +250,7 @@ fun HomeScreen(appViewModel: AppViewModel, adService: com.colageclub.colage.feat
                             )
                             Spacer(Modifier.width(6.dp))
                             Text(
-                                "${allStudents.size} visible",
+                                "${if (discoveryMode == DiscoveryMode.MAP) totalInViewport else allStudents.size} visible",
                                 style = ColageFonts.Caption.copy(color = ColageColors.TextTertiary)
                             )
                         }

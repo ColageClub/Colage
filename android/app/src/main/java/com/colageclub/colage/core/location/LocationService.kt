@@ -7,6 +7,7 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.location.Location
+import com.colageclub.colage.core.networking.ApiClient
 import com.colageclub.colage.core.networking.WebSocketManager
 import com.colageclub.colage.data.models.StudentLocation
 import com.google.android.gms.location.*
@@ -33,7 +34,8 @@ import kotlin.math.roundToInt
 @Singleton
 class LocationService @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val webSocketManager: WebSocketManager
+    private val webSocketManager: WebSocketManager,
+    private val apiClient: ApiClient
 ) : SensorEventListener {
 
     private val fusedLocationClient: FusedLocationProviderClient =
@@ -74,7 +76,7 @@ class LocationService @Inject constructor(
     private val broadcastMinIntervalMs = 3000L
 
     /** Heartbeat interval (ms) — keep-alive when stationary */
-    private val heartbeatIntervalMs = 30_000L
+    private val heartbeatIntervalMs = 15_000L
 
     private var heartbeatJob: Job? = null
     private val serviceScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
@@ -143,11 +145,33 @@ class LocationService @Inject constructor(
     fun stopTracking() {
         if (!_isTracking.value) return
         _isTracking.value = false
+        webSocketManager.sendDisconnect()
         fusedLocationClient.removeLocationUpdates(locationCallback)
         sensorManager.unregisterListener(this)
         heartbeatJob?.cancel()
         heartbeatJob = null
         lastBroadcastLocation = null
+    }
+
+    /** Immediately broadcast last known location via REST (before WebSocket connects) */
+    @SuppressLint("MissingPermission")
+    fun broadcastImmediately() {
+        fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+            if (location == null) return@addOnSuccessListener
+            val age = System.currentTimeMillis() - location.time
+            if (age > 30_000 || location.accuracy > 100f) return@addOnSuccessListener
+
+            serviceScope.launch {
+                try {
+                    apiClient.postLocation(
+                        latitude = location.latitude,
+                        longitude = location.longitude,
+                        altitude = currentAltitude,
+                        floor = _currentFloor.value
+                    )
+                } catch (_: Exception) {}
+            }
+        }
     }
 
     fun recalibrateGround() {

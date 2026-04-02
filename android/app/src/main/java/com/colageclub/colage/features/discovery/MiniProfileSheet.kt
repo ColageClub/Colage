@@ -5,6 +5,7 @@ import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -93,6 +94,9 @@ fun MiniProfileSheet(
                         )
                     }
                 }
+
+                // Freshness indicator
+                LastSeenIndicator(lastSeen = student.location.lastSeen, themeColor = themeColor)
             }
         }
 
@@ -177,6 +181,51 @@ fun SocialLinkButton(
             contentDescription = null,
             tint = ColageColors.TextTertiary,
             modifier = Modifier.size(14.dp)
+        )
+    }
+}
+
+// MARK: - Last Seen Freshness Indicator
+
+@Composable
+fun LastSeenIndicator(
+    lastSeen: String?,
+    themeColor: androidx.compose.ui.graphics.Color = LocalThemeColor.current
+) {
+    val (text, color) = remember(lastSeen) {
+        if (lastSeen == null) {
+            "Last seen unknown" to ColageColors.TextTertiary
+        } else {
+            try {
+                val instant = java.time.Instant.parse(lastSeen)
+                val elapsed = java.time.Duration.between(instant, java.time.Instant.now()).seconds
+                when {
+                    elapsed < 30 -> "Active now" to ColageColors.Online
+                    elapsed < 120 -> "${elapsed / 60}m ago" to ColageColors.TextSecondary
+                    else -> "Last seen ${elapsed / 60}m ago" to ColageColors.TextTertiary
+                }
+            } catch (_: Exception) {
+                "Last seen unknown" to ColageColors.TextTertiary
+            }
+        }
+    }
+
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.padding(top = 2.dp)
+    ) {
+        if (text == "Active now") {
+            Box(
+                modifier = Modifier
+                    .size(6.dp)
+                    .clip(androidx.compose.foundation.shape.CircleShape)
+                    .background(ColageColors.Online)
+            )
+        }
+        Text(
+            text = text,
+            style = ColageFonts.MonoSmall.copy(color = color)
         )
     }
 }

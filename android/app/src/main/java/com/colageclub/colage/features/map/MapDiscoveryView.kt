@@ -48,7 +48,8 @@ fun MapDiscoveryView(
     isVisible: Boolean = true,
     currentUserId: String? = null,
     currentLocationFlow: StateFlow<Location?>? = null,
-    onStudentTapped: (NearbyStudent) -> Unit = {}
+    onStudentTapped: (NearbyStudent) -> Unit = {},
+    onViewportChanged: ((swLat: Double, swLng: Double, neLat: Double, neLng: Double) -> Unit)? = null
 ) {
     var selectedStudent by remember { mutableStateOf<NearbyStudent?>(null) }
     val themeArgb = themeColor.toArgb()
@@ -102,6 +103,30 @@ fun MapDiscoveryView(
 
                     // Create annotation manager once in factory
                     annotationManagerRef = annotations.createPointAnnotationManager()
+                    // Report viewport changes (debounced 300ms)
+                    var viewportJob: Job? = null
+                    mapboxMap.subscribeCameraChanged {
+                        viewportJob?.cancel()
+                        viewportJob = coroutineScope.launch {
+                            delay(300)
+                            val state = mapboxMap.cameraState
+                            val cam = cameraOptions {
+                                center(state.center)
+                                zoom(state.zoom)
+                                bearing(state.bearing)
+                                pitch(state.pitch)
+                                padding(state.padding)
+                            }
+                            val bounds = mapboxMap.coordinateBoundsForCamera(cam)
+                            onViewportChanged?.invoke(
+                                bounds.southwest.latitude(),
+                                bounds.southwest.longitude(),
+                                bounds.northeast.latitude(),
+                                bounds.northeast.longitude()
+                            )
+                        }
+                    }
+
                     mapViewRef = this
                 }
             },
@@ -169,10 +194,20 @@ fun MapDiscoveryView(
                         Point.fromLngLat(targetLng, targetLat)
                     }
 
+                    // Fade stale markers (lastSeen > 60s ago)
+                    val markerOpacity = student.location.lastSeen?.let { ls ->
+                        try {
+                            val instant = java.time.Instant.parse(ls)
+                            val elapsed = java.time.Duration.between(instant, java.time.Instant.now()).seconds
+                            if (elapsed > 60) 0.6 else 1.0
+                        } catch (_: Exception) { 1.0 }
+                    } ?: 1.0
+
                     val options = PointAnnotationOptions()
                         .withPoint(displayPoint)
                         .withIconImage(bitmap)
                         .withIconSize(1.0)
+                        .withIconOpacity(markerOpacity)
                         .withIconAnchor(com.mapbox.maps.extension.style.layers.properties.generated.IconAnchor.CENTER)
                         .withTextField(student.profile.displayName.split(" ").first())
                         .withTextSize(9.0)
@@ -180,6 +215,7 @@ fun MapDiscoveryView(
                         .withTextOffset(listOf(0.0, 1.8))
                         .withTextHaloColor(android.graphics.Color.BLACK)
                         .withTextHaloWidth(1.5)
+                        .withTextOpacity(markerOpacity)
                     val annotation = manager.create(options)
                     studentAnnotationMap[annotation.id] = student
                 }

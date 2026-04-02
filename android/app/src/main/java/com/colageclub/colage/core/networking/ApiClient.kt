@@ -168,6 +168,20 @@ class ApiClient @Inject constructor(
     suspend fun getMe(): ProfileResponseWrapper =
         request("GET", "/auth/me", null, ProfileResponseWrapper::class.java)
 
+    suspend fun postLocation(latitude: Double, longitude: Double, altitude: Double, floor: Int): PostLocationResponse =
+        request("POST", "/location", PostLocationRequest(latitude, longitude, altitude, floor), PostLocationResponse::class.java)
+
+    suspend fun getNearbyViewport(
+        domain: String, swLat: Double, swLng: Double, neLat: Double, neLng: Double,
+        myLat: Double, myLng: Double, floor: Int? = null, limit: Int = 100
+    ): ViewportResponse {
+        val path = buildString {
+            append("/nearby/viewport?domain=$domain&swLat=$swLat&swLng=$swLng&neLat=$neLat&neLng=$neLng&myLat=$myLat&myLng=$myLng&limit=$limit")
+            floor?.let { append("&floor=$it") }
+        }
+        return request("GET", path, null, ViewportResponse::class.java)
+    }
+
     suspend fun uploadToS3(uploadUrl: String, imageBytes: ByteArray, contentType: String) = withContext(Dispatchers.IO) {
         val body = imageBytes.toRequestBody(contentType.toMediaType())
         val request = Request.Builder()

@@ -77,11 +77,18 @@ class WebSocketManager @Inject constructor() {
     }
 
     fun disconnect() {
+        sendDisconnect()
         pingRunnable?.let { handler.removeCallbacks(it) }
         webSocket?.close(1000, "Normal closure")
         webSocket = null
         _isConnected.value = false
         reconnectAttempts = 0
+    }
+
+    /** Send explicit disconnect so server removes location immediately */
+    fun sendDisconnect() {
+        if (BuildConfig.DEV_MODE || webSocket == null) return
+        webSocket?.send("{\"action\":\"student.disconnect\"}")
     }
 
     fun sendLocationUpdate(location: StudentLocation) {

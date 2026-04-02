@@ -110,6 +110,8 @@ data class StudentLocation(
     val altitude: Double = 0.0,
     val floor: Int = 1,
     val timestamp: String? = null,
+    /// When this location was last reported — used for freshness display
+    val lastSeen: String? = null,
     // Optional profile snapshot from WebSocket broadcast
     val displayName: String? = null,
     val profilePhotoURL: String? = null,
@@ -238,5 +240,40 @@ data class NearbyLocationData(
     val longitude: Double,
     val altitude: Double? = null,
     val floor: Int? = null,
-    val timestamp: String? = null
+    val timestamp: String? = null,
+    val lastSeen: String? = null
+)
+
+// MARK: - Viewport API Response
+
+data class ViewportResponse(
+    val students: List<ViewportStudent>,
+    val totalInViewport: Int,
+    val truncated: Boolean
+)
+
+data class ViewportStudent(
+    val userId: String,
+    val latitude: Double,
+    val longitude: Double,
+    val floor: Int? = null,
+    val distance: Double? = null,
+    val lastSeen: String? = null,
+    val displayName: String? = null,
+    val profilePhotoURL: String? = null,
+    val major: String? = null,
+    val bio: String? = null
+)
+
+// MARK: - POST /location request
+
+data class PostLocationRequest(
+    val latitude: Double,
+    val longitude: Double,
+    val altitude: Double,
+    val floor: Int
+)
+
+data class PostLocationResponse(
+    val success: Boolean
 )

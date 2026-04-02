@@ -7,12 +7,7 @@ import com.colageclub.colage.BuildConfig
 import com.colageclub.colage.core.location.LocationService
 import com.colageclub.colage.core.networking.ApiClient
 import com.colageclub.colage.core.networking.WebSocketManager
-import com.colageclub.colage.data.models.NearbyResponse
-import com.colageclub.colage.data.models.NearbyStudent
-import com.colageclub.colage.data.models.SocialLink
-import com.colageclub.colage.data.models.SocialPlatform
-import com.colageclub.colage.data.models.StudentLocation
-import com.colageclub.colage.data.models.UserProfile
+import com.colageclub.colage.data.models.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -36,6 +31,12 @@ class NearbyStudentsViewModel @Inject constructor(
     private val _students = MutableStateFlow<List<NearbyStudent>>(emptyList())
     val students: StateFlow<List<NearbyStudent>> = _students.asStateFlow()
 
+    private val _mapViewportStudents = MutableStateFlow<List<NearbyStudent>>(emptyList())
+    val mapViewportStudents: StateFlow<List<NearbyStudent>> = _mapViewportStudents.asStateFlow()
+
+    private val _totalInViewport = MutableStateFlow(0)
+    val totalInViewport: StateFlow<Int> = _totalInViewport.asStateFlow()
+
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
@@ -55,6 +56,10 @@ class NearbyStudentsViewModel @Inject constructor(
 
     val isWebSocketConnected: StateFlow<Boolean> get() = webSocketManager.isConnected
 
+    // Stored viewport bounds for map refresh
+    var currentViewportSW: Pair<Double, Double>? = null
+    var currentViewportNE: Pair<Double, Double>? = null
+
     fun setMaxDistance(value: Float) { _maxDistance.value = value }
     fun setArMaxDistance(value: Float) { _arMaxDistance.value = value }
     fun setFilterFloor(floor: Int?) { _filterFloor.value = floor }
@@ -62,10 +67,11 @@ class NearbyStudentsViewModel @Inject constructor(
     val listDistanceFeet: Double get() = sliderToFeet(_maxDistance.value.toDouble())
     val arDistanceFeet: Double get() = sliderToFeet(_arMaxDistance.value.toDouble())
 
-    /** Map students — all on selected floor, no distance limit */
+    /** Map students — uses viewport data when available, falls back to full list */
     fun mapStudents(): List<NearbyStudent> {
         val floor = _filterFloor.value
-        return _students.value
+        val source = _mapViewportStudents.value.ifEmpty { _students.value }
+        return source
             .filter { floor == null || it.location.floor == floor }
             .sortedBy { it.distance }
     }
@@ -98,15 +104,18 @@ class NearbyStudentsViewModel @Inject constructor(
     // MARK: - Periodic Refresh
 
     private var refreshJob: Job? = null
+    private var mapRefreshJob: Job? = null
+    private var listRefreshJob: Job? = null
     private var lastFetchLat: Double = 0.0
     private var lastFetchLng: Double = 0.0
     private var lastFetchDomain: String = ""
 
-    fun startPeriodicRefresh() {
-        refreshJob?.cancel()
-        refreshJob = viewModelScope.launch {
+    /** Start periodic list refresh (every 15s) */
+    fun startListRefresh() {
+        listRefreshJob?.cancel()
+        listRefreshJob = viewModelScope.launch {
             while (isActive) {
-                delay(60_000)
+                delay(15_000)
                 val location = locationService.currentLocation.value
                 val lat = location?.latitude ?: lastFetchLat
                 val lng = location?.longitude ?: lastFetchLng
@@ -117,9 +126,81 @@ class NearbyStudentsViewModel @Inject constructor(
         }
     }
 
+    /** Start periodic map viewport refresh (every 20s) */
+    fun startMapRefresh() {
+        mapRefreshJob?.cancel()
+        mapRefreshJob = viewModelScope.launch {
+            while (isActive) {
+                delay(20_000)
+                refreshViewport()
+            }
+        }
+    }
+
     fun stopPeriodicRefresh() {
         refreshJob?.cancel()
         refreshJob = null
+        mapRefreshJob?.cancel()
+        mapRefreshJob = null
+        listRefreshJob?.cancel()
+        listRefreshJob = null
+    }
+
+    // MARK: - Viewport API
+
+    fun fetchViewportStudents(
+        swLat: Double, swLng: Double, neLat: Double, neLng: Double,
+        myLat: Double, myLng: Double, floor: Int? = null
+    ) {
+        if (BuildConfig.DEV_MODE) return
+        val domain = lastFetchDomain.ifEmpty { return }
+        viewModelScope.launch {
+            try {
+                val resp = apiClient.getNearbyViewport(
+                    domain = domain,
+                    swLat = swLat, swLng = swLng,
+                    neLat = neLat, neLng = neLng,
+                    myLat = myLat, myLng = myLng,
+                    floor = floor
+                )
+                _mapViewportStudents.value = resp.students
+                    .filter { it.userId != currentUserId }
+                    .map { s ->
+                        NearbyStudent(
+                            profile = UserProfile(
+                                userId = s.userId,
+                                universityDomain = domain,
+                                displayName = s.displayName ?: "Student",
+                                profilePhotoURL = s.profilePhotoURL,
+                                bio = s.bio,
+                                major = s.major
+                            ),
+                            location = StudentLocation(
+                                userId = s.userId,
+                                latitude = s.latitude,
+                                longitude = s.longitude,
+                                floor = s.floor ?: 1,
+                                lastSeen = s.lastSeen
+                            ),
+                            distance = s.distance ?: 0.0
+                        )
+                    }
+                _totalInViewport.value = resp.totalInViewport
+            } catch (e: Exception) {
+                // Non-fatal — map just shows stale data
+            }
+        }
+    }
+
+    private fun refreshViewport() {
+        val sw = currentViewportSW ?: return
+        val ne = currentViewportNE ?: return
+        val location = locationService.currentLocation.value ?: return
+        fetchViewportStudents(
+            swLat = sw.first, swLng = sw.second,
+            neLat = ne.first, neLng = ne.second,
+            myLat = location.latitude, myLng = location.longitude
+        )
     }
 
     // MARK: - Real Data
@@ -157,7 +238,8 @@ class NearbyStudentsViewModel @Inject constructor(
                                 userId = s.profile.userId,
                                 latitude = s.location.latitude,
                                 longitude = s.location.longitude,
-                                floor = s.location.floor ?: 1
+                                floor = s.location.floor ?: 1,
+                                lastSeen = s.location.lastSeen
                             ),
                             distance = s.distance
                         )
@@ -193,6 +275,7 @@ class NearbyStudentsViewModel @Inject constructor(
         webSocketManager.onStudentLeft = null
         webSocketManager.onLocationUpdate = null
         webSocketManager.onReconnected = null
+        stopPeriodicRefresh()
     }
 
     private fun calculateDistanceFeet(studentLocation: StudentLocation): Double {
